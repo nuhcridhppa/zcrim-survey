@@ -222,7 +222,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
         </div>
       </div>
       <button class="btn btn-blue" onclick="validateAndNext(0)">Next: Members →</button>
-      <button class="btn btn-gray" onclick="skipFamily()" style="background:#475569;font-size:13px;padding:10px">⏭ Skip Family (Mark Absent / Unavailable)</button>
+      <button class="btn btn-gray" id="btn-skip" onclick="skipFamily()" style="background:#475569;font-size:13px;padding:10px" disabled>⏭ Skip Family (Mark Absent / Unavailable)</button>
     </div>
     <!-- TAB 1 -->
     <div id="tab1" style="display:none">
@@ -616,6 +616,9 @@ function selectVillage(ward){
   state.selectedWard=ward;
   document.getElementById('active-village-name').textContent=ward;
   document.getElementById('hdr-name').textContent='👤 '+state.zcrim.name;
+  // Reset skip button state
+  var skipBtn = document.getElementById('btn-skip');
+  if(skipBtn){ skipBtn.disabled=true; skipBtn.style.opacity='0.4'; }
   var g=state.gps&&state.gps.lat!=='N/A'?'📍 '+state.gps.lat+', '+state.gps.lng:'📍 GPS unavailable';
   document.getElementById('hdr-gps').textContent=g;
   document.getElementById('cam-gps-label').textContent=g;
@@ -704,6 +707,9 @@ function checkDuplicate(familyId, cb) {
 function loadNextFamily(){
   // Show loading state
   showLoadingOverlay('Loading next family...');
+  // Disable skip button while loading
+  var skipBtn = document.getElementById('btn-skip');
+  if(skipBtn){ skipBtn.disabled=true; skipBtn.style.opacity='0.4'; }
 
   // Safety timeout — never get stuck on loading overlay
   var loadDone = false;
@@ -744,6 +750,9 @@ function loadNextFamily(){
       resetForm();
       switchTab(0);  // ← explicitly show Family tab
       window.scrollTo(0, 0); // scroll to top
+      // Enable skip button now that family is loaded
+      var skipBtn = document.getElementById('btn-skip');
+      if(skipBtn){ skipBtn.disabled=false; skipBtn.style.opacity='1'; }
 
       // Update progress counter
       google.script.run
