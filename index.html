@@ -163,9 +163,18 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
       <span id="sess-timer" style="color:var(--org)">⏱ 30:00</span>
       <button onclick="doLogout()" style="background:none;border:1px solid var(--bdr);border-radius:6px;padding:3px 10px;color:var(--mut);font-size:11px;cursor:pointer">Logout</button>
     </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button onclick="showTab('village-tab')" id="tab-villages-btn" style="flex:1;padding:9px;border:1px solid var(--acc);border-radius:8px;background:var(--acc);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🏘️ Villages</button>
+      <button onclick="showTab('leaderboard-tab')" id="tab-board-btn" style="flex:1;padding:9px;border:1px solid var(--bdr);border-radius:8px;background:transparent;color:var(--mut);font-weight:700;font-size:13px;cursor:pointer">🏆 Leaderboard</button>
+    </div>
+    <div id="village-tab">
     <input id="village-search" type="text" placeholder="🔍 Search village..." oninput="filterVillages()" style="margin-bottom:12px" />
     <div style="display:flex;gap:8px;margin-bottom:14px" id="village-stats-bar"></div>
     <div id="village-list"></div>
+    </div>
+    <div id="leaderboard-tab" style="display:none">
+      <div id="leaderboard-list"><div style="text-align:center;padding:30px;color:var(--mut)"><span class="spinner"></span> Loading…</div></div>
+    </div>
   </div>
 </div>
 
@@ -195,6 +204,9 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   <div style="padding:14px">
     <!-- TAB 0 -->
     <div id="tab0">
+      <div id="dup-banner" style="display:none;background:#ef444422;border:2px solid var(--red);border-radius:8px;padding:12px;margin-bottom:12px;color:var(--red);font-weight:700;text-align:center;font-size:13px">
+        ⚠️ DUPLICATE ALERT — This family may have already been surveyed. Verify before submitting.
+      </div>
       <div class="card">
         <div class="sec-title">📋 Family Record</div>
         <div class="info-grid" id="family-info"></div>
@@ -210,6 +222,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
         </div>
       </div>
       <button class="btn btn-blue" onclick="validateAndNext(0)">Next: Members →</button>
+      <button class="btn btn-gray" onclick="skipFamily()" style="background:#475569;font-size:13px;padding:10px">⏭ Skip Family (Mark Absent / Unavailable)</button>
     </div>
     <!-- TAB 1 -->
     <div id="tab1" style="display:none">
@@ -608,6 +621,44 @@ function selectVillage(ward){
   document.getElementById('cam-gps-label').textContent=g;
   showScreen('screen-survey'); loadNextFamily();
 }
+function showTab(tabId){
+  document.getElementById('village-tab').style.display     = tabId==='village-tab'     ? 'block':'none';
+  document.getElementById('leaderboard-tab').style.display = tabId==='leaderboard-tab' ? 'block':'none';
+  document.getElementById('tab-villages-btn').style.background = tabId==='village-tab' ? 'var(--acc)':'transparent';
+  document.getElementById('tab-villages-btn').style.color      = tabId==='village-tab' ? '#fff':'var(--mut)';
+  document.getElementById('tab-board-btn').style.background    = tabId==='leaderboard-tab' ? 'var(--acc)':'transparent';
+  document.getElementById('tab-board-btn').style.color         = tabId==='leaderboard-tab' ? '#fff':'var(--mut)';
+  if(tabId==='leaderboard-tab') loadLeaderboard();
+}
+
+function loadLeaderboard(){
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(!res.ok){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px;text-align:center">'+res.msg+'</div>'; return; }
+      var html='<div style="font-size:11px;color:var(--mut);margin-bottom:10px;text-align:center">Updated live from Google Sheets</div>';
+      var medals=['🥇','🥈','🥉'];
+      res.board.forEach(function(z,i){
+        var pct = z.total>0 ? Math.round(z.done/z.total*100) : 0;
+        var col = pct===100?'var(--grn)':pct>50?'var(--acc)':'var(--org)';
+        html += '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:8px">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+            '<div style="font-weight:700;font-size:14px">'+(medals[i]||'#'+(i+1))+' '+z.name+'</div>'+
+            '<div style="font-size:12px;color:'+col+';font-weight:700">'+pct+'%</div>'+
+          '</div>'+
+          '<div style="background:#334155;border-radius:4px;height:6px;margin-bottom:6px">'+
+            '<div style="background:'+col+';width:'+pct+'%;height:100%;border-radius:4px;transition:width .4s"></div>'+
+          '</div>'+
+          '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)">'+
+            '<span>Block: '+z.block+'</span>'+
+            '<span>✅ '+z.done+' / '+z.total+' &nbsp; ⏳ '+z.pending+'</span>'+
+          '</div></div>';
+      });
+      document.getElementById('leaderboard-list').innerHTML = html;
+    })
+    .withFailureHandler(function(e){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px">Error: '+e.message+'</div>'; })
+    .getLeaderboard(state.token);
+}
+
 function switchVillage(){
   showScreen('screen-village');
   google.script.run
@@ -617,6 +668,31 @@ function switchVillage(){
 }
 
 // ── FAMILY ────────────────────────────────────
+function skipFamily(){
+  if(!state.family){ toast('No family loaded.','red'); return; }
+  if(!confirm('Mark '+state.family.name+' ('+state.family.id+') as ABSENT/UNAVAILABLE? This will be logged and next family will load.')) return;
+  showLoadingOverlay('Skipping family...');
+  google.script.run
+    .withSuccessHandler(function(res){
+      hideLoadingOverlay();
+      if(!res.ok){ toast('Skip failed: '+(res.msg||'error'),'red'); return; }
+      toast('⏭ Skipped — loading next family','org');
+      state.family=null; state.familyRowIndex=null;
+      state.selfie=null;
+      state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+      loadNextFamily();
+    })
+    .withFailureHandler(function(e){ hideLoadingOverlay(); toast('Error: '+e.message,'red'); })
+    .skipFamily(state.token, state.familyRowIndex, state.family.id, state.family.name);
+}
+
+function checkDuplicate(familyId, cb) {
+  // Quick check — look at Families sheet status
+  // If status is 'done' backend won't return it anyway
+  // But we add a client-side warning just in case
+  cb(false);
+}
+
 function loadNextFamily(){
   // Show loading state
   showLoadingOverlay('Loading next family...');
@@ -677,6 +753,16 @@ function renderFamilyInfo(){
     .map(function(p){return '<div class="info-item"><div class="k">'+p[0]+'</div><div class="v">'+p[1]+'</div></div>';}).join('');
   document.getElementById('fi-address').textContent=f.address;
   document.getElementById('fi-badges').innerHTML='<span class="badge badge-blu">'+f.block+'</span> <span class="badge '+(f.gender==='M'?'badge-blu':'badge-org')+'">'+(f.gender==='M'?'Male':'Female')+'</span> <span class="badge badge-grn">Age '+f.age+'</span>';
+  // Duplicate check — warn if PPP ID seen this session
+  if(!state.surveyedIds) state.surveyedIds = {};
+  if(state.surveyedIds[f.id]){
+    toast('⚠️ WARNING: '+f.id+' was already surveyed this session!','red');
+    var dupBanner = document.getElementById('dup-banner');
+    if(dupBanner) dupBanner.style.display='block';
+  } else {
+    var dupBanner = document.getElementById('dup-banner');
+    if(dupBanner) dupBanner.style.display='none';
+  }
 }
 
 // ── MEMBERS ───────────────────────────────────
@@ -842,22 +928,84 @@ function closeCamera(){
   if(state.cameraStream){state.cameraStream.getTracks().forEach(function(t){t.stop();});state.cameraStream=null;}
   show('camera-wrap',false);
 }
+function burnGpsStamp(canvas, g, label, family) {
+  var ctx  = canvas.getContext('2d');
+  var w    = canvas.width, h = canvas.height;
+  var fs   = Math.max(16, Math.round(w / 40)); // font size scales with image
+
+  // Semi-transparent black bar at bottom
+  var barH = fs * 4.2;
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0, h - barH, w, barH);
+
+  // White text
+  ctx.fillStyle = '#ffffff';
+  ctx.font      = 'bold ' + fs + 'px Arial,sans-serif';
+  ctx.textAlign = 'left';
+
+  var now   = new Date();
+  var dateStr = now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear()+
+                '  '+now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes();
+  var gpsStr  = g.lat !== 'N/A' ? '📍 '+g.lat+', '+g.lng+(g.acc?' ±'+g.acc:'') : '📍 GPS unavailable';
+  var famStr  = family ? '🏠 '+family.id+' | '+family.name : '';
+  var lblStr  = '📷 '+label;
+
+  var pad = Math.round(w * 0.015);
+  var y1  = h - barH + fs * 1.1;
+  var y2  = y1 + fs * 1.15;
+  var y3  = y2 + fs * 1.15;
+
+  // Line 1: GPS
+  ctx.font = 'bold '+fs+'px Arial,sans-serif';
+  ctx.fillText(gpsStr, pad, y1);
+
+  // Line 2: Date + label
+  ctx.font = fs+'px Arial,sans-serif';
+  ctx.fillText(dateStr + '   ' + lblStr, pad, y2);
+
+  // Line 3: Family
+  if(famStr) { ctx.font = (fs*0.9)+'px Arial,sans-serif'; ctx.fillText(famStr, pad, y3); }
+
+  // ZCRIM watermark top-right
+  ctx.font      = Math.max(12, Math.round(w/55))+'px Arial,sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.textAlign = 'right';
+  ctx.fillText('ZCRIM Survey · Mewat/Nuh', w - pad, Math.round(w/55) + 8);
+}
+
 function capturePhoto(){
-  var v=document.getElementById('cam-video'),canvas=document.createElement('canvas');
-  canvas.width=v.videoWidth;canvas.height=v.videoHeight;canvas.getContext('2d').drawImage(v,0,0);
-  var q=0.7,dataUrl=canvas.toDataURL('image/jpeg',q);
-  while(dataUrl.length*0.75>199000&&q>0.15){q-=0.1;dataUrl=canvas.toDataURL('image/jpeg',q);}
-  var t=state.cameraTarget,g=state.gps||{lat:'N/A',lng:'N/A'};
+  var v      = document.getElementById('cam-video');
+  var canvas = document.createElement('canvas');
+  canvas.width  = v.videoWidth  || 1280;
+  canvas.height = v.videoHeight || 720;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(v, 0, 0);
+
+  var t = state.cameraTarget;
+  var g = state.gps || {lat:'N/A', lng:'N/A'};
+  var label = t==='selfie' ? 'Surveyor Selfie' : PHOTO_LABELS[PHOTO_KEYS.indexOf(t)] || t;
+
+  // Burn GPS stamp onto image
+  burnGpsStamp(canvas, g, label, state.family);
+
+  // Compress
+  var q = 0.78, dataUrl = canvas.toDataURL('image/jpeg', q);
+  while(dataUrl.length * 0.75 > 199000 && q > 0.15){ q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q); }
+
   closeCamera();
-  if(t==='selfie'){
-    state.selfie=dataUrl;
-    document.getElementById('selfie-box').innerHTML='<img src="'+dataUrl+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/><div class="overlay">✓ GPS: '+(g.lat!=='N/A'?g.lat+','+g.lng:'N/A')+'</div>';
-    document.getElementById('selfie-box').onclick=function(){openCamera('selfie');};
+
+  if(t === 'selfie'){
+    state.selfie = dataUrl;
+    var sb = document.getElementById('selfie-box');
+    sb.innerHTML = '<img src="'+dataUrl+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/>'+
+      '<div class="overlay">✓ GPS stamped · '+( g.lat!=='N/A' ? g.lat+','+g.lng : 'No GPS' )+'</div>';
+    sb.onclick = function(){ openCamera('selfie'); };
   } else {
-    state.photos[t]={dataUrl:dataUrl,gps:g};
-    var box=document.getElementById('pb-'+t);
-    box.innerHTML='<img src="'+dataUrl+'"/><div class="overlay">📍 '+(g.lat!=='N/A'?g.lat+','+g.lng:'GPS N/A')+' · Tap retake</div>';
-    box.onclick=function(){openCamera(t);};
+    state.photos[t] = {dataUrl:dataUrl, gps:g};
+    var box = document.getElementById('pb-'+t);
+    box.innerHTML = '<img src="'+dataUrl+'"/>'+
+      '<div class="overlay">📍 GPS stamped · Tap retake</div>';
+    box.onclick = function(){ openCamera(t); };
     updatePhotosStatus();
   }
 }
@@ -947,12 +1095,14 @@ function finalSubmit(uploaded,ts){
         return;
       }
       toast('✅ Family saved! Loading next…','green');
-      // Reset state immediately
+      // Mark as surveyed this session (duplicate detection)
+      if(!state.surveyedIds) state.surveyedIds = {};
+      if(familySnap) state.surveyedIds[familySnap.id] = true;
+      // Reset state
       state.family         = null;
       state.familyRowIndex = null;
       state.selfie         = null;
       state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
-      // Load next family right away
       loadNextFamily();
     })
     .withFailureHandler(function(e){
