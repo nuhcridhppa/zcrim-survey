@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -237,47 +238,69 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 <script>
 // ── APPS SCRIPT BACKEND URL ──────────────────
 // Replace this with your deployed Apps Script URL
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1y9TnJw7VgF_bfdI_OyWXYSMHK66OlH9jDK_8qNTgHdKzkny6VkyIOdd1I26GuuC5Hg";
+var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZiq_tcJqBd_yspBG9i2k-aOGm1rXflP7l9bwk-zYCBxEMc6xdeFOwTgIwaE3sKdsddA/exec";
 
-// ── FETCH WRAPPER — mimics google.script.run ─
-// Usage: gsr('functionName', arg1, arg2)
-//        .then(function(result){...})
-//        .catch(function(err){...})
-function gsr(fnName) {
-  var args = Array.prototype.slice.call(arguments, 1);
-  var url  = APPS_SCRIPT_URL + "?fn=" + encodeURIComponent(fnName) +
-             "&args=" + encodeURIComponent(JSON.stringify(args));
-  return fetch(url, { method: "GET" })
+// ── FETCH WRAPPER ────────────────────────────
+function gsr(fnName, args, onSuccess, onFailure) {
+  var url = APPS_SCRIPT_URL
+    + "?fn="   + encodeURIComponent(fnName)
+    + "&args=" + encodeURIComponent(JSON.stringify(args || []));
+  fetch(url)
     .then(function(r){ return r.json(); })
-    .catch(function(e){ return { ok:false, msg: e.message }; });
+    .then(function(res){ if(onSuccess) onSuccess(res); })
+    .catch(function(e){ if(onFailure) onFailure(e); else console.error(fnName, e); });
 }
 
-// ── COMPAT SHIM — google.script.run style ────
-// Allows same call pattern: gscript.run.withSuccessHandler(fn).fnName(args)
+// ── google.script.run REPLACEMENT ────────────
+// Supports: google.script.run.withSuccessHandler(fn).withFailureHandler(fn).fnName(args)
 var google = {
   script: {
-    run: new Proxy({}, {
-      get: function(_, fnName) {
-        var _successHandler = function(){};
-        var _failureHandler = function(e){ console.error(e); };
-        var obj = {
-          withSuccessHandler: function(fn){ _successHandler=fn; return obj; },
-          withFailureHandler: function(fn){ _failureHandler=fn; return obj; }
-        };
-        obj = new Proxy(obj, {
-          get: function(target, prop) {
-            if (prop in target) return target[prop];
-            return function() {
-              var fnArgs = Array.prototype.slice.call(arguments);
-              gsr.apply(null, [prop].concat(fnArgs))
-                .then(function(res){ _successHandler(res); })
-                .catch(function(e){ _failureHandler(e); });
-            };
-          }
-        });
-        return obj;
+    run: (function() {
+      function Runner() {
+        this._ok  = function(){};
+        this._err = function(e){ console.error(e); };
       }
-    })
+      Runner.prototype.withSuccessHandler = function(fn) { this._ok  = fn; return this; };
+      Runner.prototype.withFailureHandler = function(fn) { this._err = fn; return this; };
+      Runner.prototype._call = function(fn, args) {
+        var self = this;
+        gsr(fn, args, function(res){ self._ok(res); }, function(e){ self._err(e); });
+      };
+
+      // Return an object where any property access returns a new Runner
+      // that calls the backend function when invoked
+      var handler = {
+        withSuccessHandler: function(fn) {
+          var r = new Runner(); r._ok = fn; return r;
+        },
+        withFailureHandler: function(fn) {
+          var r = new Runner(); r._err = fn; return r;
+        }
+      };
+
+      // Attach all known backend functions directly
+      var fns = ['loginZcrim','logLogin','logoutSession','validateSession',
+                 'getWardsForZcrim','getNextFamily','getFamiliesForZcrim',
+                 'uploadPhoto','submitSurvey'];
+      fns.forEach(function(fn) {
+        handler[fn] = function() {
+          var args = Array.prototype.slice.call(arguments);
+          var r = new Runner();
+          setTimeout(function(){ r._call(fn, args); }, 0);
+          return r;
+        };
+      });
+
+      // Also attach to Runner prototype
+      fns.forEach(function(fn) {
+        Runner.prototype[fn] = function() {
+          var args = Array.prototype.slice.call(arguments);
+          this._call(fn, args);
+        };
+      });
+
+      return handler;
+    })()
   }
 };
 
@@ -290,6 +313,9 @@ var state = {
   selectedWard:null, allWards:[],
   sessionTimerInterval:null
 };
+
+// Start GPS after state is ready
+initGPS();
 var tabUnlocked = [true,false,false,false];
 var PHOTO_KEYS   = ['front','kitchen','familyPhoto','surroundings'];
 var PHOTO_LABELS = ['Full House (Front)','Kitchen','With Family Members','Surrounding Area'];
@@ -300,31 +326,74 @@ var INCOME_RANGES = ['0 - 5,000','5,000 - 10,000','10,000 - 25,000','25,000 - 50
 
 // ── GPS ──────────────────────────────────────
 function getGPS(cb) {
-  if (!navigator.geolocation) { cb({lat:'N/A',lng:'N/A'}); return; }
-  var done=false;
-  function fin(c){if(done)return;done=true;cb(c);}
+  if (!navigator.geolocation) { cb({lat:'N/A',lng:'N/A',acc:''}); return; }
+  var done = false;
+  function fin(c){ if(done) return; done=true; cb(c); }
+  // Strategy 1: high accuracy
   navigator.geolocation.getCurrentPosition(
-    function(p){fin({lat:p.coords.latitude.toFixed(6),lng:p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)+'m'});},
-    function(){navigator.geolocation.getCurrentPosition(
-      function(p){fin({lat:p.coords.latitude.toFixed(6),lng:p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)+'m(approx)'});},
-      function(){fin({lat:'N/A',lng:'N/A'});},
-      {timeout:8000,enableHighAccuracy:false,maximumAge:60000}
-    );},
-    {timeout:5000,enableHighAccuracy:true,maximumAge:30000}
+    function(p){ fin({lat:p.coords.latitude.toFixed(6), lng:p.coords.longitude.toFixed(6), acc:Math.round(p.coords.accuracy)+'m'}); },
+    function(err){
+      // Strategy 2: low accuracy (wifi/network, faster)
+      navigator.geolocation.getCurrentPosition(
+        function(p){ fin({lat:p.coords.latitude.toFixed(6), lng:p.coords.longitude.toFixed(6), acc:Math.round(p.coords.accuracy)+'m'}); },
+        function(){ fin({lat:'N/A',lng:'N/A',acc:''}); },
+        {timeout:10000, enableHighAccuracy:false, maximumAge:60000}
+      );
+    },
+    {timeout:8000, enableHighAccuracy:true, maximumAge:15000}
   );
 }
-(function(){
-  var pill=document.getElementById('gps-pill');
-  getGPS(function(c){
-    state.gps=c;
-    if(c.lat!=='N/A'){pill.className='gps-pill';pill.textContent='📍 '+c.lat+', '+c.lng;}
-    else{pill.className='gps-pill waiting';pill.textContent='⚠️ GPS off — tap to retry';
-      pill.onclick=function(){pill.textContent='⏳…';pill.onclick=null;
-        getGPS(function(c2){state.gps=c2;if(c2.lat!=='N/A'){pill.className='gps-pill';pill.textContent='📍 '+c2.lat+', '+c2.lng;}
-          else{pill.className='gps-pill waiting';pill.textContent='⚠️ GPS unavailable';}});};
+
+function initGPS() {
+  var pill = document.getElementById('gps-pill');
+  if (!pill) return;
+
+  if (!navigator.geolocation) {
+    pill.className  = 'gps-pill waiting';
+    pill.textContent = '❌ GPS not supported';
+    return;
+  }
+
+  // Check permission state first (Chrome/Android)
+  if (navigator.permissions) {
+    navigator.permissions.query({name:'geolocation'}).then(function(result){
+      if (result.state === 'denied') {
+        pill.className  = 'gps-pill waiting';
+        pill.textContent = '🚫 GPS blocked — enable in browser settings';
+        return;
+      }
+      startGPSFetch(pill);
+    }).catch(function(){ startGPSFetch(pill); });
+  } else {
+    startGPSFetch(pill);
+  }
+}
+
+function startGPSFetch(pill) {
+  pill.className  = 'gps-pill waiting';
+  pill.textContent = '⏳ Getting location…';
+
+  getGPS(function(c) {
+    state.gps = c;
+    if (c.lat !== 'N/A') {
+      pill.className  = 'gps-pill';
+      pill.textContent = '📍 ' + c.lat + ', ' + c.lng + (c.acc ? ' ±'+c.acc : '');
+      pill.onclick    = null;
+      // Update header GPS if survey is open
+      var hdr = document.getElementById('hdr-gps');
+      if (hdr) hdr.textContent = '📍 ' + c.lat + ', ' + c.lng;
+    } else {
+      pill.className  = 'gps-pill waiting';
+      pill.textContent = '⚠️ GPS unavailable — tap to retry';
+      pill.style.cursor = 'pointer';
+      pill.onclick = function() {
+        pill.textContent = '⏳ Retrying…';
+        pill.onclick = null;
+        startGPSFetch(pill);
+      };
     }
   });
-})();
+}
 
 // ── TOGGLE PASSWORD VISIBILITY ───────────────
 function togglePwd() {
@@ -578,7 +647,7 @@ function showCameraError(target, msg) {
       '<div style="color:var(--mut);font-size:11px;line-height:1.5">'+msg+'</div>'+
       '<div style="margin-top:10px"><label style="background:var(--acc);color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">'+
       '📁 Upload Photo Instead'+
-      '<input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleFileUpload(event,''+target+'')"/>'+
+      '<input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleFileUpload(event,\'' + target + '\')"/>'+
       '</label></div></div>';
     box.onclick=null; // remove onclick to prevent re-triggering
   }
