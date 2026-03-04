@@ -307,7 +307,7 @@ var state = {
   zcrim:null, token:null, sessionExpiry:null,
   family:null, familyRowIndex:null,
   gps:null, memberCount:6,
-  photos:{front:null,kitchen:null,familyPhoto:null,surroundings:null},
+  photos:{front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null},
   selfie:null, cameraTarget:null, cameraStream:null,
   selectedWard:null, allWards:[],
   sessionTimerInterval:null
@@ -316,8 +316,8 @@ var state = {
 // Start GPS after state is ready
 initGPS();
 var tabUnlocked = [true,false,false,false];
-var PHOTO_KEYS   = ['front','kitchen','familyPhoto','surroundings'];
-var PHOTO_LABELS = ['Full House (Front)','Kitchen','With Family Members','Surrounding Area'];
+var PHOTO_KEYS   = ['front','kitchen','familyPhoto','surroundings','surveyorFamily'];
+var PHOTO_LABELS = ['Full House (Front)','Kitchen','With Family Members','Surrounding Area','Surveyor with Family'];
 var INCOME_RANGES = ['0 - 5,000','5,000 - 10,000','10,000 - 25,000','25,000 - 50,000',
   '50,000 - 75,000','75,000 - 1,00,000','1,00,000 - 1,40,000','1,40,000 - 1,80,000',
   '1,80,000 - 3,00,000','3,00,000 - 5,00,000','5,00,000 - 6,00,000','6,00,000 - 7,00,000',
@@ -571,16 +571,23 @@ function collectAssets(){return{houseRent:val('a-houseRent'),rentAmt:val('a-rent
 
 // ── PHOTOS ────────────────────────────────────
 function renderPhotosGrid(){
-  state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null};
-  document.getElementById('photos-grid').innerHTML=PHOTO_KEYS.map(function(k,i){
-    return '<div><div style="font-size:11px;color:var(--mut);font-weight:600;margin-bottom:5px">'+(i+1)+'. '+PHOTO_LABELS[i]+' <span style="color:var(--red)">*</span></div>'+
+  state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+  // 5 photos: 2+2+1 layout
+  var html2 = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  PHOTO_KEYS.forEach(function(k,i){
+    if(i===4) {
+      html2 += '</div><div style="margin-top:10px">';
+    }
+    html2 += '<div><div style="font-size:11px;color:var(--mut);font-weight:600;margin-bottom:5px">'+(i+1)+'. '+PHOTO_LABELS[i]+' <span style="color:var(--red)">*</span></div>'+
       '<div class="photo-box" id="pb-'+k+'" onclick="openCamera(\''+k+'\')"><div style="font-size:28px">📷</div><div style="color:var(--mut);font-size:11px">Tap to capture</div></div></div>';
-  }).join('');
+    if(i===4) html2 += '</div>';
+  });
+  document.getElementById('photos-grid').innerHTML = html2;
   updatePhotosStatus();
 }
 function updatePhotosStatus(){
-  var c=PHOTO_KEYS.filter(function(k){return state.photos[k];}).length,ok=c===4;
-  document.getElementById('photos-status').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div style="color:'+(ok?'#22c55e':'#94a3b8')+'">'+c+'/4 photos captured</div>'+(ok?'<span class="badge badge-grn">✓ Complete</span>':'')+' </div>';
+  var c=PHOTO_KEYS.filter(function(k){return state.photos[k];}).length,ok=c===5;
+  document.getElementById('photos-status').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div style="color:'+(ok?'#22c55e':'#94a3b8')+'">'+c+'/5 photos captured</div>'+(ok?'<span class="badge badge-grn">✓ Complete</span>':'')+' </div>';
   document.getElementById('btn-submit').className='btn '+(ok?'btn-green':'btn-gray');
 }
 
@@ -729,7 +736,7 @@ function resetTabLocks(){tabUnlocked=[true,false,false,false];for(var i=0;i<4;i+
 
 // ── SUBMIT ────────────────────────────────────
 function submitForm(){
-  if(!PHOTO_KEYS.every(function(k){return state.photos[k];})){showErr('submit-err','Capture all 4 photos first.');return;}
+  if(!PHOTO_KEYS.every(function(k){return state.photos[k];})){showErr('submit-err','Capture all 5 photos first.');return;}
   showErr('submit-err','');
   var btn=document.getElementById('btn-submit');
   btn.innerHTML='<span class="spinner"></span> Uploading…';btn.disabled=true;
@@ -738,11 +745,11 @@ function submitForm(){
     var item=key==='selfie'?{dataUrl:state.selfie,gps:state.gps}:state.photos[key];
     if(!item||!item.dataUrl){uploaded[key]='';pending--;if(pending===0)finalSubmit(uploaded,ts);return;}
     var g=item.gps||state.gps||{lat:'N/A',lng:'N/A'};
-    var label=key==='selfie'?'Selfie':PHOTO_LABELS[PHOTO_KEYS.indexOf(key)];
+    var label=key==='selfie'?'Surveyor_Selfie':PHOTO_LABELS[PHOTO_KEYS.indexOf(key)];
     google.script.run
       .withSuccessHandler(function(r){uploaded[key]=r.ok?r.url:'';pending--;if(pending===0)finalSubmit(uploaded,ts);})
       .withFailureHandler(function(){uploaded[key]='';pending--;if(pending===0)finalSubmit(uploaded,ts);})
-      .uploadPhoto(state.token,{base64:item.dataUrl,mimeType:'image/jpeg',pppId:state.family.id,memberName:state.family.name,photoLabel:label,lat:g.lat,lng:g.lng,timestamp:ts});
+      .uploadPhoto(state.token,{base64:item.dataUrl,mimeType:'image/jpeg',pppId:state.family.id,memberName:state.family.name,photoLabel:label,zcrimName:state.zcrim.name,lat:g.lat,lng:g.lng,timestamp:ts});
   });
 }
 function finalSubmit(uploaded,ts){
@@ -757,7 +764,7 @@ function finalSubmit(uploaded,ts){
     .submitSurvey(state.token,{
       zcrimName:state.zcrim.name,family:state.family,selfieUrl:uploaded['selfie']||'',
       assets:collectAssets(),members:collectMembers(),
-      photoUrls:{front:uploaded['front']||'',kitchen:uploaded['kitchen']||'',familyPhoto:uploaded['familyPhoto']||'',surroundings:uploaded['surroundings']||''},
+      photoUrls:{front:uploaded['front']||'',kitchen:uploaded['kitchen']||'',familyPhoto:uploaded['familyPhoto']||'',surroundings:uploaded['surroundings']||'',surveyorFamily:uploaded['surveyorFamily']||''},
       gps:state.gps||{lat:'N/A',lng:'N/A'},timestamp:ts,familyRowIndex:state.familyRowIndex
     });
 }
