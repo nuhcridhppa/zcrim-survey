@@ -237,17 +237,32 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 <script>
 // ── APPS SCRIPT BACKEND URL ──────────────────
 // Replace this with your deployed Apps Script URL
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_7PQ0xZbHQba4gSwcETUXLMdoi89b51ng6VXLELVWhc4rDrDilz-6c7DSzmbVJs2Cg/exec";
+var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmEFs6JLt2oe6FHvUQuGerFL-23WP-heTl-fd1Q17X/exec";
 
 // ── FETCH WRAPPER ────────────────────────────
 function gsr(fnName, args, onSuccess, onFailure) {
-  var url = APPS_SCRIPT_URL
-    + "?fn="   + encodeURIComponent(fnName)
-    + "&args=" + encodeURIComponent(JSON.stringify(args || []));
-  fetch(url)
+  var isLarge = fnName === 'uploadPhoto' || fnName === 'submitSurvey';
+
+  if (isLarge) {
+    // POST for large payloads (photos/base64)
+    fetch(APPS_SCRIPT_URL, {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({fn: fnName, args: args || []})
+    })
     .then(function(r){ return r.json(); })
     .then(function(res){ if(onSuccess) onSuccess(res); })
     .catch(function(e){ if(onFailure) onFailure(e); else console.error(fnName, e); });
+  } else {
+    // GET for normal calls
+    var url = APPS_SCRIPT_URL
+      + "?fn="   + encodeURIComponent(fnName)
+      + "&args=" + encodeURIComponent(JSON.stringify(args || []));
+    fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if(onSuccess) onSuccess(res); })
+    .catch(function(e){ if(onFailure) onFailure(e); else console.error(fnName, e); });
+  }
 }
 
 // ── google.script.run REPLACEMENT ────────────
@@ -519,8 +534,12 @@ function switchVillage(){
 
 // ── FAMILY ────────────────────────────────────
 function loadNextFamily(){
+  // Show loading state
+  showLoadingOverlay('Loading next family...');
+
   google.script.run
     .withSuccessHandler(function(res){
+      hideLoadingOverlay();
       if(!res.ok){
         if(res.relogin){handleSessionError(res);return;}
         document.getElementById('screen-survey').innerHTML=
@@ -530,12 +549,43 @@ function loadNextFamily(){
           '<button onclick="switchVillage()" class="btn btn-blue" style="margin-top:20px;width:auto;padding:12px 24px">← Switch Village</button></div></div>';
         return;
       }
-      state.family=res.family; state.familyRowIndex=res.rowIndex;
-      renderFamilyInfo(); renderMembersTab(); renderPhotosGrid(); resetTabLocks(); resetForm();
-      google.script.run.withSuccessHandler(function(r){if(r.ok) document.getElementById('hdr-remaining').textContent=r.remaining+' remaining';}).getFamiliesForZcrim(state.token,state.selectedWard);
+      // Update state with new family
+      state.family         = res.family;
+      state.familyRowIndex = res.rowIndex;
+      state.selfie         = null;
+      state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+
+      // Reset all tabs and go back to tab 0
+      resetTabLocks();
+      renderFamilyInfo();
+      renderMembersTab();
+      renderPhotosGrid();
+      resetForm();
+      switchTab(0);  // ← explicitly show Family tab
+      window.scrollTo(0, 0); // scroll to top
+
+      // Update progress counter
+      google.script.run
+        .withSuccessHandler(function(r){ if(r.ok) document.getElementById('hdr-remaining').textContent = r.remaining+' remaining'; })
+        .getFamiliesForZcrim(state.token, state.selectedWard);
     })
-    .withFailureHandler(function(e){toast('Error: '+e.message,'red');})
-    .getNextFamily(state.token,state.selectedWard);
+    .withFailureHandler(function(e){ hideLoadingOverlay(); toast('Error: '+e.message,'red'); })
+    .getNextFamily(state.token, state.selectedWard);
+}
+
+function showLoadingOverlay(msg) {
+  var el = document.getElementById('loading-overlay');
+  if(el){ el.style.display='flex'; el.querySelector('.lo-msg').textContent = msg||'Loading...'; return; }
+  var div = document.createElement('div');
+  div.id = 'loading-overlay';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px';
+  div.innerHTML = '<span class="spinner" style="width:36px;height:36px;border-width:4px"></span>'+
+    '<div class="lo-msg" style="color:#f1f5f9;font-size:16px;font-weight:600">'+(msg||'Loading...')+'</div>';
+  document.body.appendChild(div);
+}
+function hideLoadingOverlay() {
+  var el = document.getElementById('loading-overlay');
+  if(el) el.style.display = 'none';
 }
 function renderFamilyInfo(){
   var f=state.family;
@@ -740,32 +790,89 @@ function submitForm(){
   showErr('submit-err','');
   var btn=document.getElementById('btn-submit');
   btn.innerHTML='<span class="spinner"></span> Uploading…';btn.disabled=true;
-  var ts=new Date().toLocaleString(),uploaded={},keys=PHOTO_KEYS.concat('selfie'),pending=keys.length;
+  var ts=new Date().toLocaleString();
+  var uploaded={};
+  var keys=PHOTO_KEYS.concat('selfie');
+  var pending=keys.length;
+  var done=false;
+
+  function onUploadDone(key, url) {
+    uploaded[key] = url || '';
+    pending--;
+    if(pending===0 && !done){ done=true; finalSubmit(uploaded,ts); }
+  }
+
   keys.forEach(function(key){
-    var item=key==='selfie'?{dataUrl:state.selfie,gps:state.gps}:state.photos[key];
-    if(!item||!item.dataUrl){uploaded[key]='';pending--;if(pending===0)finalSubmit(uploaded,ts);return;}
-    var g=item.gps||state.gps||{lat:'N/A',lng:'N/A'};
-    var label=key==='selfie'?'Surveyor_Selfie':PHOTO_LABELS[PHOTO_KEYS.indexOf(key)];
-    google.script.run
-      .withSuccessHandler(function(r){uploaded[key]=r.ok?r.url:'';pending--;if(pending===0)finalSubmit(uploaded,ts);})
-      .withFailureHandler(function(){uploaded[key]='';pending--;if(pending===0)finalSubmit(uploaded,ts);})
-      .uploadPhoto(state.token,{base64:item.dataUrl,mimeType:'image/jpeg',pppId:state.family.id,memberName:state.family.name,photoLabel:label,zcrimName:state.zcrim.name,lat:g.lat,lng:g.lng,timestamp:ts});
+    var item = key==='selfie' ? {dataUrl:state.selfie, gps:state.gps} : state.photos[key];
+    if(!item || !item.dataUrl){ onUploadDone(key,''); return; }
+    var g     = item.gps || state.gps || {lat:'N/A',lng:'N/A'};
+    var label = key==='selfie' ? 'Surveyor_Selfie' : PHOTO_LABELS[PHOTO_KEYS.indexOf(key)];
+    // IIFE to capture key per iteration
+    (function(capturedKey, capturedLabel, capturedG){
+      google.script.run
+        .withSuccessHandler(function(r){ onUploadDone(capturedKey, r.ok ? r.url : ''); })
+        .withFailureHandler(function(e){ console.error('Upload failed '+capturedKey, e); onUploadDone(capturedKey,''); })
+        .uploadPhoto(state.token, {
+          base64:     item.dataUrl,
+          mimeType:   'image/jpeg',
+          pppId:      state.family.id,
+          memberName: state.family.name,
+          photoLabel: capturedLabel,
+          zcrimName:  state.zcrim.name,
+          lat:        capturedG.lat,
+          lng:        capturedG.lng,
+          timestamp:  ts
+        });
+    })(key, label, g);
   });
 }
 function finalSubmit(uploaded,ts){
   document.getElementById('btn-submit').innerHTML='<span class="spinner"></span> Saving…';
+
+  // Snapshot current family data before state gets overwritten
+  var familySnap       = state.family;
+  var familyRowSnap    = state.familyRowIndex;
+  var assetsSnap       = collectAssets();
+  var membersSnap      = collectMembers();
+  var gpsSnap          = state.gps || {lat:'N/A',lng:'N/A'};
+
   google.script.run
     .withSuccessHandler(function(res){
-      if(!res.ok){if(res.relogin){handleSessionError(res);return;}toast('Error: '+res.msg,'red');resetSubmitBtn();return;}
-      toast('✅ Submitted! Loading next family…','green');
-      setTimeout(function(){loadNextFamily();},2000);
+      if(!res.ok){
+        if(res.relogin){handleSessionError(res);return;}
+        toast('Error: '+res.msg,'red');
+        resetSubmitBtn();
+        return;
+      }
+      toast('✅ Family saved! Loading next…','green');
+      // Reset state immediately
+      state.family         = null;
+      state.familyRowIndex = null;
+      state.selfie         = null;
+      state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+      // Load next family right away
+      loadNextFamily();
     })
-    .withFailureHandler(function(e){toast('Error: '+e.message,'red');resetSubmitBtn();})
-    .submitSurvey(state.token,{
-      zcrimName:state.zcrim.name,family:state.family,selfieUrl:uploaded['selfie']||'',
-      assets:collectAssets(),members:collectMembers(),
-      photoUrls:{front:uploaded['front']||'',kitchen:uploaded['kitchen']||'',familyPhoto:uploaded['familyPhoto']||'',surroundings:uploaded['surroundings']||'',surveyorFamily:uploaded['surveyorFamily']||''},
-      gps:state.gps||{lat:'N/A',lng:'N/A'},timestamp:ts,familyRowIndex:state.familyRowIndex
+    .withFailureHandler(function(e){
+      toast('Save error: '+e.message,'red');
+      resetSubmitBtn();
+    })
+    .submitSurvey(state.token, {
+      zcrimName:      state.zcrim.name,
+      family:         familySnap,
+      selfieUrl:      uploaded['selfie']      || '',
+      assets:         assetsSnap,
+      members:        membersSnap,
+      photoUrls: {
+        front:          uploaded['front']         || '',
+        kitchen:        uploaded['kitchen']       || '',
+        familyPhoto:    uploaded['familyPhoto']   || '',
+        surroundings:   uploaded['surroundings']  || '',
+        surveyorFamily: uploaded['surveyorFamily']|| ''
+      },
+      gps:            gpsSnap,
+      timestamp:      ts,
+      familyRowIndex: familyRowSnap
     });
 }
 function resetSubmitBtn(){document.getElementById('btn-submit').innerHTML='✅ Submit Verification';document.getElementById('btn-submit').disabled=false;}
