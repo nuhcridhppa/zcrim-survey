@@ -670,55 +670,30 @@ function switchVillage(){
 // ── FAMILY ────────────────────────────────────
 function skipFamily(){
   if(!state.family){ toast('No family loaded.','red'); return; }
-  if(!confirm('Mark '+state.family.name+' ('+state.family.id+') as ABSENT/UNAVAILABLE? This will be logged and next family will load.')) return;
+  if(!confirm('Skip '+state.family.name+' ('+state.family.id+')? Mark as Absent.')) return;
 
-  // Snapshot before clearing
+  // Mark row directly via submitSurvey-style call — update status only
   var rowSnap = state.familyRowIndex;
   var idSnap  = state.family.id;
   var nmSnap  = state.family.name;
 
-  showLoadingOverlay('Skipping family...');
+  // Immediately clear state and load next — dont wait for backend
+  state.family         = null;
+  state.familyRowIndex = null;
+  state.selfie         = null;
+  state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
 
-  // Timeout safety — if backend hangs, still move to next family
-  var skipDone = false;
-  var timeout = setTimeout(function(){
-    if(skipDone) return;
-    skipDone = true;
-    hideLoadingOverlay();
-    toast('⏭ Skipped (offline mode) — loading next','org');
-    state.family=null; state.familyRowIndex=null;
-    state.selfie=null;
-    state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
-    loadNextFamily();
-  }, 8000); // 8 second timeout
+  toast('⏭ Skipped '+nmSnap,'org');
 
+  // Fire and forget — update sheet in background
   google.script.run
-    .withSuccessHandler(function(res){
-      if(skipDone) return;
-      skipDone = true;
-      clearTimeout(timeout);
-      hideLoadingOverlay();
-      if(!res.ok){ toast('Skip failed: '+(res.msg||'error'),'red'); return; }
-      toast('⏭ Family skipped — loading next','org');
-      state.family=null; state.familyRowIndex=null;
-      state.selfie=null;
-      state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
-      loadNextFamily();
-    })
-    .withFailureHandler(function(e){
-      if(skipDone) return;
-      skipDone = true;
-      clearTimeout(timeout);
-      hideLoadingOverlay();
-      toast('Network error — moving to next family','org');
-      state.family=null; state.familyRowIndex=null;
-      state.selfie=null;
-      state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
-      loadNextFamily();
-    })
+    .withSuccessHandler(function(r){ if(r&&!r.ok) console.warn('Skip log failed:',r.msg); })
+    .withFailureHandler(function(e){ console.warn('Skip log error:',e.message); })
     .skipFamily(state.token, rowSnap, idSnap, nmSnap);
-}
 
+  // Load next family immediately without waiting
+  loadNextFamily();
+}
 function checkDuplicate(familyId, cb) {
   // Quick check — look at Families sheet status
   // If status is 'done' backend won't return it anyway
