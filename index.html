@@ -65,57 +65,15 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 .info-item .k{font-size:10px;color:var(--mut);text-transform:uppercase}
 .info-item .v{font-size:13px;font-weight:600;margin-top:2px}
 
-/* ── CAMERA — KEY FIX ── */
+/* ── CAMERA — ABSOLUTE LAYOUT (works on iOS + Android) ── */
 #camera-wrap{
   position:fixed;
   top:0;left:0;right:0;bottom:0;
   background:#000;
   z-index:9999;
-  display:flex;
-  flex-direction:column;
   overflow:hidden;
 }
-.cam-bar{
-  background:rgba(0,0,0,0.8);
-  padding:12px 16px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-shrink:0;
-  z-index:2;
-}
-#cam-video{
-  flex:1;
-  width:100%;
-  height:0; /* flex:1 controls height */
-  object-fit:cover;
-  display:block;
-}
-.cam-footer{
-  background:#1e293b;
-  padding:16px;
-  flex-shrink:0;
-  z-index:2;
-  border-top:3px solid var(--acc);
-  /* safe area for notch phones */
-  padding-bottom:max(16px, env(safe-area-inset-bottom));
-}
-#btn-capture{
-  display:block !important;
-  width:100% !important;
-  padding:18px !important;
-  background:#3b82f6 !important;
-  color:#fff !important;
-  border:none !important;
-  border-radius:14px !important;
-  font-size:20px !important;
-  font-weight:700 !important;
-  cursor:pointer !important;
-  -webkit-tap-highlight-color:transparent !important;
-  touch-action:manipulation !important;
-  letter-spacing:1px !important;
-}
-#btn-capture:active{background:#2563eb !important;transform:scale(0.98)}
+#btn-capture:active{opacity:0.85;transform:scale(0.97)}
 
 /* ── SPINNER ── */
 .spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
@@ -322,16 +280,21 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 
 <!-- ═══ CAMERA ═══ -->
 <div id="camera-wrap" style="display:none">
-  <div class="cam-bar">
-    <button onclick="closeCamera()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:18px;cursor:pointer;padding:6px 12px;border-radius:6px">✕ Close</button>
-    <div style="font-weight:700;font-size:15px;color:#fff;flex:1;text-align:center" id="cam-label">Camera</div>
-    <div style="width:70px"></div>
+  <video id="cam-video" autoplay playsinline muted
+    style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1">
+  </video>
+  <!-- Overlay bar at top -->
+  <div style="position:absolute;top:0;left:0;right:0;z-index:10;background:linear-gradient(rgba(0,0,0,0.7),transparent);padding:14px 16px;display:flex;align-items:center;gap:12px">
+    <button onclick="closeCamera()" style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding:8px 14px;border-radius:8px;-webkit-tap-highlight-color:transparent">✕ Close</button>
+    <div style="font-weight:700;font-size:16px;color:#fff;flex:1;text-align:center" id="cam-label">Camera</div>
+    <div style="width:80px"></div>
   </div>
-  <video id="cam-video" autoplay playsinline style="flex:1;width:100%;object-fit:cover;background:#000"></video>
-  <div class="cam-footer">
-    <div style="color:#94a3b8;font-size:11px;text-align:center;margin-bottom:8px" id="cam-gps-label">📍 Acquiring GPS…</div>
-    <div id="cam-error" style="display:none;color:var(--red);font-size:12px;text-align:center;margin-bottom:8px;padding:8px;background:#ef444422;border-radius:6px"></div>
-    <button id="btn-capture" onclick="capturePhoto()" style="display:block;width:100%;padding:16px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:1px">
+  <!-- Capture button fixed at bottom -->
+  <div style="position:absolute;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:20px 20px 36px">
+    <div style="color:rgba(255,255,255,0.7);font-size:12px;text-align:center;margin-bottom:10px" id="cam-gps-label">📍 Acquiring GPS…</div>
+    <div id="cam-error" style="display:none;color:#fca5a5;font-size:12px;text-align:center;margin-bottom:10px;padding:8px;background:rgba(239,68,68,0.2);border-radius:6px"></div>
+    <button id="btn-capture" onclick="capturePhoto()"
+      style="display:block;width:100%;padding:20px;background:#3b82f6;color:#fff;border:none;border-radius:16px;font-size:20px;font-weight:800;cursor:pointer;letter-spacing:1px;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 20px rgba(59,130,246,0.5)">
       📸 &nbsp; CAPTURE PHOTO
     </button>
   </div>
@@ -773,42 +736,60 @@ function openCamera(t){
 
   getGPS(function(c){if(c.lat!=='N/A'){state.gps=c;document.getElementById('cam-gps-label').textContent='📍 '+c.lat+', '+c.lng;}});
 
-  // Check if camera API available
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    showCameraError(t,'Camera API not available on this browser. Please use Chrome.');
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showCameraError(t,'Camera not supported. Use Chrome on Android or Safari on iPhone.');
     return;
   }
 
   show('camera-wrap',true);
+  var vid = document.getElementById('cam-video');
 
-  // Try environment camera first, fallback to any camera
-  var constraints={video:{facingMode:t==='selfie'?'user':'environment',width:{ideal:1280},height:{ideal:720}},audio:false};
+  function tryCamera(facingMode, fallback) {
+    var constraints = {video:{facingMode:facingMode}, audio:false};
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(s){
+        if(state.cameraStream){ state.cameraStream.getTracks().forEach(function(t){t.stop();}); }
+        state.cameraStream = s;
+        vid.srcObject = s;
+        vid.setAttribute('playsinline','');
+        vid.setAttribute('muted','');
+        vid.muted = true;
+        var p = vid.play();
+        if(p && p.catch) p.catch(function(e){ console.warn('play():', e.message); });
+      })
+      .catch(function(err){
+        console.warn('Camera attempt failed ('+facingMode+'): '+err.name+' '+err.message);
+        if(fallback){
+          fallback();
+        } else {
+          show('camera-wrap',false);
+          var msg = err.name==='NotAllowedError'
+            ? 'Camera blocked. iPhone: Settings→Safari→Camera→Allow. Android: Chrome→Site Settings→Camera→Allow'
+            : err.name==='NotFoundError'
+            ? 'No camera found on this device.'
+            : 'Camera error ('+err.name+'): '+err.message;
+          showCameraError(t, msg);
+        }
+      });
+  }
 
-  navigator.mediaDevices.getUserMedia(constraints)
-    .then(function(s){
-      state.cameraStream=s;
-      var vid=document.getElementById('cam-video');
-      vid.srcObject=s;
-      vid.play();
-    })
-    .catch(function(err){
-      // Retry with basic constraints
+  // Strategy: try exact facing mode → fallback to any camera
+  var facing = t==='selfie' ? 'user' : 'environment';
+  tryCamera(facing, function(){
+    tryCamera('user', function(){
+      // last resort — no facing mode constraint
       navigator.mediaDevices.getUserMedia({video:true,audio:false})
         .then(function(s){
-          state.cameraStream=s;
-          var vid=document.getElementById('cam-video');
-          vid.srcObject=s;
-          vid.play();
+          state.cameraStream=s; vid.srcObject=s;
+          vid.muted=true; vid.setAttribute('playsinline','');
+          var p=vid.play(); if(p&&p.catch) p.catch(function(){});
         })
-        .catch(function(err2){
+        .catch(function(err){
           show('camera-wrap',false);
-          showCameraError(t, err2.name==='NotAllowedError'
-            ? 'Camera permission denied. Go to browser Settings → Site Settings → Camera → Allow for this site.'
-            : err2.name==='NotFoundError'
-            ? 'No camera found on this device.'
-            : 'Camera error: '+err2.message+'. Try using Chrome browser.');
+          showCameraError(t,'Camera blocked. iPhone: Settings→Safari→Camera→Allow. Android: Chrome→Site Settings→Camera→Allow');
         });
     });
+  });
 }
 
 function showCameraError(target, msg) {
