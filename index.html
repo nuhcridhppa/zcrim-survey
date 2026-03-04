@@ -237,31 +237,47 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 <script>
 // ── APPS SCRIPT BACKEND URL ──────────────────
 // Replace this with your deployed Apps Script URL
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmEFs6JLt2oe6FHvUQuGerFL-23WP-heTl-fd1Q17X/exec";
+var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx0tOoaxb-x1gcF867ogaKUPmFtaX3I4N0EZiaeU5N5Jy8KtoP0UUQUY42wSCIQu25OtA/exec";
 
-// ── FETCH WRAPPER ────────────────────────────
+// ── XHR WRAPPER — handles Apps Script CORS redirects ──
 function gsr(fnName, args, onSuccess, onFailure) {
   var isLarge = fnName === 'uploadPhoto' || fnName === 'submitSurvey';
+  var xhr = new XMLHttpRequest();
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4) return;
+    if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
+      try {
+        var res = JSON.parse(xhr.responseText);
+        if (onSuccess) onSuccess(res);
+      } catch(e) {
+        if (onFailure) onFailure({message: 'Invalid JSON: ' + xhr.responseText.substring(0,100)});
+        else console.error('JSON parse error', e, xhr.responseText.substring(0,200));
+      }
+    } else {
+      var err = {message: 'HTTP ' + xhr.status + ': ' + xhr.statusText};
+      if (onFailure) onFailure(err);
+      else console.error(fnName, err);
+    }
+  };
+
+  xhr.onerror = function() {
+    var err = {message: 'Network error. Check internet connection.'};
+    if (onFailure) onFailure(err);
+  };
 
   if (isLarge) {
-    // POST for large payloads (photos/base64)
-    fetch(APPS_SCRIPT_URL, {
-      method:  'POST',
-      headers: {'Content-Type': 'application/json'},
-      body:    JSON.stringify({fn: fnName, args: args || []})
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(res){ if(onSuccess) onSuccess(res); })
-    .catch(function(e){ if(onFailure) onFailure(e); else console.error(fnName, e); });
+    // POST for photos/large data
+    xhr.open('POST', APPS_SCRIPT_URL, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain'); // text/plain avoids CORS preflight
+    xhr.send(JSON.stringify({fn: fnName, args: args || []}));
   } else {
     // GET for normal calls
     var url = APPS_SCRIPT_URL
-      + "?fn="   + encodeURIComponent(fnName)
-      + "&args=" + encodeURIComponent(JSON.stringify(args || []));
-    fetch(url)
-    .then(function(r){ return r.json(); })
-    .then(function(res){ if(onSuccess) onSuccess(res); })
-    .catch(function(e){ if(onFailure) onFailure(e); else console.error(fnName, e); });
+      + '?fn='   + encodeURIComponent(fnName)
+      + '&args=' + encodeURIComponent(JSON.stringify(args || []));
+    xhr.open('GET', url, true);
+    xhr.send();
   }
 }
 
