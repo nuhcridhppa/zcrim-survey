@@ -318,7 +318,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 <script>
 // ── APPS SCRIPT BACKEND URL ──────────────────
 // Replace this with your deployed Apps Script URL
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOdhJ-eI12wsfYLTL608bhBOFtDHP6lKQaIpmxX_4rDURcK6BZ_iNWZ5kMG5RmOl2CIA/exec";
+var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkZsidK_1Tz4SblxZBODnTOXt1YlY_9LbK0UfiDac1oyxeT1wegvlsCubhjbAHuWs89Q/exec";
 
 // ── XHR WRAPPER — handles Apps Script CORS redirects ──
 function gsr(fnName, args, onSuccess, onFailure) {
@@ -671,19 +671,52 @@ function switchVillage(){
 function skipFamily(){
   if(!state.family){ toast('No family loaded.','red'); return; }
   if(!confirm('Mark '+state.family.name+' ('+state.family.id+') as ABSENT/UNAVAILABLE? This will be logged and next family will load.')) return;
+
+  // Snapshot before clearing
+  var rowSnap = state.familyRowIndex;
+  var idSnap  = state.family.id;
+  var nmSnap  = state.family.name;
+
   showLoadingOverlay('Skipping family...');
+
+  // Timeout safety — if backend hangs, still move to next family
+  var skipDone = false;
+  var timeout = setTimeout(function(){
+    if(skipDone) return;
+    skipDone = true;
+    hideLoadingOverlay();
+    toast('⏭ Skipped (offline mode) — loading next','org');
+    state.family=null; state.familyRowIndex=null;
+    state.selfie=null;
+    state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+    loadNextFamily();
+  }, 8000); // 8 second timeout
+
   google.script.run
     .withSuccessHandler(function(res){
+      if(skipDone) return;
+      skipDone = true;
+      clearTimeout(timeout);
       hideLoadingOverlay();
       if(!res.ok){ toast('Skip failed: '+(res.msg||'error'),'red'); return; }
-      toast('⏭ Skipped — loading next family','org');
+      toast('⏭ Family skipped — loading next','org');
       state.family=null; state.familyRowIndex=null;
       state.selfie=null;
       state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
       loadNextFamily();
     })
-    .withFailureHandler(function(e){ hideLoadingOverlay(); toast('Error: '+e.message,'red'); })
-    .skipFamily(state.token, state.familyRowIndex, state.family.id, state.family.name);
+    .withFailureHandler(function(e){
+      if(skipDone) return;
+      skipDone = true;
+      clearTimeout(timeout);
+      hideLoadingOverlay();
+      toast('Network error — moving to next family','org');
+      state.family=null; state.familyRowIndex=null;
+      state.selfie=null;
+      state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+      loadNextFamily();
+    })
+    .skipFamily(state.token, rowSnap, idSnap, nmSnap);
 }
 
 function checkDuplicate(familyId, cb) {
@@ -697,8 +730,21 @@ function loadNextFamily(){
   // Show loading state
   showLoadingOverlay('Loading next family...');
 
+  // Safety timeout — never get stuck on loading overlay
+  var loadDone = false;
+  var loadTimeout = setTimeout(function(){
+    if(loadDone) return;
+    loadDone = true;
+    hideLoadingOverlay();
+    toast('Connection slow — please tap a village to retry','red');
+    showScreen('screen-village');
+  }, 15000);
+
   google.script.run
     .withSuccessHandler(function(res){
+      if(loadDone) return;
+      loadDone = true;
+      clearTimeout(loadTimeout);
       hideLoadingOverlay();
       if(!res.ok){
         if(res.relogin){handleSessionError(res);return;}
