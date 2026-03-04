@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>ZCRIM Verification</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card:#1e293b;--bdr:#334155;--acc:#3b82f6;--grn:#22c55e;--org:#f59e0b;--red:#ef4444;--txt:#f1f5f9;--mut:#94a3b8;--inp:#0f172a}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font-size:14px;min-height:100vh}
+input,select{width:100%;background:var(--inp);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;color:var(--txt);font-size:14px;outline:none}
+select option{background:#1e293b}
+label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-bottom:5px}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:18px;margin-bottom:14px}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--acc);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{margin-bottom:10px}
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;text-align:center;margin-bottom:8px}
+.btn-blue{background:var(--acc);color:#fff}
+.btn-green{background:var(--grn);color:#fff}
+.btn-gray{background:#475569;color:#fff}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-org{background:#f59e0b22;color:var(--org);border:1px solid #f59e0b44}
+.badge-grn{background:#22c55e22;color:var(--grn);border:1px solid #22c55e44}
+.badge-blu{background:#3b82f622;color:var(--acc);border:1px solid #3b82f644}
+.tabs{display:flex;border-bottom:1px solid var(--bdr);background:var(--card);position:sticky;top:48px;z-index:40}
+.tab{flex:1;padding:10px 4px;border:none;background:none;color:var(--mut);font-size:11px;cursor:pointer;border-bottom:2px solid transparent}
+.tab.active{color:var(--acc);font-weight:700;border-bottom-color:var(--acc)}
+.tab.locked{color:#475569;cursor:not-allowed;opacity:0.5}
+.tab.done{color:var(--grn)}
+.topbar{background:var(--card);border-bottom:1px solid var(--bdr);padding:10px 14px;position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center}
+.photo-box{border:2px dashed var(--bdr);border-radius:8px;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;position:relative;overflow:hidden}
+.photo-box img{width:100%;height:110px;object-fit:cover;border-radius:6px}
+.photo-box .overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);font-size:10px;padding:3px 6px;color:#fff}
+.member-card{background:#0f172a;border:1px solid var(--bdr);border-left:3px solid var(--acc);border-radius:8px;padding:14px;margin-bottom:12px}
+.err{color:var(--red);font-size:12px;margin-top:6px;min-height:18px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.info-item .k{font-size:10px;color:var(--mut);text-transform:uppercase}
+.info-item .v{font-size:13px;font-weight:600;margin-top:2px}
+#camera-wrap{position:fixed;inset:0;background:#000;z-index:200;display:flex;flex-direction:column}
+#camera-wrap video{flex:1;width:100%;object-fit:cover}
+.cam-bar{background:var(--card);padding:12px 16px;display:flex;align-items:center;gap:12px}
+.cam-footer{background:var(--card);padding:16px}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--bdr);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:600;z-index:300;display:none;box-shadow:0 4px 24px rgba(0,0,0,.4);white-space:nowrap}
+.pwd-wrap{position:relative}
+.pwd-wrap input{padding-right:42px}
+.pwd-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mut);cursor:pointer;font-size:16px;padding:0}
+.gps-pill{display:inline-flex;align-items:center;gap:5px;background:#22c55e18;border:1px solid #22c55e44;border-radius:20px;padding:2px 10px;font-size:11px;color:var(--grn)}
+.gps-pill.waiting{background:#f59e0b18;border-color:#f59e0b44;color:var(--org)}
+.session-bar{background:#1e3a5f;border:1px solid #3b82f644;border-radius:8px;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="screen-login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:380px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:44px">🏛️</div>
+      <div style="font-size:22px;font-weight:700;margin-top:8px">ZCRIM Portal</div>
+      <div style="color:var(--mut);font-size:13px;margin-top:4px">Income Verification · Mewat/Nuh</div>
+    </div>
+    <div class="card">
+      <div class="sec-title">Field Verifier Login</div>
+      <div class="field">
+        <label>Registered Mobile Number</label>
+        <input id="inp-mobile" type="tel" maxlength="10" placeholder="10-digit mobile number"
+          onkeydown="if(event.key==='Enter') document.getElementById('inp-password').focus()" />
+      </div>
+      <div class="field">
+        <label>Password <span style="color:var(--mut);font-size:10px;text-transform:none;font-weight:400">(sent to your email)</span></label>
+        <div class="pwd-wrap">
+          <input id="inp-password" type="password" placeholder="Enter your password"
+            onkeydown="if(event.key==='Enter') doLogin()" />
+          <button class="pwd-toggle" onclick="togglePwd()" type="button">👁</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+        <span class="gps-pill waiting" id="gps-pill">⏳ Locating…</span>
+        <span style="font-size:11px;color:var(--mut)">Works without GPS</span>
+      </div>
+      <button class="btn btn-blue" id="btn-login" onclick="doLogin()">Login →</button>
+      <div class="err" id="login-err"></div>
+    </div>
+    <div style="text-align:center;color:var(--mut);font-size:12px">
+      Password was emailed to you by admin · Contact admin if not received
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VILLAGE PICKER ═══ -->
+<div id="screen-village" style="display:none;min-height:100vh;padding:20px">
+  <div style="max-width:480px;margin:0 auto">
+    <div style="text-align:center;padding:20px 0 16px">
+      <div style="font-size:32px">🏘️</div>
+      <div style="font-size:18px;font-weight:700;margin-top:8px" id="village-title">Select Village</div>
+      <div style="color:var(--mut);font-size:12px;margin-top:4px">Choose where you are working today</div>
+    </div>
+    <div class="session-bar">
+      <span>👤 <span id="sess-name">—</span></span>
+      <span id="sess-timer" style="color:var(--org)">⏱ 30:00</span>
+      <button onclick="doLogout()" style="background:none;border:1px solid var(--bdr);border-radius:6px;padding:3px 10px;color:var(--mut);font-size:11px;cursor:pointer">Logout</button>
+    </div>
+    <input id="village-search" type="text" placeholder="🔍 Search village..." oninput="filterVillages()" style="margin-bottom:12px" />
+    <div style="display:flex;gap:8px;margin-bottom:14px" id="village-stats-bar"></div>
+    <div id="village-list"></div>
+  </div>
+</div>
+
+<!-- ═══ SURVEY SCREEN ═══ -->
+<div id="screen-survey" style="display:none;padding-bottom:80px">
+  <div class="topbar">
+    <div>
+      <div style="font-weight:700;font-size:14px" id="hdr-name">—</div>
+      <div style="color:var(--mut);font-size:10px" id="hdr-gps">📍 Getting location…</div>
+    </div>
+    <div style="text-align:center;flex:1">
+      <span onclick="switchVillage()" style="cursor:pointer">
+        <span style="background:#1e3a5f;border:1px solid #3b82f644;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#93c5fd">🏘️ <span id="active-village-name">—</span> ▾</span>
+      </span>
+    </div>
+    <div style="text-align:right">
+      <div class="badge badge-org" id="hdr-remaining">—</div>
+      <div style="color:var(--org);font-size:10px;margin-top:2px" id="sess-timer-survey">⏱ —</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-0" onclick="tryTab(0)">👨‍👩‍👧 Family</button>
+    <button class="tab locked" id="tab-btn-1" onclick="tryTab(1)">👥 Members</button>
+    <button class="tab locked" id="tab-btn-2" onclick="tryTab(2)">🏠 Assets</button>
+    <button class="tab locked" id="tab-btn-3" onclick="tryTab(3)">📷 Photos</button>
+  </div>
+  <div style="padding:14px">
+    <!-- TAB 0 -->
+    <div id="tab0">
+      <div class="card">
+        <div class="sec-title">📋 Family Record</div>
+        <div class="info-grid" id="family-info"></div>
+        <div style="margin-top:10px"><div class="info-item"><div class="k">Address</div><div class="v" id="fi-address" style="font-size:12px"></div></div></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="fi-badges"></div>
+      </div>
+      <div class="card">
+        <div class="sec-title">🤳 Surveyor Selfie <span style="color:var(--red)">*</span></div>
+        <div class="photo-box" id="selfie-box" onclick="openCamera('selfie')">
+          <div style="font-size:32px">🤳</div>
+          <div style="color:var(--org);font-weight:600;font-size:13px">Capture Surveyor Photo</div>
+          <div style="color:var(--mut);font-size:11px">Front camera · Required</div>
+        </div>
+      </div>
+      <button class="btn btn-blue" onclick="validateAndNext(0)">Next: Members →</button>
+    </div>
+    <!-- TAB 1 -->
+    <div id="tab1" style="display:none">
+      <div style="color:var(--mut);font-size:12px;margin-bottom:10px">Enter all family members. Use ＋ to add more.</div>
+      <div id="members-list"></div>
+      <button class="btn btn-gray" onclick="addMember()" style="margin-bottom:12px">＋ Add Member</button>
+      <button class="btn btn-blue" onclick="validateAndNext(1)">Next: Assets →</button>
+    </div>
+    <!-- TAB 2 -->
+    <div id="tab2" style="display:none">
+      <div class="card">
+        <div class="sec-title">🏠 Housing</div>
+        <div class="row2">
+          <div class="field"><label>House on Rent</label><select id="a-houseRent" onchange="toggleRent()"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+          <div class="field" id="rent-field" style="display:none"><label>Rent Amount (₹/month)</label><input type="number" id="a-rentAmt" placeholder="Amount" /></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>House Size (Sq Yards)</label><input type="number" id="a-houseSize" placeholder="0" /></div>
+          <div class="field"><label>House Condition</label><select id="a-houseCondition"><option value="">Select</option><option>Kachha</option><option>Pucca</option></select></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Electricity</label><select id="a-electricity"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+          <div class="field"><label>Property ID</label><input id="a-propertyId" placeholder="If any" /></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title">📄 Legal & Admin</div>
+        <div class="row2">
+          <div class="field"><label>Tax Payer</label><select id="a-taxPayer"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+          <div class="field"><label>Split from Parents</label><select id="a-splitFamily"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title">🚗 Vehicles</div>
+        <div class="row2">
+          <div class="field"><label>Two Wheeler</label><input id="a-twoWheeler" placeholder="e.g. HR28AB1234" /></div>
+          <div class="field"><label>Four Wheeler</label><input id="a-fourWheeler" placeholder="e.g. HR28CD5678" /></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title">🌾 Land & Business</div>
+        <div class="row2">
+          <div class="field"><label>Agriculture Land</label><input id="a-agriLand" placeholder="e.g. 2 acres" /></div>
+          <div class="field"><label>Other Land</label><input id="a-otherLand" placeholder="Details if any" /></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Shop / Business</label><select id="a-shopBusiness"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+          <div class="field"><label>Cattle / Buffalo</label><input type="number" id="a-cattle" placeholder="0" /></div>
+        </div>
+      </div>
+      <button class="btn btn-blue" onclick="validateAndNext(2)">Next: Photos →</button>
+    </div>
+    <!-- TAB 3 -->
+    <div id="tab3" style="display:none">
+      <div class="card" style="border-color:var(--org)">
+        <div style="color:var(--org);font-weight:700;margin-bottom:4px">📷 Camera-Only Mode</div>
+        <div style="color:var(--mut);font-size:12px">All 4 photos mandatory. GPS auto-tagged.</div>
+      </div>
+      <div class="row2" id="photos-grid"></div>
+      <div style="height:14px"></div>
+      <div class="card" id="photos-status"></div>
+      <div style="height:14px"></div>
+      <button class="btn btn-green" id="btn-submit" onclick="submitForm()">✅ Submit Verification</button>
+      <div class="err" id="submit-err" style="text-align:center"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CAMERA ═══ -->
+<div id="camera-wrap" style="display:none">
+  <div class="cam-bar">
+    <button onclick="closeCamera()" style="background:none;border:none;color:var(--txt);font-size:20px;cursor:pointer">✕</button>
+    <div style="font-weight:600;font-size:14px" id="cam-label">Camera</div>
+  </div>
+  <video id="cam-video" autoplay playsinline style="flex:1;width:100%;object-fit:cover;background:#000"></video>
+  <div class="cam-footer">
+    <div style="color:var(--mut);font-size:12px;text-align:center;margin-bottom:8px" id="cam-gps-label">📍 Acquiring GPS…</div>
+    <div id="cam-error" style="display:none;color:var(--red);font-size:12px;text-align:center;margin-bottom:8px;padding:8px;background:#ef444422;border-radius:6px"></div>
+    <button class="btn btn-blue" id="btn-capture" onclick="capturePhoto()">📸 Capture</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── APPS SCRIPT BACKEND URL ──────────────────
+// Replace this with your deployed Apps Script URL
+var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZiq_tcJqBd_yspBG9i2k-aOGm1rXflP7l9bwk-zYCBxEMc6xdeFOwTgIwaE3sKdsddA/exec";
+
+// ── FETCH WRAPPER — mimics google.script.run ─
+// Usage: gsr('functionName', arg1, arg2)
+//        .then(function(result){...})
+//        .catch(function(err){...})
+function gsr(fnName) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  var url  = APPS_SCRIPT_URL + "?fn=" + encodeURIComponent(fnName) +
+             "&args=" + encodeURIComponent(JSON.stringify(args));
+  return fetch(url, { method: "GET" })
+    .then(function(r){ return r.json(); })
+    .catch(function(e){ return { ok:false, msg: e.message }; });
+}
+
+// ── COMPAT SHIM — google.script.run style ────
+// Allows same call pattern: gscript.run.withSuccessHandler(fn).fnName(args)
+var google = {
+  script: {
+    run: new Proxy({}, {
+      get: function(_, fnName) {
+        var _successHandler = function(){};
+        var _failureHandler = function(e){ console.error(e); };
+        var obj = {
+          withSuccessHandler: function(fn){ _successHandler=fn; return obj; },
+          withFailureHandler: function(fn){ _failureHandler=fn; return obj; }
+        };
+        obj = new Proxy(obj, {
+          get: function(target, prop) {
+            if (prop in target) return target[prop];
+            return function() {
+              var fnArgs = Array.prototype.slice.call(arguments);
+              gsr.apply(null, [prop].concat(fnArgs))
+                .then(function(res){ _successHandler(res); })
+                .catch(function(e){ _failureHandler(e); });
+            };
+          }
+        });
+        return obj;
+      }
+    })
+  }
+};
+
+var state = {
+  zcrim:null, token:null, sessionExpiry:null,
+  family:null, familyRowIndex:null,
+  gps:null, memberCount:6,
+  photos:{front:null,kitchen:null,familyPhoto:null,surroundings:null},
+  selfie:null, cameraTarget:null, cameraStream:null,
+  selectedWard:null, allWards:[],
+  sessionTimerInterval:null
+};
+var tabUnlocked = [true,false,false,false];
+var PHOTO_KEYS   = ['front','kitchen','familyPhoto','surroundings'];
+var PHOTO_LABELS = ['Full House (Front)','Kitchen','With Family Members','Surrounding Area'];
+var INCOME_RANGES = ['0 - 5,000','5,000 - 10,000','10,000 - 25,000','25,000 - 50,000',
+  '50,000 - 75,000','75,000 - 1,00,000','1,00,000 - 1,40,000','1,40,000 - 1,80,000',
+  '1,80,000 - 3,00,000','3,00,000 - 5,00,000','5,00,000 - 6,00,000','6,00,000 - 7,00,000',
+  '7,00,000 - 8,00,000','8,00,000 - 9,00,000','9,00,000 - 10,00,000','Above 10,00,000'];
+
+// ── GPS ──────────────────────────────────────
+function getGPS(cb) {
+  if (!navigator.geolocation) { cb({lat:'N/A',lng:'N/A'}); return; }
+  var done=false;
+  function fin(c){if(done)return;done=true;cb(c);}
+  navigator.geolocation.getCurrentPosition(
+    function(p){fin({lat:p.coords.latitude.toFixed(6),lng:p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)+'m'});},
+    function(){navigator.geolocation.getCurrentPosition(
+      function(p){fin({lat:p.coords.latitude.toFixed(6),lng:p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)+'m(approx)'});},
+      function(){fin({lat:'N/A',lng:'N/A'});},
+      {timeout:8000,enableHighAccuracy:false,maximumAge:60000}
+    );},
+    {timeout:5000,enableHighAccuracy:true,maximumAge:30000}
+  );
+}
+(function(){
+  var pill=document.getElementById('gps-pill');
+  getGPS(function(c){
+    state.gps=c;
+    if(c.lat!=='N/A'){pill.className='gps-pill';pill.textContent='📍 '+c.lat+', '+c.lng;}
+    else{pill.className='gps-pill waiting';pill.textContent='⚠️ GPS off — tap to retry';
+      pill.onclick=function(){pill.textContent='⏳…';pill.onclick=null;
+        getGPS(function(c2){state.gps=c2;if(c2.lat!=='N/A'){pill.className='gps-pill';pill.textContent='📍 '+c2.lat+', '+c2.lng;}
+          else{pill.className='gps-pill waiting';pill.textContent='⚠️ GPS unavailable';}});};
+    }
+  });
+})();
+
+// ── TOGGLE PASSWORD VISIBILITY ───────────────
+function togglePwd() {
+  var inp=document.getElementById('inp-password');
+  inp.type=inp.type==='password'?'text':'password';
+}
+
+// ── LOGIN ─────────────────────────────────────
+function doLogin() {
+  var mob=document.getElementById('inp-mobile').value.trim();
+  var pwd=document.getElementById('inp-password').value.trim();
+  if(mob.length!==10){showErr('login-err','Enter valid 10-digit mobile.'); return;}
+  if(!pwd){showErr('login-err','Enter your password.'); return;}
+  showErr('login-err','');
+  var btn=document.getElementById('btn-login');
+  btn.innerHTML='<span class="spinner"></span> Logging in…'; btn.disabled=true;
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      btn.innerHTML='Login →'; btn.disabled=false;
+      if(!res.ok){showErr('login-err',res.msg); return;}
+      state.zcrim=res.zcrim; state.token=res.token;
+      state.sessionExpiry=new Date(res.expires);
+      getGPS(function(c){
+        state.gps=c;
+        google.script.run.logLogin({
+          token:res.token, zcrimName:res.zcrim.name, mobile:res.zcrim.mobile,
+          lat:c.lat, lng:c.lng,
+          deviceInfo:navigator.platform+' | '+screen.width+'x'+screen.height,
+          userAgent:navigator.userAgent, timestamp:new Date().toLocaleString()
+        });
+      });
+      startSessionTimer();
+      loadVillagePicker();
+    })
+    .withFailureHandler(function(e){btn.innerHTML='Login →';btn.disabled=false;showErr('login-err',e.message);})
+    .loginZcrim(mob,pwd);
+}
+
+// ── SESSION TIMER ────────────────────────────
+function startSessionTimer() {
+  clearInterval(state.sessionTimerInterval);
+  state.sessionTimerInterval=setInterval(function(){
+    var left=Math.max(0,Math.floor((state.sessionExpiry-new Date())/1000));
+    var m=Math.floor(left/60),s=left%60;
+    var txt='⏱ '+m+':'+(s<10?'0':'')+s;
+    var e1=document.getElementById('sess-timer'),e2=document.getElementById('sess-timer-survey');
+    if(e1)e1.textContent=txt; if(e2)e2.textContent=txt;
+    if(left===0){clearInterval(state.sessionTimerInterval);toast('⏰ Session expired. Please login again.','red');setTimeout(function(){doLogout(true);},2000);}
+    else if(left===60)toast('⚠️ Session expires in 1 minute!','org');
+  },1000);
+}
+
+// ── LOGOUT ────────────────────────────────────
+function doLogout(auto) {
+  clearInterval(state.sessionTimerInterval);
+  if(state.token) google.script.run.logoutSession(state.token);
+  state.token=null; state.zcrim=null; state.selectedWard=null;
+  document.getElementById('inp-mobile').value='';
+  document.getElementById('inp-password').value='';
+  if(!auto) toast('👋 Logged out.','green');
+  setTimeout(function(){showScreen('screen-login');},1000);
+}
+
+// ── VILLAGE PICKER ────────────────────────────
+function loadVillagePicker() {
+  showScreen('screen-village');
+  document.getElementById('sess-name').textContent=state.zcrim.name;
+  document.getElementById('village-list').innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)"><span class="spinner"></span> Loading…</div>';
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(!res.ok){handleSessionError(res);return;}
+      state.allWards=res.wards; renderVillageList(res.wards); renderVillageStats(res.wards);
+    })
+    .withFailureHandler(function(e){toast('Error: '+e.message,'red');})
+    .getWardsForZcrim(state.token);
+}
+function renderVillageStats(wards){
+  var tf=wards.reduce(function(s,w){return s+w.total;},0);
+  var df=wards.reduce(function(s,w){return s+w.done;},0);
+  var pf=wards.reduce(function(s,w){return s+w.pending;},0);
+  document.getElementById('village-stats-bar').innerHTML=
+    '<div style="flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700">'+wards.length+'</div><div style="font-size:10px;color:var(--mut)">VILLAGES</div></div>'+
+    '<div style="flex:1;background:var(--card);border:1px solid #f59e0b44;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--org)">'+pf+'</div><div style="font-size:10px;color:var(--mut)">PENDING</div></div>'+
+    '<div style="flex:1;background:var(--card);border:1px solid #22c55e44;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--grn)">'+df+'</div><div style="font-size:10px;color:var(--mut)">DONE</div></div>';
+}
+function renderVillageList(wards){
+  var list=document.getElementById('village-list');
+  if(!wards||!wards.length){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">No villages found.</div>';return;}
+  list.innerHTML=wards.map(function(w){
+    var pct=w.total>0?Math.round(w.done/w.total*100):0, done=w.pending===0;
+    var bar=done?'#22c55e':'#3b82f6', bc=done?'#22c55e44':'var(--bdr)';
+    return '<div onclick="selectVillage(\''+w.ward.replace(/'/g,"\\'")+'\')\" style="background:var(--card);border:1px solid '+bc+';border-radius:10px;padding:14px;cursor:pointer;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<div style="font-weight:700">'+w.ward+'</div>'+(done?'<span class="badge badge-grn">✓ Complete</span>':'<span style="font-size:12px;color:var(--mut)">'+w.done+'/'+w.total+'</span>')+
+      '</div>'+
+      '<div style="background:#334155;border-radius:4px;height:4px"><div style="background:'+bar+';width:'+pct+'%;height:100%;border-radius:4px"></div></div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:6px">'+
+        '<span style="font-size:11px;color:var(--mut)">'+w.pending+' pending · '+w.done+' done</span>'+
+        '<span style="font-size:11px;color:'+bar+'">'+pct+'%</span>'+
+      '</div></div>';
+  }).join('');
+}
+function filterVillages(){
+  var q=document.getElementById('village-search').value.toLowerCase();
+  renderVillageList(state.allWards.filter(function(w){return w.ward.toLowerCase().indexOf(q)>=0;}));
+}
+function selectVillage(ward){
+  state.selectedWard=ward;
+  document.getElementById('active-village-name').textContent=ward;
+  document.getElementById('hdr-name').textContent='👤 '+state.zcrim.name;
+  var g=state.gps&&state.gps.lat!=='N/A'?'📍 '+state.gps.lat+', '+state.gps.lng:'📍 GPS unavailable';
+  document.getElementById('hdr-gps').textContent=g;
+  document.getElementById('cam-gps-label').textContent=g;
+  showScreen('screen-survey'); loadNextFamily();
+}
+function switchVillage(){
+  showScreen('screen-village');
+  google.script.run
+    .withSuccessHandler(function(res){if(!res.ok){handleSessionError(res);return;} state.allWards=res.wards;renderVillageList(res.wards);renderVillageStats(res.wards);document.getElementById('village-search').value='';})
+    .withFailureHandler(function(){})
+    .getWardsForZcrim(state.token);
+}
+
+// ── FAMILY ────────────────────────────────────
+function loadNextFamily(){
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(!res.ok){
+        if(res.relogin){handleSessionError(res);return;}
+        document.getElementById('screen-survey').innerHTML=
+          '<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">'+
+          '<div><div style="font-size:56px">🎉</div><div style="font-size:20px;font-weight:700;color:#22c55e;margin-top:12px">All Families Verified!</div>'+
+          '<div style="color:#94a3b8;margin-top:8px">Great work, '+state.zcrim.name+'!</div>'+
+          '<button onclick="switchVillage()" class="btn btn-blue" style="margin-top:20px;width:auto;padding:12px 24px">← Switch Village</button></div></div>';
+        return;
+      }
+      state.family=res.family; state.familyRowIndex=res.rowIndex;
+      renderFamilyInfo(); renderMembersTab(); renderPhotosGrid(); resetTabLocks(); resetForm();
+      google.script.run.withSuccessHandler(function(r){if(r.ok) document.getElementById('hdr-remaining').textContent=r.remaining+' remaining';}).getFamiliesForZcrim(state.token,state.selectedWard);
+    })
+    .withFailureHandler(function(e){toast('Error: '+e.message,'red');})
+    .getNextFamily(state.token,state.selectedWard);
+}
+function renderFamilyInfo(){
+  var f=state.family;
+  document.getElementById('family-info').innerHTML=[['PPP ID',f.id],['Name',f.name],['Mobile',f.mobile||'—'],['Age',f.age],['Gender',f.gender==='M'?'Male':'Female'],['Ward',f.ward]]
+    .map(function(p){return '<div class="info-item"><div class="k">'+p[0]+'</div><div class="v">'+p[1]+'</div></div>';}).join('');
+  document.getElementById('fi-address').textContent=f.address;
+  document.getElementById('fi-badges').innerHTML='<span class="badge badge-blu">'+f.block+'</span> <span class="badge '+(f.gender==='M'?'badge-blu':'badge-org')+'">'+(f.gender==='M'?'Male':'Female')+'</span> <span class="badge badge-grn">Age '+f.age+'</span>';
+}
+
+// ── MEMBERS ───────────────────────────────────
+function renderMembersTab(){state.memberCount=6;document.getElementById('members-list').innerHTML='';for(var i=0;i<6;i++)appendMemberCard(i);}
+function addMember(){appendMemberCard(state.memberCount);state.memberCount++;}
+function appendMemberCard(i){
+  var div=document.createElement('div');div.className='member-card';div.id='mc-'+i;
+  var opts=INCOME_RANGES.map(function(r){return '<option value="'+r+'">₹ '+r+'</option>';}).join('');
+  div.innerHTML='<div style="font-weight:700;color:var(--acc);margin-bottom:10px">Member '+(i+1)+'</div>'+
+    '<div class="row2"><div class="field"><label>Full Name</label><input id="m'+i+'-name" placeholder="Name"/></div>'+
+    '<div class="field"><label>Age</label><input id="m'+i+'-age" type="number" placeholder="Age"/></div></div>'+
+    '<div class="field"><label>Income Range</label><select id="m'+i+'-income"><option value="">-- Select --</option>'+opts+'</select></div>'+
+    '<div class="row2"><div class="field"><label>Occupation</label><input id="m'+i+'-occ" placeholder="e.g. Farmer"/></div>'+
+    '<div class="field"><label>Remarks</label><input id="m'+i+'-rem" placeholder="Optional"/></div></div>';
+  document.getElementById('members-list').appendChild(div);
+}
+function collectMembers(){
+  var arr=[];
+  for(var i=0;i<state.memberCount;i++){var n=val('m'+i+'-name'),inc=val('m'+i+'-income');if(!n&&!inc)continue;arr.push({name:n,age:val('m'+i+'-age'),income:inc,occupation:val('m'+i+'-occ'),remarks:val('m'+i+'-rem')});}
+  return arr;
+}
+
+// ── ASSETS ────────────────────────────────────
+function toggleRent(){document.getElementById('rent-field').style.display=document.getElementById('a-houseRent').value==='Yes'?'block':'none';}
+function collectAssets(){return{houseRent:val('a-houseRent'),rentAmt:val('a-rentAmt'),houseSize:val('a-houseSize'),houseCondition:val('a-houseCondition'),electricity:val('a-electricity'),splitFamily:val('a-splitFamily'),propertyId:val('a-propertyId'),taxPayer:val('a-taxPayer'),twoWheeler:val('a-twoWheeler'),fourWheeler:val('a-fourWheeler'),otherLand:val('a-otherLand'),agriLand:val('a-agriLand'),shopBusiness:val('a-shopBusiness'),cattle:val('a-cattle')};}
+
+// ── PHOTOS ────────────────────────────────────
+function renderPhotosGrid(){
+  state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null};
+  document.getElementById('photos-grid').innerHTML=PHOTO_KEYS.map(function(k,i){
+    return '<div><div style="font-size:11px;color:var(--mut);font-weight:600;margin-bottom:5px">'+(i+1)+'. '+PHOTO_LABELS[i]+' <span style="color:var(--red)">*</span></div>'+
+      '<div class="photo-box" id="pb-'+k+'" onclick="openCamera(\''+k+'\')"><div style="font-size:28px">📷</div><div style="color:var(--mut);font-size:11px">Tap to capture</div></div></div>';
+  }).join('');
+  updatePhotosStatus();
+}
+function updatePhotosStatus(){
+  var c=PHOTO_KEYS.filter(function(k){return state.photos[k];}).length,ok=c===4;
+  document.getElementById('photos-status').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div style="color:'+(ok?'#22c55e':'#94a3b8')+'">'+c+'/4 photos captured</div>'+(ok?'<span class="badge badge-grn">✓ Complete</span>':'')+' </div>';
+  document.getElementById('btn-submit').className='btn '+(ok?'btn-green':'btn-gray');
+}
+
+// ── CAMERA ────────────────────────────────────
+function openCamera(t){
+  state.cameraTarget=t;
+  var labels={selfie:'Surveyor Selfie',front:PHOTO_LABELS[0],kitchen:PHOTO_LABELS[1],familyPhoto:PHOTO_LABELS[2],surroundings:PHOTO_LABELS[3]};
+  document.getElementById('cam-label').textContent=labels[t]||t;
+  document.getElementById('cam-error').style.display='none';
+  document.getElementById('cam-video').style.display='block';
+  document.getElementById('btn-capture').style.display='block';
+
+  getGPS(function(c){if(c.lat!=='N/A'){state.gps=c;document.getElementById('cam-gps-label').textContent='📍 '+c.lat+', '+c.lng;}});
+
+  // Check if camera API available
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showCameraError(t,'Camera API not available on this browser. Please use Chrome.');
+    return;
+  }
+
+  show('camera-wrap',true);
+
+  // Try environment camera first, fallback to any camera
+  var constraints={video:{facingMode:t==='selfie'?'user':'environment',width:{ideal:1280},height:{ideal:720}},audio:false};
+
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then(function(s){
+      state.cameraStream=s;
+      var vid=document.getElementById('cam-video');
+      vid.srcObject=s;
+      vid.play();
+    })
+    .catch(function(err){
+      // Retry with basic constraints
+      navigator.mediaDevices.getUserMedia({video:true,audio:false})
+        .then(function(s){
+          state.cameraStream=s;
+          var vid=document.getElementById('cam-video');
+          vid.srcObject=s;
+          vid.play();
+        })
+        .catch(function(err2){
+          show('camera-wrap',false);
+          showCameraError(t, err2.name==='NotAllowedError'
+            ? 'Camera permission denied. Go to browser Settings → Site Settings → Camera → Allow for this site.'
+            : err2.name==='NotFoundError'
+            ? 'No camera found on this device.'
+            : 'Camera error: '+err2.message+'. Try using Chrome browser.');
+        });
+    });
+}
+
+function showCameraError(target, msg) {
+  // Show error inside the photo box so user knows what happened
+  var boxId = target==='selfie' ? 'selfie-box' : 'pb-'+target;
+  var box = document.getElementById(boxId);
+  if(box) {
+    box.style.borderColor='var(--red)';
+    box.innerHTML=
+      '<div style="padding:12px;text-align:center">'+
+      '<div style="font-size:24px;margin-bottom:6px">📵</div>'+
+      '<div style="color:var(--red);font-weight:700;font-size:12px;margin-bottom:6px">Camera Blocked</div>'+
+      '<div style="color:var(--mut);font-size:11px;line-height:1.5">'+msg+'</div>'+
+      '<div style="margin-top:10px"><label style="background:var(--acc);color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">'+
+      '📁 Upload Photo Instead'+
+      '<input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleFileUpload(event,''+target+'')"/>'+
+      '</label></div></div>';
+    box.onclick=null; // remove onclick to prevent re-triggering
+  }
+  toast('📵 Camera blocked — see instructions in photo box','red');
+}
+
+function handleFileUpload(event, target) {
+  var file = event.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var dataUrl = e.target.result;
+    var g = state.gps||{lat:'N/A',lng:'N/A'};
+    if(target==='selfie'){
+      state.selfie=dataUrl;
+      var box=document.getElementById('selfie-box');
+      box.style.borderColor='';
+      box.innerHTML='<img src="'+dataUrl+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/><div class="overlay">✓ Uploaded · GPS: '+(g.lat!=='N/A'?g.lat+','+g.lng:'N/A')+'</div>';
+      box.onclick=function(){openCamera('selfie');};
+    } else {
+      state.photos[target]={dataUrl:dataUrl,gps:g};
+      var box2=document.getElementById('pb-'+target);
+      box2.style.borderColor='';
+      box2.innerHTML='<img src="'+dataUrl+'"/><div class="overlay">📁 Uploaded · GPS N/A · Tap retake</div>';
+      box2.onclick=function(){openCamera(target);};
+      updatePhotosStatus();
+    }
+    toast('✅ Photo uploaded','green');
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeCamera(){
+  if(state.cameraStream){state.cameraStream.getTracks().forEach(function(t){t.stop();});state.cameraStream=null;}
+  show('camera-wrap',false);
+}
+function capturePhoto(){
+  var v=document.getElementById('cam-video'),canvas=document.createElement('canvas');
+  canvas.width=v.videoWidth;canvas.height=v.videoHeight;canvas.getContext('2d').drawImage(v,0,0);
+  var q=0.7,dataUrl=canvas.toDataURL('image/jpeg',q);
+  while(dataUrl.length*0.75>199000&&q>0.15){q-=0.1;dataUrl=canvas.toDataURL('image/jpeg',q);}
+  var t=state.cameraTarget,g=state.gps||{lat:'N/A',lng:'N/A'};
+  closeCamera();
+  if(t==='selfie'){
+    state.selfie=dataUrl;
+    document.getElementById('selfie-box').innerHTML='<img src="'+dataUrl+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/><div class="overlay">✓ GPS: '+(g.lat!=='N/A'?g.lat+','+g.lng:'N/A')+'</div>';
+    document.getElementById('selfie-box').onclick=function(){openCamera('selfie');};
+  } else {
+    state.photos[t]={dataUrl:dataUrl,gps:g};
+    var box=document.getElementById('pb-'+t);
+    box.innerHTML='<img src="'+dataUrl+'"/><div class="overlay">📍 '+(g.lat!=='N/A'?g.lat+','+g.lng:'GPS N/A')+' · Tap retake</div>';
+    box.onclick=function(){openCamera(t);};
+    updatePhotosStatus();
+  }
+}
+
+// ── TABS ──────────────────────────────────────
+function switchTab(i){
+  [0,1,2,3].forEach(function(n){
+    document.getElementById('tab'+n).style.display=n===i?'block':'none';
+    var b=document.getElementById('tab-btn-'+n);
+    if(b) b.className='tab'+(n===i?' active':tabUnlocked[n]?' done':' locked');
+  });
+}
+function tryTab(i){if(!tabUnlocked[i]){toast('🔒 Complete previous step first.','red');return;}switchTab(i);}
+function validateAndNext(cur){
+  if(cur===0){
+    if(!state.selfie){toast('🤳 Capture surveyor selfie first.','red');var b=document.getElementById('selfie-box');b.style.borderColor='var(--red)';setTimeout(function(){b.style.borderColor='';},2500);return;}
+    tabUnlocked[1]=true;switchTab(1);
+  } else if(cur===1){
+    var ok=false;for(var i=0;i<state.memberCount;i++){if(val('m'+i+'-name')){ok=true;break;}}
+    if(!ok){toast('👥 Enter at least 1 member name.','red');return;}
+    tabUnlocked[2]=true;switchTab(2);
+  } else if(cur===2){
+    if(!val('a-houseCondition')){toast('🏠 Select House Condition.','red');var el=document.getElementById('a-houseCondition');el.style.borderColor='var(--red)';setTimeout(function(){el.style.borderColor='';},2500);return;}
+    tabUnlocked[3]=true;switchTab(3);
+  }
+}
+function resetTabLocks(){tabUnlocked=[true,false,false,false];for(var i=0;i<4;i++){var b=document.getElementById('tab-btn-'+i);if(b)b.className=i===0?'tab active':'tab locked';}}
+
+// ── SUBMIT ────────────────────────────────────
+function submitForm(){
+  if(!PHOTO_KEYS.every(function(k){return state.photos[k];})){showErr('submit-err','Capture all 4 photos first.');return;}
+  showErr('submit-err','');
+  var btn=document.getElementById('btn-submit');
+  btn.innerHTML='<span class="spinner"></span> Uploading…';btn.disabled=true;
+  var ts=new Date().toLocaleString(),uploaded={},keys=PHOTO_KEYS.concat('selfie'),pending=keys.length;
+  keys.forEach(function(key){
+    var item=key==='selfie'?{dataUrl:state.selfie,gps:state.gps}:state.photos[key];
+    if(!item||!item.dataUrl){uploaded[key]='';pending--;if(pending===0)finalSubmit(uploaded,ts);return;}
+    var g=item.gps||state.gps||{lat:'N/A',lng:'N/A'};
+    var label=key==='selfie'?'Selfie':PHOTO_LABELS[PHOTO_KEYS.indexOf(key)];
+    google.script.run
+      .withSuccessHandler(function(r){uploaded[key]=r.ok?r.url:'';pending--;if(pending===0)finalSubmit(uploaded,ts);})
+      .withFailureHandler(function(){uploaded[key]='';pending--;if(pending===0)finalSubmit(uploaded,ts);})
+      .uploadPhoto(state.token,{base64:item.dataUrl,mimeType:'image/jpeg',pppId:state.family.id,memberName:state.family.name,photoLabel:label,lat:g.lat,lng:g.lng,timestamp:ts});
+  });
+}
+function finalSubmit(uploaded,ts){
+  document.getElementById('btn-submit').innerHTML='<span class="spinner"></span> Saving…';
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(!res.ok){if(res.relogin){handleSessionError(res);return;}toast('Error: '+res.msg,'red');resetSubmitBtn();return;}
+      toast('✅ Submitted! Loading next family…','green');
+      setTimeout(function(){loadNextFamily();},2000);
+    })
+    .withFailureHandler(function(e){toast('Error: '+e.message,'red');resetSubmitBtn();})
+    .submitSurvey(state.token,{
+      zcrimName:state.zcrim.name,family:state.family,selfieUrl:uploaded['selfie']||'',
+      assets:collectAssets(),members:collectMembers(),
+      photoUrls:{front:uploaded['front']||'',kitchen:uploaded['kitchen']||'',familyPhoto:uploaded['familyPhoto']||'',surroundings:uploaded['surroundings']||''},
+      gps:state.gps||{lat:'N/A',lng:'N/A'},timestamp:ts,familyRowIndex:state.familyRowIndex
+    });
+}
+function resetSubmitBtn(){document.getElementById('btn-submit').innerHTML='✅ Submit Verification';document.getElementById('btn-submit').disabled=false;}
+function resetForm(){
+  ['a-houseRent','a-rentAmt','a-houseSize','a-houseCondition','a-electricity','a-splitFamily','a-propertyId','a-taxPayer','a-twoWheeler','a-fourWheeler','a-otherLand','a-agriLand','a-shopBusiness','a-cattle']
+    .forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('rent-field').style.display='none';
+  document.getElementById('selfie-box').innerHTML='<div style="font-size:32px">🤳</div><div style="color:var(--org);font-weight:600;font-size:13px">Capture Surveyor Photo</div><div style="color:var(--mut);font-size:11px">Front camera · Required</div>';
+  document.getElementById('selfie-box').onclick=function(){openCamera('selfie');};
+  state.selfie=null;resetSubmitBtn();
+}
+
+// ── SESSION ERROR ─────────────────────────────
+function handleSessionError(res){clearInterval(state.sessionTimerInterval);toast('🔒 '+(res.msg||'Session expired.'),'red');setTimeout(function(){doLogout(true);},2000);}
+
+// ── HELPERS ───────────────────────────────────
+function showScreen(id){['screen-login','screen-village','screen-survey','camera-wrap'].forEach(function(s){document.getElementById(s).style.display='none';});document.getElementById(id).style.display='block';}
+function show(id,v){document.getElementById(id).style.display=v?'block':'none';}
+function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function showErr(id,m){var e=document.getElementById(id);if(e)e.textContent=m;}
+function toast(msg,type){
+  var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
+  t.style.borderColor=type==='green'?'#22c55e':type==='red'?'#ef4444':type==='org'?'#f59e0b':'#334155';
+  t.style.color=type==='green'?'#22c55e':type==='red'?'#ef4444':type==='org'?'#f59e0b':'#f1f5f9';
+  setTimeout(function(){t.style.display='none';},3500);
+}
+</script>
+</body>
+</html>
