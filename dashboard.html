@@ -87,12 +87,7 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
 .org-row   .lb-pct{color:var(--org)}
 .grn-row   .lb-pct{color:var(--grn)}
 /* LOGIN */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.login-card{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:32px;width:100%;max-width:360px;text-align:center}
-.login-card h2{font-size:22px;font-weight:800;margin-bottom:6px}
-.login-card p{color:var(--mut);font-size:13px;margin-bottom:24px}
-.login-card input{width:100%;background:#0f172a;border:1px solid var(--bdr);border-radius:8px;padding:12px;color:var(--txt);font-size:15px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px}
-.login-card button{width:100%;padding:13px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer}
+
 .err-msg{color:var(--red);font-size:13px;margin-top:10px;min-height:20px}
 /* SPINNER */
 .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
@@ -103,20 +98,7 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
 </head>
 <body>
 
-<div id="login-screen">
-  <div class="login-wrap">
-    <div class="login-card">
-      <div style="font-size:52px;margin-bottom:12px">🏛️</div>
-      <h2>ZCRIM Admin</h2>
-      <p>Survey Dashboard · Mewat/Nuh District</p>
-      <input type="password" id="admin-key" placeholder="Enter admin key" autocomplete="off"/>
-      <button onclick="doLogin()">Access Dashboard →</button>
-      <div class="err-msg" id="login-err"></div>
-    </div>
-  </div>
-</div>
-
-<div id="dashboard-screen" style="display:none">
+<div id="dashboard-screen">
   <div class="topbar">
     <h1>🏛️ ZCRIM Dashboard · Mewat/Nuh</h1>
     <div class="topbar-right">
@@ -145,34 +127,7 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
 </div>
 
 <script>
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkZsidK_1Tz4SblxZBODnTOXt1YlY_9LbK0UfiDac1oyxeT1wegvlsCubhjbAHuWs89Q/exec';
-var ADMIN_PASS  = 'ZCRIM_ADMIN';
-var SESSION_TOKEN = '';
-var charts = {};
-var dashData = null;
-
-function doLogin() {
-  var key = document.getElementById('admin-key').value.trim();
-  if (!key) { document.getElementById('login-err').textContent = 'Enter admin key'; return; }
-  if (key !== ADMIN_PASS) {
-    document.getElementById('login-err').textContent = 'Wrong admin key. Try again.';
-    document.getElementById('admin-key').value = '';
-    return;
-  }
-  document.getElementById('login-err').textContent = '';
-  document.getElementById('login-screen').style.display    = 'none';
-  document.getElementById('dashboard-screen').style.display = 'block';
-  callAPI('loginZcrim', ['9466610668', 'ZCRIM@2024'], function(err, res) {
-    if (err || !res || !res.ok) {
-      showError('Could not connect to server. Check internet or redeploy Apps Script.');
-      return;
-    }
-    SESSION_TOKEN = res.token;
-    loadData();
-  });
-}
-
-document.getElementById('admin-key').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-9SSHrwMgKfHw-1qEFqH-cmKDjNjNLbGOu5DN9yD9YMp-iTESK4TkdWl5kDCax-uT3w/exec';
 
 function callAPI(fn, args, cb) {
   var url = APPS_SCRIPT_URL + '?fn=' + encodeURIComponent(fn) + '&args=' + encodeURIComponent(JSON.stringify(args||[]));
@@ -390,6 +345,13 @@ function applyBlockFilter() {
   }
   renderDashboard(filtered);
 }
+
+// Auto-init on load
+(function init(){ callAPI('loginZcrim', ['9466610668', 'ZCRIM@2024'], function(err, res) {
+  if(err||!res.ok) return;
+  apiToken = res.token;
+  loadData();
+}); })();
 
 // Export CSV
 function exportCSV() {
