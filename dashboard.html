@@ -127,6 +127,7 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
 </div>
 
 <script>
+var SESSION_TOKEN   = '';
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-9SSHrwMgKfHw-1qEFqH-cmKDjNjNLbGOu5DN9yD9YMp-iTESK4TkdWl5kDCax-uT3w/exec';
 
 function callAPI(fn, args, cb) {
@@ -349,7 +350,7 @@ function applyBlockFilter() {
 // Auto-init on load
 (function init(){ callAPI('loginZcrim', ['9466610668', 'ZCRIM@2024'], function(err, res) {
   if(err||!res.ok) return;
-  apiToken = res.token;
+  SESSION_TOKEN = res.token;
   loadData();
 }); })();
 
