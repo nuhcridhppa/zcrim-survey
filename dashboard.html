@@ -121,6 +121,20 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
     <h1>🏛️ ZCRIM Dashboard · Mewat/Nuh</h1>
     <div class="topbar-right">
       <span class="updated" id="updated-time"></span>
+      <select id="block-filter" onchange="applyBlockFilter()" style="background:#1e293b;border:1px solid #334155;color:#f1f5f9;padding:7px 10px;border-radius:8px;font-size:13px;cursor:pointer">
+        <option value="">🗺️ All Blocks</option>
+        <option>NAGINA BL</option>
+        <option>TAORU MC</option>
+        <option>NUH BL</option>
+        <option>INDRI BL</option>
+        <option>PINGWAN BL</option>
+        <option>FEROZEPUR JHIRKA BL</option>
+        <option>FEROZEPUR JHIRKA MC</option>
+        <option>TAORU BL</option>
+        <option>PUNAHANA MC</option>
+        <option>NUH MC</option>
+        <option>PUNAHANA BL</option>
+      </select>
       <button class="btn btn-green" onclick="exportCSV()">📥 Export CSV</button>
       <button class="btn btn-blue" onclick="loadData()">🔄 Refresh</button>
     </div>
@@ -358,6 +372,23 @@ function renderCharts(d) {
       }
     }
   });
+}
+
+// Block Filter
+function applyBlockFilter() {
+  var block = document.getElementById('block-filter').value.toUpperCase();
+  if (!dashData) return;
+  var filtered = JSON.parse(JSON.stringify(dashData)); // deep copy
+  if (block) {
+    filtered.board   = filtered.board.filter(function(z){ return z.block.toUpperCase()===block; });
+    filtered.wards   = (filtered.wards||[]).filter(function(w){ return w.block.toUpperCase()===block; });
+    filtered.blocks  = (filtered.blocks||[]).filter(function(b){ return b.block.toUpperCase()===block; });
+    filtered.activeSessions  = (filtered.activeSessions||[]).filter(function(s){
+      var z = (dashData.board||[]).filter(function(z){ return z.name===s.name; })[0];
+      return z && z.block.toUpperCase()===block;
+    });
+  }
+  renderDashboard(filtered);
 }
 
 // Export CSV
