@@ -207,6 +207,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
       <div id="dup-banner" style="display:none;background:#ef444422;border:2px solid var(--red);border-radius:8px;padding:12px;margin-bottom:12px;color:var(--red);font-weight:700;text-align:center;font-size:13px">
         ⚠️ DUPLICATE ALERT — This family may have already been surveyed. Verify before submitting.
       </div>
+      <div id="survey-timer" style="text-align:center;padding:6px;font-size:12px;color:#94a3b8;margin-bottom:8px">⏱ Survey time: <span id="timer-display">0:00</span></div>
       <div class="card">
         <div class="sec-title">📋 Family Record</div>
         <div class="info-grid" id="family-info"></div>
@@ -675,27 +676,45 @@ function skipFamily(){
   if(!state.family){ toast('No family loaded.','red'); return; }
   if(!confirm('Skip '+state.family.name+' ('+state.family.id+')? Mark as Absent.')) return;
 
-  // Mark row directly via submitSurvey-style call — update status only
   var rowSnap = state.familyRowIndex;
   var idSnap  = state.family.id;
   var nmSnap  = state.family.name;
 
-  // Immediately clear state and load next — dont wait for backend
+  // Clear state immediately
   state.family         = null;
   state.familyRowIndex = null;
   state.selfie         = null;
   state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
 
-  toast('⏭ Skipped '+nmSnap,'org');
+  showLoadingOverlay('Marking absent...');
 
-  // Fire and forget — update sheet in background
+  // MUST wait for backend to mark absent BEFORE loading next family
+  // Otherwise getNextFamily returns the same family again
+  var done = false;
+  var timeout = setTimeout(function(){
+    if(done) return;
+    done = true;
+    toast('⚠️ Skip saved slowly — loading next','org');
+    loadNextFamily();
+  }, 16000);
+
   google.script.run
-    .withSuccessHandler(function(r){ if(r&&!r.ok) console.warn('Skip log failed:',r.msg); })
-    .withFailureHandler(function(e){ console.warn('Skip log error:',e.message); })
+    .withSuccessHandler(function(r){
+      if(done) return;
+      done = true;
+      clearTimeout(timeout);
+      if(r && !r.ok) toast('Skip warning: '+r.msg,'org');
+      else toast('⏭ '+nmSnap+' marked absent','org');
+      loadNextFamily(); // now safe — sheet is updated
+    })
+    .withFailureHandler(function(e){
+      if(done) return;
+      done = true;
+      clearTimeout(timeout);
+      toast('Skip error — loading next anyway','org');
+      loadNextFamily();
+    })
     .skipFamily(state.token, rowSnap, idSnap, nmSnap);
-
-  // Load next family immediately without waiting
-  loadNextFamily();
 }
 function checkDuplicate(familyId, cb) {
   // Quick check — look at Families sheet status
@@ -741,6 +760,7 @@ function loadNextFamily(){
       state.familyRowIndex = res.rowIndex;
       state.selfie         = null;
       state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+      state.surveyStartTime = Date.now(); // ⏱ start timer
 
       // Reset all tabs and go back to tab 0
       resetTabLocks();
@@ -748,8 +768,9 @@ function loadNextFamily(){
       renderMembersTab();
       renderPhotosGrid();
       resetForm();
-      switchTab(0);  // ← explicitly show Family tab
-      window.scrollTo(0, 0); // scroll to top
+      switchTab(0);
+      startTimerDisplay(); // ⏱ start countdown display
+      window.scrollTo(0, 0);
       // Enable skip button now that family is loaded
       var skipBtn = document.getElementById('btn-skip');
       if(skipBtn){ skipBtn.disabled=false; skipBtn.style.opacity='1'; }
@@ -1003,6 +1024,49 @@ function burnGpsStamp(canvas, g, label, family) {
   ctx.fillText('ZCRIM Survey · Mewat/Nuh', w - pad, Math.round(w/55) + 8);
 }
 
+// ── PHOTO QUALITY CHECK ──────────────────────────────────────────
+function checkPhotoQuality(canvas) {
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  // Sample a grid of pixels to check brightness and contrast
+  var sampleSize = 20;
+  var stepX = Math.floor(w / sampleSize);
+  var stepY = Math.floor(h / sampleSize);
+  var pixels = ctx.getImageData(0, 0, w, h).data;
+  var brightnessValues = [];
+  for (var y = 0; y < sampleSize; y++) {
+    for (var x = 0; x < sampleSize; x++) {
+      var px = (y * stepY * w + x * stepX) * 4;
+      var r = pixels[px], g2 = pixels[px+1], b2 = pixels[px+2];
+      // Perceived brightness formula
+      var brightness = 0.299*r + 0.587*g2 + 0.114*b2;
+      brightnessValues.push(brightness);
+    }
+  }
+  var avgBrightness = brightnessValues.reduce(function(a,b){return a+b;},0) / brightnessValues.length;
+  // Contrast = standard deviation of brightness
+  var variance = brightnessValues.reduce(function(s,v){return s+Math.pow(v-avgBrightness,2);},0) / brightnessValues.length;
+  var contrast = Math.sqrt(variance);
+  return { brightness: Math.round(avgBrightness), contrast: Math.round(contrast), ok: avgBrightness > 40 && contrast > 18 };
+}
+
+function showQualityWarning(msg, onRetake, onKeep) {
+  // Show overlay warning on camera screen
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div style="background:#1e293b;border:2px solid #ef4444;border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center">'+
+    '<div style="font-size:48px;margin-bottom:12px">⚠️</div>'+
+    '<div style="font-size:17px;font-weight:800;color:#ef4444;margin-bottom:8px">Photo Quality Warning</div>'+
+    '<div style="font-size:14px;color:#94a3b8;margin-bottom:20px">'+msg+'</div>'+
+    '<button id="qw-retake" style="width:100%;padding:14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px">📸 Retake Photo</button>'+
+    '<button id="qw-keep" style="width:100%;padding:12px;background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:10px;font-size:14px;cursor:pointer">Use Anyway</button>'+
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector('#qw-retake').onclick = function(){ document.body.removeChild(overlay); onRetake(); };
+  overlay.querySelector('#qw-keep').onclick   = function(){ document.body.removeChild(overlay); onKeep(); };
+}
+
 function capturePhoto(){
   var v      = document.getElementById('cam-video');
   var canvas = document.createElement('canvas');
@@ -1015,15 +1079,38 @@ function capturePhoto(){
   var g = state.gps || {lat:'N/A', lng:'N/A'};
   var label = t==='selfie' ? 'Surveyor Selfie' : PHOTO_LABELS[PHOTO_KEYS.indexOf(t)] || t;
 
-  // Burn GPS stamp onto image
-  burnGpsStamp(canvas, g, label, state.family);
+  // Quality check BEFORE gps stamp
+  var quality = checkPhotoQuality(canvas);
+  var qualityMsg = '';
+  if (quality.brightness < 40)  qualityMsg = 'Photo is too dark (brightness: '+quality.brightness+'/255). Move to better lighting and retake.';
+  else if (quality.contrast < 18) qualityMsg = 'Photo appears blurry or has very low contrast. Please retake for a clearer image.';
 
-  // Compress
+  if (qualityMsg) {
+    var savedCanvas = canvas;
+    showQualityWarning(qualityMsg,
+      function(){ /* retake — camera still open */ },
+      function(){
+        // User chose to keep — continue with GPS stamp and save
+        burnGpsStamp(savedCanvas, g, label, state.family);
+        var q = 0.78, dataUrl = savedCanvas.toDataURL('image/jpeg', q);
+        while(dataUrl.length*0.75>199000&&q>0.15){q-=0.1;dataUrl=savedCanvas.toDataURL('image/jpeg',q);}
+        closeCamera();
+        savePhoto(t, dataUrl, g);
+      }
+    );
+    return; // wait for user choice
+  }
+
+  // Quality OK — proceed normally
+  burnGpsStamp(canvas, g, label, state.family);
   var q = 0.78, dataUrl = canvas.toDataURL('image/jpeg', q);
   while(dataUrl.length * 0.75 > 199000 && q > 0.15){ q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q); }
 
   closeCamera();
+  savePhoto(t, dataUrl, g);
+}
 
+function savePhoto(t, dataUrl, g) {
   if(t === 'selfie'){
     state.selfie = dataUrl;
     var sb = document.getElementById('selfie-box');
@@ -1041,6 +1128,65 @@ function capturePhoto(){
 }
 
 // ── TABS ──────────────────────────────────────
+// ── PRINT FAMILY REPORT ───────────────────────────────────────────
+function printFamilyReport(family, assets, members, photos) {
+  var win = window.open('', '_blank');
+  if (!win) { toast('Allow popups to print report','red'); return; }
+  var photoHtml = '';
+  var photoLabels = ['Front Photo','Kitchen','Family Photo','Surroundings','Surveyor+Family','Selfie'];
+  var photoKeys   = ['frontPhoto','kitchenPhoto','familyPhoto','surroundingsPhoto','surveyorFamilyPhoto','selfiePhoto'];
+  photoKeys.forEach(function(k,i){
+    if(photos[k]) photoHtml += '<div style="display:inline-block;margin:6px;vertical-align:top;text-align:center"><img src="'+photos[k]+'" style="width:180px;height:130px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0"/><div style="font-size:10px;color:#64748b;margin-top:3px">'+photoLabels[i]+'</div></div>';
+  });
+  var membersHtml = '';
+  (members||[]).forEach(function(m,i){
+    if(!m.name) return;
+    membersHtml += '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:6px 8px;font-size:12px">'+(i+1)+'</td><td style="padding:6px 8px;font-size:12px">'+m.name+'</td><td style="padding:6px 8px;font-size:12px">'+m.age+'</td><td style="padding:6px 8px;font-size:12px">'+m.gender+'</td><td style="padding:6px 8px;font-size:12px">'+m.relation+'</td><td style="padding:6px 8px;font-size:12px">'+(m.aadhaar||'—')+'</td></tr>';
+  });
+  var now = new Date().toLocaleString();
+  var gps = state.gps && state.gps.lat !== 'N/A' ? state.gps.lat+', '+state.gps.lng : 'Not available';
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Survey Report — '+family.id+'</title><style>body{font-family:Arial,sans-serif;font-size:13px;color:#1e293b;margin:0;padding:20px}h1{font-size:18px;color:#1a56a0;margin-bottom:4px}.header{background:#1a56a0;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;margin-bottom:0}.sub{font-size:12px;opacity:.8}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:12px}.info-item label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;display:block}.info-item span{font-size:13px;font-weight:600}table{width:100%;border-collapse:collapse}th{background:#1a56a0;color:#fff;padding:8px;font-size:11px;text-align:left}.sec{font-size:13px;font-weight:700;color:#1a56a0;margin:14px 0 8px;padding-bottom:4px;border-bottom:2px solid #e2e8f0}.footer{margin-top:20px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:10px;color:#94a3b8;text-align:center}@media print{button{display:none}}</style></head><body>'+
+    '<div class="header"><h1>🏛️ ZCRIM Survey Report</h1><div class="sub">Mewat/Nuh District · Generated: '+now+'</div></div>'+
+    '<div class="info-grid">'+
+      '<div class="info-item"><label>PPP ID</label><span>'+family.id+'</span></div>'+
+      '<div class="info-item"><label>Name</label><span>'+family.name+'</span></div>'+
+      '<div class="info-item"><label>Mobile</label><span>'+(family.mobile||'—')+'</span></div>'+
+      '<div class="info-item"><label>Age</label><span>'+(family.age||'—')+'</span></div>'+
+      '<div class="info-item"><label>Gender</label><span>'+(family.gender||'—')+'</span></div>'+
+      '<div class="info-item"><label>Ward</label><span>'+family.ward+'</span></div>'+
+      '<div class="info-item"><label>Block</label><span>'+family.block+'</span></div>'+
+      '<div class="info-item"><label>GPS</label><span>'+gps+'</span></div>'+
+      '<div class="info-item"><label>Address</label><span>'+(family.address||'—')+'</span></div>'+
+      '<div class="info-item"><label>Surveyed By</label><span>'+state.zcrim.name+'</span></div>'+
+    '</div>'+
+    '<div class="sec">👥 Family Members</div>'+
+    '<table><thead><tr><th>#</th><th>Name</th><th>Age</th><th>Gender</th><th>Relation</th><th>Aadhaar</th></tr></thead><tbody>'+membersHtml+'</tbody></table>'+
+    '<div class="sec">📷 Survey Photos</div>'+
+    '<div>'+photoHtml+'</div>'+
+    '<div class="footer">ZCRIM Survey System · Mewat/Nuh District · This is an official survey document</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#1a56a0;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;margin-right:10px">🖨️ Print</button>'+
+    '<button onclick="window.close()" style="padding:10px 24px;background:#e2e8f0;color:#1e293b;border:none;border-radius:6px;font-size:14px;cursor:pointer">✕ Close</button>'+
+    '</body></html>');
+  win.document.close();
+}
+
+// ── SURVEY TIMER ──────────────────────────────────────────────────
+var timerInterval = null;
+function startTimerDisplay() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function(){
+    if (!state.surveyStartTime) return;
+    var elapsed = Math.round((Date.now() - state.surveyStartTime) / 1000);
+    var mins = Math.floor(elapsed / 60);
+    var secs = elapsed % 60;
+    var el = document.getElementById('timer-display');
+    if (el) el.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    // Highlight if taking too long (>15 min)
+    var timerEl = document.getElementById('survey-timer');
+    if (timerEl) timerEl.style.color = elapsed > 900 ? '#ef4444' : '#94a3b8';
+  }, 1000);
+}
+
 function switchTab(i){
   [0,1,2,3].forEach(function(n){
     document.getElementById('tab'+n).style.display=n===i?'block':'none';
