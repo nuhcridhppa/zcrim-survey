@@ -429,8 +429,10 @@ var state = {
 // Start GPS after state is ready
 initGPS();
 var tabUnlocked = [true,false,false,false];
-var PHOTO_KEYS   = ['front','kitchen','familyPhoto','surroundings','surveyorFamily'];
-var PHOTO_LABELS = ['Full House (Front)','Kitchen','With Family Members','Surrounding Area','Surveyor with Family'];
+var PHOTO_KEYS      = ['front','kitchen','familyPhoto','surroundings','surveyorFamily'];
+var PHOTO_LABELS    = ['Full House (Front)','Kitchen','With Family Members','Surrounding Area','Surveyor with Family'];
+var PHOTO_MANDATORY = ['front','surroundings','surveyorFamily']; // selfie also mandatory — checked separately
+var PHOTO_OPTIONAL  = ['kitchen','familyPhoto'];
 var INCOME_RANGES = ['0 - 5,000','5,000 - 10,000','10,000 - 25,000','25,000 - 50,000',
   '50,000 - 75,000','75,000 - 1,00,000','1,00,000 - 1,40,000','1,40,000 - 1,80,000',
   '1,80,000 - 3,00,000','3,00,000 - 5,00,000','5,00,000 - 6,00,000','6,00,000 - 7,00,000',
@@ -886,17 +888,31 @@ function renderPhotosGrid(){
     if(i===4) {
       html2 += '</div><div style="margin-top:10px">';
     }
-    html2 += '<div><div style="font-size:11px;color:var(--mut);font-weight:600;margin-bottom:5px">'+(i+1)+'. '+PHOTO_LABELS[i]+' <span style="color:var(--red)">*</span></div>'+
-      '<div class="photo-box" id="pb-'+k+'" onclick="openCamera(\''+k+'\')"><div style="font-size:28px">📷</div><div style="color:var(--mut);font-size:11px">Tap to capture</div></div></div>';
+    var isOpt = PHOTO_OPTIONAL.indexOf(k) > -1;
+    var badge = isOpt
+      ? '<span style="color:#f59e0b;font-size:10px;font-weight:700;background:#fef3c7;padding:1px 6px;border-radius:4px;margin-left:4px">Optional</span>'
+      : '<span style="color:var(--red)">*</span>';
+    html2 += '<div><div style="font-size:11px;color:var(--mut);font-weight:600;margin-bottom:5px">'+(i+1)+'. '+PHOTO_LABELS[i]+' '+badge+'</div>'+
+      '<div class="photo-box" id="pb-'+k+'" onclick="openCamera(&quot;'+k+'&quot;)"><div style="font-size:28px">&#128247;</div><div style="color:var(--mut);font-size:11px">Tap to capture</div></div></div>';
     if(i===4) html2 += '</div>';
   });
   document.getElementById('photos-grid').innerHTML = html2;
   updatePhotosStatus();
 }
 function updatePhotosStatus(){
-  var c=PHOTO_KEYS.filter(function(k){return state.photos[k];}).length,ok=c===5;
-  document.getElementById('photos-status').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div style="color:'+(ok?'#22c55e':'#94a3b8')+'">'+c+'/5 photos captured</div>'+(ok?'<span class="badge badge-grn">✓ Complete</span>':'')+' </div>';
-  document.getElementById('btn-submit').className='btn '+(ok?'btn-green':'btn-gray');
+  var total    = PHOTO_KEYS.filter(function(k){ return state.photos[k]; }).length;
+  var mandDone = PHOTO_MANDATORY.filter(function(k){ return state.photos[k]; }).length;
+  var selfieOk = !!state.selfie;
+  var ok       = mandDone === PHOTO_MANDATORY.length && selfieOk; // 3 mandatory + selfie
+  var optDone  = PHOTO_OPTIONAL.filter(function(k){ return state.photos[k]; }).length;
+  var msg = mandDone+'/'+PHOTO_MANDATORY.length+' mandatory';
+  if (optDone > 0) msg += ' &middot; '+optDone+'/'+PHOTO_OPTIONAL.length+' optional';
+  document.getElementById('photos-status').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="color:'+(ok?'#22c55e':'#94a3b8')+'">'+msg+'</div>'
+    + (ok ? '<span class="badge badge-grn">Ready to Submit</span>' : '<span style="font-size:11px;color:#f59e0b">Selfie + 3 mandatory required</span>')
+    + '</div>';
+  document.getElementById('btn-submit').className = 'btn '+(ok?'btn-green':'btn-gray');
 }
 
 // ── CAMERA ────────────────────────────────────
@@ -1249,7 +1265,15 @@ function resetTabLocks(){tabUnlocked=[true,false,false,false];for(var i=0;i<4;i+
 
 // ── SUBMIT ────────────────────────────────────
 function submitForm(){
-  if(!PHOTO_KEYS.every(function(k){return state.photos[k];})){showErr('submit-err','Capture all 5 photos first.');return;}
+  var missingMandatory = PHOTO_MANDATORY.filter(function(k){ return !state.photos[k]; });
+  if(!state.selfie) missingMandatory.push('selfie');
+  if(missingMandatory.length > 0){
+    var missingLabels = missingMandatory.map(function(k){
+      if(k==='selfie') return 'Surveyor Selfie';
+      return PHOTO_LABELS[PHOTO_KEYS.indexOf(k)];
+    });
+    showErr('submit-err','Missing mandatory photos: '+missingLabels.join(', ')); return;
+  }
   showErr('submit-err','');
   var btn=document.getElementById('btn-submit');
   btn.innerHTML='<span class="spinner"></span> Uploading…';btn.disabled=true;
