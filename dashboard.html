@@ -1,164 +1,260 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Declared Data Analysis</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZCRIM Admin Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3a;--text:#e8eaf0;--muted:#7b80a0;--accent:#6c8ff8;--green:#4ecb8d;--orange:#f5a623;--pink:#f06292;--purple:#b39ddb}
-body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;font-size:14px;padding:24px}
-.header{margin-bottom:28px}
-.header-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.header h1{font-size:22px;font-weight:600}
-.header p{color:var(--muted);margin-top:4px;font-size:13px}
-.badge{background:rgba(108,143,248,.15);color:var(--accent);border:1px solid rgba(108,143,248,.3);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;font-family:'JetBrains Mono',monospace;white-space:nowrap}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 16px}
-.kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
-.kpi-value{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1}
-.kpi-sub{font-size:11px;color:var(--muted);margin-top:5px}
-.kpi.accent .kpi-value{color:var(--accent)}.kpi.green .kpi-value{color:var(--green)}.kpi.orange .kpi-value{color:var(--orange)}.kpi.pink .kpi-value{color:var(--pink)}.kpi.purple .kpi-value{color:var(--purple)}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-@media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px}
-.card-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:18px}
-.bar-item{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.bar-label{font-size:12px;color:var(--text);width:150px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
-.bar-fill{height:100%;border-radius:4px}
-.bar-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);width:36px;text-align:right;flex-shrink:0}
-.donut-wrap{display:flex;align-items:center;gap:24px;justify-content:center;padding:8px 0}
-.legend{display:flex;flex-direction:column;gap:10px}
-.legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
-.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.legend-pct{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;margin-left:auto;padding-left:12px}
-.age-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.age-label{font-size:11px;color:var(--muted);width:65px;flex-shrink:0;font-family:'JetBrains Mono',monospace}
-.age-bar-wrap{flex:1;display:flex;gap:3px}
-.age-bar-m,.age-bar-f{height:20px;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,.7);min-width:2px}
-.age-bar-m{background:var(--accent)}.age-bar-f{background:var(--pink)}
-.ward-table{width:100%;border-collapse:collapse}
-.ward-table th{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:500;text-align:left;padding:0 0 10px;border-bottom:1px solid var(--border)}
-.ward-table th:last-child{text-align:right}
-.ward-table td{padding:8px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
-.ward-table td:last-child{text-align:right;font-family:'JetBrains Mono',monospace;color:var(--muted)}
-.ward-mini-bar{display:inline-block;height:4px;background:var(--green);border-radius:2px;vertical-align:middle;margin-left:8px;opacity:.6}
-.rank{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);width:24px;display:inline-block}
-.quality-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
-.quality-item:last-child{border-bottom:none}
-.quality-ok{color:var(--green);font-family:'JetBrains Mono',monospace;font-size:12px}
-.quality-warn{color:var(--orange);font-family:'JetBrains Mono',monospace;font-size:12px}
+:root{--bg:#0f172a;--card:#1e293b;--bdr:#334155;--acc:#3b82f6;--grn:#22c55e;--org:#f59e0b;--red:#ef4444;--txt:#f1f5f9;--mut:#94a3b8}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font-size:14px;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--bdr);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:18px;font-weight:800}
+.btn-refresh{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:13px}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:700px){.summary-grid{grid-template-columns:repeat(2,1fr)}}
+.sum-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:18px;text-align:center}
+.sum-card .num{font-size:36px;font-weight:800;margin-bottom:4px}
+.sum-card .lbl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.overall-bar{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:20px;margin-bottom:24px}
+.overall-bar h3{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.prog-track{background:#334155;border-radius:8px;height:20px;overflow:hidden;margin-bottom:8px}
+.prog-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#3b82f6,#22c55e);transition:width .8s ease}
+.prog-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:20px}
+.panel h3{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--bdr)}
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #334155}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{font-size:20px;width:32px;text-align:center}
+.lb-info{flex:1}
+.lb-name{font-weight:700;font-size:13px}
+.lb-block{font-size:11px;color:var(--mut)}
+.lb-bar-wrap{height:4px;background:#334155;border-radius:2px;margin-top:4px}
+.lb-bar{height:100%;border-radius:2px;transition:width .6s}
+.lb-nums{text-align:right;font-size:12px}
+.lb-pct{font-weight:800;font-size:15px}
+.act-row{padding:10px 0;border-bottom:1px solid #334155;display:flex;gap:10px;align-items:flex-start}
+.act-row:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;background:var(--grn);margin-top:4px;flex-shrink:0}
+.act-info{flex:1}
+.act-name{font-weight:600;font-size:13px}
+.act-meta{font-size:11px;color:var(--mut)}
+.ward-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #334155}
+.ward-row:last-child{border-bottom:none}
+.ward-name{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ward-bar-wrap{width:100px;height:6px;background:#334155;border-radius:3px}
+.ward-bar{height:100%;border-radius:3px;background:var(--acc)}
+.ward-pct{width:36px;text-align:right;font-size:12px;color:var(--mut)}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:32px;width:100%;max-width:360px;text-align:center}
+.login-card h2{font-size:22px;font-weight:800;margin-bottom:6px}
+.login-card p{color:var(--mut);font-size:13px;margin-bottom:24px}
+.login-card input{width:100%;background:#0f172a;border:1px solid var(--bdr);border-radius:8px;padding:12px;color:var(--txt);font-size:15px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px}
+.login-card button{width:100%;padding:13px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer}
+.err-msg{color:var(--red);font-size:13px;margin-top:10px;min-height:20px}
+.spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-screen{min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:var(--mut)}
+.updated{font-size:11px;color:var(--mut);margin-right:8px}
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <div>
-      <h1>Declared Data &mdash; Population Registry</h1>
-      <p>Mewat / Nuh District, Haryana &nbsp;&middot;&nbsp; Family registration records</p>
-    </div>
-    <span class="badge">2,692 records</span>
-  </div>
-</div>
 
-<div class="kpi-grid">
-  <div class="kpi accent"><div class="kpi-label">Total Records</div><div class="kpi-value">2,692</div><div class="kpi-sub">unique family IDs</div></div>
-  <div class="kpi green"><div class="kpi-label">Avg. Age</div><div class="kpi-value">43.8</div><div class="kpi-sub">range: 8 to 101 yrs</div></div>
-  <div class="kpi orange"><div class="kpi-label">Blocks / Towns</div><div class="kpi-value">17</div><div class="kpi-sub">administrative areas</div></div>
-  <div class="kpi purple"><div class="kpi-label">Unique Wards</div><div class="kpi-value">381</div><div class="kpi-sub">villages and wards</div></div>
-  <div class="kpi pink"><div class="kpi-label">Missing Mobile</div><div class="kpi-value">57</div><div class="kpi-sub">2.1% of records</div></div>
-</div>
-
-<div class="charts-grid">
-  <div class="card">
-    <div class="card-title">Gender Distribution</div>
-    <div class="donut-wrap">
-      <svg width="120" height="120" viewBox="0 0 120 120" style="overflow:visible">
-        <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>
-        <circle cx="60" cy="60" r="45" fill="none" stroke="#6c8ff8" stroke-width="18" stroke-dasharray="162.1 120.6" stroke-dashoffset="70.7" transform="rotate(-90 60 60)"/>
-        <circle cx="60" cy="60" r="45" fill="none" stroke="#f06292" stroke-width="18" stroke-dasharray="120.6 162.1" stroke-dashoffset="-91.4" transform="rotate(-90 60 60)"/>
-        <text x="60" y="56" text-anchor="middle" fill="#e8eaf0" font-size="18" font-weight="700" font-family="JetBrains Mono,monospace">2,692</text>
-        <text x="60" y="71" text-anchor="middle" fill="#7b80a0" font-size="9" font-family="Inter,sans-serif">total</text>
-      </svg>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#6c8ff8"></div><span>Male</span><span class="legend-pct" style="color:#6c8ff8">57.3%</span></div>
-        <div class="legend-item" style="font-size:11px;color:#7b80a0;margin-left:18px">1,543 individuals</div>
-        <div class="legend-item" style="margin-top:6px"><div class="legend-dot" style="background:#f06292"></div><span>Female</span><span class="legend-pct" style="color:#f06292">42.7%</span></div>
-        <div class="legend-item" style="font-size:11px;color:#7b80a0;margin-left:18px">1,149 individuals</div>
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">Age Group Distribution</div>
-    <div id="age-groups"></div>
-  </div>
-</div>
-
-<div class="charts-grid">
-  <div class="card">
-    <div class="card-title">Records by Block / Town</div>
-    <div id="blocks-chart"></div>
-  </div>
-  <div class="card">
-    <div class="card-title">Top 10 Wards / Villages</div>
-    <table class="ward-table">
-      <thead><tr><th>#</th><th>Ward / Village</th><th>Count</th></tr></thead>
-      <tbody id="ward-tbody"></tbody>
-    </table>
-  </div>
-</div>
-
-<div class="charts-grid" style="grid-template-columns:1fr">
-  <div class="card">
-    <div class="card-title">Age Groups by Gender</div>
-    <div id="age-gender-chart"></div>
-    <div style="display:flex;gap:20px;margin-top:14px;justify-content:flex-end">
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#7b80a0"><div style="width:10px;height:10px;border-radius:2px;background:#6c8ff8"></div> Male</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#7b80a0"><div style="width:10px;height:10px;border-radius:2px;background:#f06292"></div> Female</div>
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div style="font-size:52px;margin-bottom:12px">🏛️</div>
+      <h2>ZCRIM Admin</h2>
+      <p>Survey Dashboard · Mewat/Nuh District</p>
+      <input type="password" id="admin-key" placeholder="Enter admin key" autocomplete="off" />
+      <button onclick="doLogin()">Access Dashboard →</button>
+      <div class="err-msg" id="login-err"></div>
     </div>
   </div>
 </div>
 
-<div class="charts-grid">
-  <div class="card">
-    <div class="card-title">Data Quality</div>
-    <div class="quality-item"><span>Total Records</span><span class="quality-ok">2,692</span></div>
-    <div class="quality-item"><span>Records with Mobile No.</span><span class="quality-ok">2,635 (97.9%)</span></div>
-    <div class="quality-item"><span>Missing Mobile No.</span><span class="quality-warn">57 (2.1%)</span></div>
-    <div class="quality-item"><span>Records with Age</span><span class="quality-ok">2,692 (100%)</span></div>
-    <div class="quality-item"><span>Records with Gender</span><span class="quality-ok">2,692 (100%)</span></div>
-    <div class="quality-item"><span>Unique Family IDs</span><span class="quality-ok">2,692</span></div>
+<!-- DASHBOARD SCREEN -->
+<div id="dashboard-screen" style="display:none">
+  <div class="topbar">
+    <h1>🏛️ ZCRIM Dashboard</h1>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="updated" id="updated-time"></span>
+      <button class="btn-refresh" onclick="loadData()">🔄 Refresh</button>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-title">Key Observations</div>
-    <div class="quality-item"><span>Sex ratio (F per 1000 M)</span><span class="quality-warn">744</span></div>
-    <div class="quality-item"><span>Elderly (60+)</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b39ddb">574 (21.3%)</span></div>
-    <div class="quality-item"><span>Working age (18-59)</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#4ecb8d">2,063 (76.6%)</span></div>
-    <div class="quality-item"><span>Minors (Under 18)</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#f5a623">55 (2.0%)</span></div>
-    <div class="quality-item"><span>Largest block</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6c8ff8">PUNAHANA (693)</span></div>
-    <div class="quality-item"><span>Largest ward</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6c8ff8">Singar (101)</span></div>
+  <div class="container" id="dashboard-body">
+    <div class="loading-screen"><span class="spinner"></span><span>Loading…</span></div>
   </div>
 </div>
 
 <script>
-var ageGroups=[{l:"Under 18",c:55,col:"#f5a623"},{l:"18-29",c:573,col:"#6c8ff8"},{l:"30-44",c:958,col:"#4ecb8d"},{l:"45-59",c:532,col:"#b39ddb"},{l:"60+",c:574,col:"#f06292"}];
-var ag=document.getElementById("age-groups");
-ageGroups.forEach(function(g){var p=(g.c/958*100).toFixed(1);ag.innerHTML+='<div class="bar-item"><div class="bar-label">'+g.l+'</div><div class="bar-track"><div class="bar-fill" style="width:'+p+'%;background:'+g.col+'"></div></div><div class="bar-count">'+g.c+'</div></div>';});
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkZsidK_1Tz4SblxZBODnTOXt1YlY_9LbK0UfiDac1oyxeT1wegvlsCubhjbAHuWs89Q/exec';
+var ADMIN_KEY = '';
+var charts = {};
 
-var blocks=[["PUNAHANA BL",693],["NUH BL",470],["TAORU BL",377],["PINGWAN BL",344],["FEROZEPUR JHIRKA BL",233],["NAGINA BL",214],["INDRI BL",194],["PUNAHANA MC",59],["FEROZEPUR JHIRKA MC",38],["TAORU MC",37]];
-var bc=["#6c8ff8","#4ecb8d","#f5a623","#b39ddb","#f06292","#6c8ff8","#4ecb8d","#f5a623","#b39ddb","#f06292"];
-var bl=document.getElementById("blocks-chart");
-blocks.forEach(function(b,i){var p=(b[1]/693*100).toFixed(1);bl.innerHTML+='<div class="bar-item"><div class="bar-label" style="width:170px">'+b[0]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+p+'%;background:'+bc[i]+'"></div></div><div class="bar-count">'+b[1]+'</div></div>';});
+function doLogin() {
+  var key = document.getElementById('admin-key').value.trim();
+  if (!key) { document.getElementById('login-err').textContent = 'Please enter the admin key'; return; }
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard-screen').style.display = 'block';
+  ADMIN_KEY = key;
+  loadData();
+}
 
-var wards=[["Singar",101],["Bisru",67],["Pingwan",59],["Nai",44],["Ghasera",43],["Khori Kalan",33],["Malab",32],["Bichhor",32],["Sakras",29],["Bawla",29]];
-var tb=document.getElementById("ward-tbody");
-wards.forEach(function(w,i){var bw=Math.round(w[1]/101*60);tb.innerHTML+='<tr><td><span class="rank">'+('0'+(i+1)).slice(-2)+'</span></td><td>'+w[0]+'<span class="ward-mini-bar" style="width:'+bw+'px"></span></td><td>'+w[1]+'</td></tr>';});
+document.getElementById('admin-key').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') doLogin();
+});
 
-var agd=[{l:"Under 18",m:32,f:23},{l:"18-29",m:332,f:241},{l:"30-44",m:551,f:407},{l:"45-59",m:301,f:231},{l:"60+",m:327,f:247}];
-var ac=document.getElementById("age-gender-chart");
-agd.forEach(function(g){var mp=(g.m/958*100).toFixed(1);var fp=(g.f/958*100).toFixed(1);ac.innerHTML+='<div class="age-row"><div class="age-label">'+g.l+'</div><div class="age-bar-wrap"><div class="age-bar-m" style="width:'+mp+'%">'+g.m+'</div><div class="age-bar-f" style="width:'+fp+'%">'+g.f+'</div></div></div>';});
+function callAPI(fn, args, cb) {
+  var url = APPS_SCRIPT_URL + '?fn=' + encodeURIComponent(fn) + '&args=' + encodeURIComponent(JSON.stringify(args || []));
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4) return;
+    try { cb(null, JSON.parse(xhr.responseText)); }
+    catch(e) { cb('Parse error: ' + xhr.responseText.substring(0, 100)); }
+  };
+  xhr.onerror = function() { cb('Network error — check internet connection'); };
+  xhr.open('GET', url, true);
+  xhr.send();
+}
+
+function loadData() {
+  document.getElementById('updated-time').textContent = 'Refreshing…';
+  document.getElementById('dashboard-body').innerHTML = '<div class="loading-screen"><span class="spinner"></span><span>Loading data…</span></div>';
+  callAPI('getDashboardData', [ADMIN_KEY], function(err, res) {
+    if (err || !res) {
+      document.getElementById('dashboard-body').innerHTML = '<div class="loading-screen" style="color:var(--red)">❌ ' + (err || 'Unknown error') + '<br><small style="color:var(--mut);margin-top:8px">Make sure Code.gs is deployed with latest version</small></div>';
+      return;
+    }
+    if (!res.ok) {
+      // Wrong admin key — go back to login
+      document.getElementById('dashboard-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'block';
+      document.getElementById('login-err').textContent = '❌ Wrong admin key. Try again.';
+      document.getElementById('admin-key').value = '';
+      ADMIN_KEY = '';
+      return;
+    }
+    renderDashboard(res);
+  });
+}
+
+function renderDashboard(d) {
+  document.getElementById('updated-time').textContent = 'Updated: ' + d.updated;
+  var s = d.summary;
+  var overallPct = s.total > 0 ? Math.round(s.done / s.total * 100) : 0;
+  var medals = ['🥇','🥈','🥉'];
+
+  var lbHtml = d.board.map(function(z, i) {
+    var barCol = z.pct >= 75 ? '#22c55e' : z.pct >= 40 ? '#f59e0b' : '#ef4444';
+    return '<div class="lb-row">' +
+      '<div class="lb-rank">' + (medals[i] || '#' + (i+1)) + '</div>' +
+      '<div class="lb-info">' +
+        '<div class="lb-name">' + z.name + '</div>' +
+        '<div class="lb-block">' + z.block + '</div>' +
+        '<div class="lb-bar-wrap"><div class="lb-bar" style="width:' + z.pct + '%;background:' + barCol + '"></div></div>' +
+      '</div>' +
+      '<div class="lb-nums">' +
+        '<div class="lb-pct" style="color:' + barCol + '">' + z.pct + '%</div>' +
+        '<div style="color:var(--mut)">✅' + z.done + ' ⏳' + z.pending + ' 🚫' + z.absent + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  var actHtml = !d.recent || d.recent.length === 0
+    ? '<div style="color:var(--mut);text-align:center;padding:20px">No submissions yet</div>'
+    : d.recent.map(function(r) {
+        return '<div class="act-row">' +
+          '<div class="act-dot"></div>' +
+          '<div class="act-info">' +
+            '<div class="act-name">' + (r.family || '—') + '</div>' +
+            '<div class="act-meta">' + (r.zcrim||'') + ' · ' + (r.ward||'') + ' · ' + (r.time||'') + '</div>' +
+          '</div></div>';
+      }).join('');
+
+  var wardHtml = d.wards.slice(0, 15).map(function(w) {
+    var pct = w.total > 0 ? Math.round(w.done / w.total * 100) : 0;
+    return '<div class="ward-row">' +
+      '<div class="ward-name">' + w.ward + '</div>' +
+      '<div class="ward-bar-wrap"><div class="ward-bar" style="width:' + pct + '%"></div></div>' +
+      '<div class="ward-pct">' + pct + '%</div>' +
+      '<div style="font-size:11px;color:var(--mut);width:50px;text-align:right">' + w.done + '/' + w.total + '</div>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('dashboard-body').innerHTML =
+    '<div class="summary-grid">' +
+      '<div class="sum-card"><div class="num" style="color:var(--acc)">' + s.total + '</div><div class="lbl">Total Families</div></div>' +
+      '<div class="sum-card"><div class="num" style="color:var(--grn)">' + s.done + '</div><div class="lbl">Completed</div></div>' +
+      '<div class="sum-card"><div class="num" style="color:var(--org)">' + s.pending + '</div><div class="lbl">Pending</div></div>' +
+      '<div class="sum-card"><div class="num" style="color:#a78bfa">' + s.todayCount + '</div><div class="lbl">Today\'s Surveys</div></div>' +
+    '</div>' +
+    '<div class="overall-bar">' +
+      '<h3>Overall Progress — ' + overallPct + '% Complete</h3>' +
+      '<div class="prog-track"><div class="prog-fill" style="width:' + overallPct + '%"></div></div>' +
+      '<div class="prog-labels"><span>0</span><span>' + s.done + ' of ' + s.total + ' families verified</span><span>' + s.total + '</span></div>' +
+    '</div>' +
+    '<div class="grid2">' +
+      '<div class="panel"><h3>📊 Completion by ZCRIM</h3><div style="position:relative;height:280px"><canvas id="chart-bar"></canvas></div></div>' +
+      '<div class="panel"><h3>🥧 Overall Status</h3><div style="position:relative;height:280px"><canvas id="chart-pie"></canvas></div></div>' +
+    '</div>' +
+    '<div class="grid2">' +
+      '<div class="panel"><h3>🏆 ZCRIM Leaderboard</h3>' + lbHtml + '</div>' +
+      '<div class="panel"><h3>🕐 Recent Submissions</h3>' + actHtml + '</div>' +
+    '</div>' +
+    '<div class="panel" style="margin-bottom:24px"><h3>🏘️ Village / Ward Progress (Top 15)</h3>' + wardHtml + '</div>';
+
+  // Render charts after DOM is ready
+  setTimeout(function() { renderCharts(d); }, 100);
+}
+
+function renderCharts(d) {
+  Object.keys(charts).forEach(function(k) { if (charts[k]) { charts[k].destroy(); charts[k] = null; } });
+
+  var barCtx = document.getElementById('chart-bar');
+  var pieCtx = document.getElementById('chart-pie');
+  if (!barCtx || !pieCtx) return;
+
+  charts.bar = new Chart(barCtx.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: d.board.map(function(z) { return z.name; }),
+      datasets: [
+        { label:'Done',    data: d.board.map(function(z){ return z.done; }),    backgroundColor:'#22c55e' },
+        { label:'Absent',  data: d.board.map(function(z){ return z.absent; }),  backgroundColor:'#f59e0b' },
+        { label:'Pending', data: d.board.map(function(z){ return z.pending; }), backgroundColor:'#334155' }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#94a3b8', font:{size:11} } } },
+      scales:{
+        x:{ stacked:true, ticks:{ color:'#94a3b8', font:{size:10} }, grid:{ color:'#1e293b' } },
+        y:{ stacked:true, ticks:{ color:'#94a3b8' }, grid:{ color:'#334155' } }
+      }
+    }
+  });
+
+  charts.pie = new Chart(pieCtx.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Completed','Absent','Pending'],
+      datasets:[{ data:[d.summary.done, d.summary.absent, d.summary.pending], backgroundColor:['#22c55e','#f59e0b','#334155'], borderWidth:0 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ color:'#94a3b8', font:{size:12}, padding:16 } } }
+    }
+  });
+}
+
+setInterval(function() { if (ADMIN_KEY) loadData(); }, 300000);
 </script>
 </body>
 </html>
