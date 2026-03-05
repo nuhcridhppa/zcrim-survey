@@ -94,17 +94,33 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
 
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkZsidK_1Tz4SblxZBODnTOXt1YlY_9LbK0UfiDac1oyxeT1wegvlsCubhjbAHuWs89Q/exec';
-var ADMIN_KEY = '';
+var SESSION_TOKEN = '';
 var charts = {};
+
+// Admin password check is done locally — then login as master ANEES
+var ADMIN_PASS = 'ZCRIM_ADMIN_NUH2024';
 
 function doLogin() {
   var key = document.getElementById('admin-key').value.trim();
   if (!key) { document.getElementById('login-err').textContent = 'Please enter the admin key'; return; }
+  if (key !== ADMIN_PASS) {
+    document.getElementById('login-err').textContent = 'Wrong admin key. Try again.';
+    document.getElementById('admin-key').value = '';
+    return;
+  }
   document.getElementById('login-err').textContent = '';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('dashboard-screen').style.display = 'block';
-  ADMIN_KEY = key;
-  loadData();
+  // Login as master ANEES to get session token
+  callAPI('loginZcrim', ['9466610668', 'ZCRIM@2024'], function(err, res) {
+    if (err || !res || !res.ok) {
+      document.getElementById('dashboard-body').innerHTML =
+        '<div class="loading-screen" style="color:var(--red)">❌ Could not connect to server.<br><small style="color:var(--mut)">Check internet or redeploy Apps Script</small></div>';
+      return;
+    }
+    SESSION_TOKEN = res.token;
+    loadData();
+  });
 }
 
 document.getElementById('admin-key').addEventListener('keydown', function(e){
@@ -119,7 +135,7 @@ function callAPI(fn, args, cb) {
     try { cb(null, JSON.parse(xhr.responseText)); }
     catch(e) { cb('Parse error: ' + xhr.responseText.substring(0, 100)); }
   };
-  xhr.onerror = function() { cb('Network error — check internet connection'); };
+  xhr.onerror = function() { cb('Network error'); };
   xhr.open('GET', url, true);
   xhr.send();
 }
@@ -127,21 +143,25 @@ function callAPI(fn, args, cb) {
 function loadData() {
   document.getElementById('updated-time').textContent = 'Refreshing…';
   document.getElementById('dashboard-body').innerHTML = '<div class="loading-screen"><span class="spinner"></span><span>Loading data…</span></div>';
-  callAPI('getDashboardData', [ADMIN_KEY], function(err, res) {
-    if (err || !res) {
-      document.getElementById('dashboard-body').innerHTML = '<div class="loading-screen" style="color:var(--red)">❌ ' + (err || 'Unknown error') + '<br><small style="color:var(--mut);margin-top:8px">Make sure Code.gs is deployed with latest version</small></div>';
+  // Use getLeaderboard which is already in the deployed backend
+  callAPI('getLeaderboard', [SESSION_TOKEN], function(err, res) {
+    if (err || !res || !res.ok) {
+      document.getElementById('dashboard-body').innerHTML =
+        '<div class="loading-screen" style="color:var(--red)">❌ ' + (err || (res&&res.msg) || 'Failed') + '</div>';
       return;
     }
-    if (!res.ok) {
-      // Wrong admin key — go back to login
-      document.getElementById('dashboard-screen').style.display = 'none';
-      document.getElementById('login-screen').style.display = 'block';
-      document.getElementById('login-err').textContent = '❌ Wrong admin key. Try again.';
-      document.getElementById('admin-key').value = '';
-      ADMIN_KEY = '';
-      return;
-    }
-    renderDashboard(res);
+    // Build dashboard from leaderboard data
+    var total=0, done=0, absent=0;
+    res.board.forEach(function(z){ total+=z.total; done+=z.done; absent+=z.absent; });
+    var pending = total - done - absent;
+    var d = {
+      summary: { total:total, done:done, absent:absent, pending:pending, todayCount:'—' },
+      board:   res.board,
+      wards:   [],
+      recent:  [],
+      updated: new Date().toLocaleString()
+    };
+    renderDashboard(d);
   });
 }
 
