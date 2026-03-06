@@ -77,17 +77,6 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
   <div class="topbar-right">
     <select id="block-filter" onchange="applyBlockFilter()" style="background:#0f172a;border:1px solid var(--bdr);border-radius:8px;padding:7px 12px;color:var(--txt);font-size:13px;outline:none">
       <option value="">All Blocks</option>
-      <option>NUH BL</option>
-      <option>FEROZEPUR JHIRKA BL</option>
-      <option>PUNHANA BL</option>
-      <option>NAGINA BL</option>
-      <option>TAORU BL</option>
-      <option>PINANGWAN BL</option>
-      <option>INDRI BL</option>
-      <option>BISRU BL</option>
-      <option>SHAHPUR BL</option>
-      <option>KHOLPUR BL</option>
-      <option>SOHNA BL</option>
     </select>
     <span class="updated" id="updated-time">Loading&hellip;</span>
     <button class="btn btn-blue" onclick="loadData()">&#x1F504; Refresh</button>
@@ -222,6 +211,19 @@ function renderDashboard(d) {
       '<input class="search-box" id="ward-search" placeholder="Search village..." oninput="filterWards(this.value)"/>'+
       '<div id="ward-list">'+wardRows+'</div>'+
     '</div>';
+
+  // Populate block filter dropdown from real data
+  var sel = document.getElementById('block-filter');
+  if (sel && d.blockNames && d.blockNames.length) {
+    var current = sel.value;
+    sel.innerHTML = '<option value="">All Blocks</option>';
+    d.blockNames.forEach(function(b){
+      var opt = document.createElement('option');
+      opt.value = b; opt.textContent = b;
+      if (b === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
 
   setTimeout(function(){ renderCharts(d); }, 100);
 }
