@@ -612,8 +612,9 @@ function doLogin() {
   if(!validMobile(mob)){showErr('login-err','Enter valid 10-digit mobile number.'); return;}
   if(!pwd){showErr('login-err','Enter your password.'); return;}
 
-  // Block login from desktop/PC
-  if (!isMobileDevice()) {
+  // Block login from desktop/PC — exempt DCRIM observer account
+  var DCRIM_MOBILE = '9560596645';
+  if (!isMobileDevice() && mob !== DCRIM_MOBILE) {
     showErr('login-err', '🚫 Login only allowed from mobile phones. Desktop/PC access is not permitted.');
     return;
   }
