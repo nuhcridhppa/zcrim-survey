@@ -416,6 +416,20 @@ var google = {
   }
 };
 
+// ── SECURITY: sanitize any server data before inserting into DOM ──
+function esc(val) {
+  if (val === null || val === undefined) return '';
+  return String(val)
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#x27;');
+}
+
+// Validate mobile before sending
+function validMobile(m) { return /^[6-9]\d{9}$/.test(String(m||'').trim()); }
+
 var state = {
   zcrim:null, token:null, sessionExpiry:null,
   family:null, familyRowIndex:null,
@@ -544,7 +558,7 @@ function isMobileDevice() {
 function doLogin() {
   var mob=document.getElementById('inp-mobile').value.trim();
   var pwd=document.getElementById('inp-password').value.trim();
-  if(mob.length!==10){showErr('login-err','Enter valid 10-digit mobile.'); return;}
+  if(!validMobile(mob)){showErr('login-err','Enter valid 10-digit mobile number.'); return;}
   if(!pwd){showErr('login-err','Enter your password.'); return;}
 
   // Block login from desktop/PC
@@ -575,7 +589,7 @@ function doLogin() {
       startSessionTimer();
       loadVillagePicker();
     })
-    .withFailureHandler(function(e){btn.innerHTML='Login →';btn.disabled=false;showErr('login-err',e.message);})
+    .withFailureHandler(function(e){btn.innerHTML='Login →';btn.disabled=false;showErr('login-err', esc(e.message));})
     .loginZcrim(mob, pwd, navigator.platform + " | " + screen.width + "x" + screen.height);
 }
 
@@ -721,7 +735,7 @@ function showTab(tabId){
 function loadLeaderboard(){
   google.script.run
     .withSuccessHandler(function(res){
-      if(!res.ok){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px;text-align:center">'+res.msg+'</div>'; return; }
+      if(!res.ok){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px;text-align:center">'+esc(res.msg)+'</div>'; return; }
       var html='<div style="font-size:11px;color:var(--mut);margin-bottom:10px;text-align:center">Updated live from Google Sheets</div>';
       var medals=['🥇','🥈','🥉'];
       res.board.forEach(function(z,i){
@@ -899,10 +913,10 @@ function renderFamilyInfo(){
     if (tab0) tab0.insertBefore(banner, tab0.firstChild);
   }
 
-  document.getElementById('family-info').innerHTML=[['PPP ID',f.id],['Name',f.name],['Mobile',f.mobile||'—'],['Age',f.age],['Gender',f.gender==='M'?'Male':'Female'],['Ward',f.ward]]
+  document.getElementById('family-info').innerHTML=[['PPP ID',esc(f.id)],['Name',esc(f.name)],['Mobile',esc(f.mobile||'—')],['Age',esc(f.age)],['Gender',f.gender==='M'?'Male':'Female'],['Ward',esc(f.ward)]]
     .map(function(p){return '<div class="info-item"><div class="k">'+p[0]+'</div><div class="v">'+p[1]+'</div></div>';}).join('');
   document.getElementById('fi-address').textContent=f.address;
-  document.getElementById('fi-badges').innerHTML='<span class="badge badge-blu">'+f.block+'</span> <span class="badge '+(f.gender==='M'?'badge-blu':'badge-org')+'">'+(f.gender==='M'?'Male':'Female')+'</span> <span class="badge badge-grn">Age '+f.age+'</span>';
+  document.getElementById('fi-badges').innerHTML='<span class="badge badge-blu">'+esc(f.block)+'</span> <span class="badge '+(f.gender==='M'?'badge-blu':'badge-org')+'">'+(f.gender==='M'?'Male':'Female')+'</span> <span class="badge badge-grn">Age '+esc(f.age)+'</span>';
   // Duplicate check — warn if PPP ID seen this session
   if(!state.surveyedIds) state.surveyedIds = {};
   if(state.surveyedIds[f.id]){
