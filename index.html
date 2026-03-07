@@ -516,6 +516,9 @@ function togglePwd() {
 }
 
 // ── LOGIN ─────────────────────────────────────
+// ── DEVICE FINGERPRINT ───────────────────────────────────────────
+// Builds a stable hash from hardware/browser properties
+// Cannot be spoofed easily without developer tools knowledge
 function doLogin() {
   var mob=document.getElementById('inp-mobile').value.trim();
   var pwd=document.getElementById('inp-password').value.trim();
@@ -544,21 +547,49 @@ function doLogin() {
       loadVillagePicker();
     })
     .withFailureHandler(function(e){btn.innerHTML='Login →';btn.disabled=false;showErr('login-err',e.message);})
-    .loginZcrim(mob,pwd);
+    .loginZcrim(mob, pwd);
 }
 
-// ── SESSION TIMER ────────────────────────────
+// ── SESSION TIMER + SERVER HEARTBEAT ─────────
+var heartbeatTick = 0;
 function startSessionTimer() {
   clearInterval(state.sessionTimerInterval);
-  state.sessionTimerInterval=setInterval(function(){
-    var left=Math.max(0,Math.floor((state.sessionExpiry-new Date())/1000));
-    var m=Math.floor(left/60),s=left%60;
-    var txt='⏱ '+m+':'+(s<10?'0':'')+s;
-    var e1=document.getElementById('sess-timer'),e2=document.getElementById('sess-timer-survey');
-    if(e1)e1.textContent=txt; if(e2)e2.textContent=txt;
-    if(left===0){clearInterval(state.sessionTimerInterval);toast('⏰ Session expired. Please login again.','red');setTimeout(function(){doLogout(true);},2000);}
-    else if(left===60)toast('⚠️ Session expires in 1 minute!','org');
-  },1000);
+  heartbeatTick = 0;
+  state.sessionTimerInterval = setInterval(function(){
+    // Local countdown
+    var left = Math.max(0, Math.floor((state.sessionExpiry - new Date()) / 1000));
+    var m = Math.floor(left/60), s = left % 60;
+    var txt = '⏱ ' + m + ':' + (s<10?'0':'') + s;
+    var e1 = document.getElementById('sess-timer'), e2 = document.getElementById('sess-timer-survey');
+    if(e1) e1.textContent = txt; if(e2) e2.textContent = txt;
+
+    // Local expiry
+    if (left === 0) {
+      clearInterval(state.sessionTimerInterval);
+      toast('⏰ Session expired. Please login again.', 'red');
+      setTimeout(function(){ doLogout(true); }, 2000);
+      return;
+    }
+    if (left === 60) toast('⚠️ Session expires in 1 minute!', 'org');
+
+    // Server heartbeat every 60 seconds — detects if session was invalidated
+    // (e.g. same ZCRIM logged in from another device)
+    heartbeatTick++;
+    if (heartbeatTick % 60 === 0 && state.token) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (!res || !res.ok) {
+            clearInterval(state.sessionTimerInterval);
+            toast('🔒 Your session was ended — another device logged in with your account.', 'red');
+            setTimeout(function(){ doLogout(true); }, 3000);
+          }
+        })
+        .withFailureHandler(function(){
+          // Silent fail — don't interrupt on network blip
+        })
+        .validateSessionPing(state.token);
+    }
+  }, 1000);
 }
 
 // ── LOGOUT ────────────────────────────────────
