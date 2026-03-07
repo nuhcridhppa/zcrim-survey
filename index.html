@@ -404,12 +404,13 @@ function gsr(fnName, args, onSuccess, onFailure) {
     // POST for photos/large data
     xhr.open('POST', APPS_SCRIPT_URL, true);
     xhr.setRequestHeader('Content-Type', 'text/plain'); // text/plain avoids CORS preflight
-    xhr.send(JSON.stringify({fn: fnName, args: args || []}));
+    xhr.send(JSON.stringify({fn: fnName, args: args || [], ak: _AK}));
   } else {
     // GET for normal calls
     var url = APPS_SCRIPT_URL
       + '?fn='   + encodeURIComponent(fnName)
-      + '&args=' + encodeURIComponent(JSON.stringify(args || []));
+      + '&args=' + encodeURIComponent(JSON.stringify(args || []))
+      + '&ak='   + encodeURIComponent(_AK);
     xhr.open('GET', url, true);
     xhr.send();
   }
@@ -649,29 +650,101 @@ function doLogin() {
 }
 
 // ── SESSION TIMER + SERVER HEARTBEAT ─────────
+// ── IDLE TIMEOUT — 15 minutes of no activity ─────────────────────
+var IDLE_LIMIT_SEC  = 15 * 60;  // 15 minutes
+var IDLE_WARN_SEC   = 60;       // warn 1 minute before logout
+var lastActivityAt  = Date.now();
+var idleWarned      = false;
+
+function resetIdleTimer() {
+  lastActivityAt = Date.now();
+  idleWarned     = false;
+  // Hide warning banner if visible
+  var warn = document.getElementById('idle-warning');
+  if (warn) warn.style.display = 'none';
+}
+
+// Track ANY user interaction as activity
+['touchstart','touchmove','click','keydown','scroll','mousemove'].forEach(function(ev){
+  document.addEventListener(ev, resetIdleTimer, { passive:true });
+});
+
+// ── SESSION TIMER + IDLE CHECKER ─────────────────────────────────
 var heartbeatTick = 0;
 function startSessionTimer() {
   clearInterval(state.sessionTimerInterval);
-  heartbeatTick = 0;
+  heartbeatTick  = 0;
+  lastActivityAt = Date.now();
+  idleWarned     = false;
+
   state.sessionTimerInterval = setInterval(function(){
-    // Local countdown
+
+    // ── IDLE CHECK ──────────────────────────────────────────────
+    if (state.token) {
+      var idleFor = Math.floor((Date.now() - lastActivityAt) / 1000);
+      var idleLeft = IDLE_LIMIT_SEC - idleFor;
+
+      if (idleLeft <= 0) {
+        // Idle limit reached — auto logout
+        clearInterval(state.sessionTimerInterval);
+        var warn = document.getElementById('idle-warning');
+        if (warn) warn.style.display = 'none';
+        toast('💤 Logged out due to inactivity.', 'red');
+        setTimeout(function(){ doLogout(true); }, 1500);
+        return;
+      }
+
+      if (idleLeft <= IDLE_WARN_SEC && !idleWarned) {
+        // Show idle warning banner
+        idleWarned = true;
+        var warn = document.getElementById('idle-warning');
+        if (!warn) {
+          warn = document.createElement('div');
+          warn.id = 'idle-warning';
+          warn.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+            'background:#92400e;color:#fef3c7;padding:12px 20px;border-radius:12px;' +
+            'font-size:13px;font-weight:700;z-index:9999;text-align:center;' +
+            'box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:320px;width:90%';
+          document.body.appendChild(warn);
+        }
+        warn.style.display = 'block';
+        warn.innerHTML = '💤 Still there? You will be logged out in ' + IDLE_WARN_SEC +
+          ' seconds due to inactivity.<br>' +
+          '<button onclick="resetIdleTimer()" style="margin-top:8px;padding:6px 16px;' +
+          'background:#fef3c7;color:#92400e;border:none;border-radius:6px;' +
+          'font-weight:800;font-size:12px;cursor:pointer">Yes, keep me logged in</button>';
+      }
+
+      // Update idle countdown in warning banner
+      if (idleWarned && idleLeft <= IDLE_WARN_SEC) {
+        var warn = document.getElementById('idle-warning');
+        if (warn && warn.style.display !== 'none') {
+          warn.innerHTML = '💤 Still there? Logging out in <b>' + idleLeft + 's</b> due to inactivity.<br>' +
+            '<button onclick="resetIdleTimer()" style="margin-top:8px;padding:6px 16px;' +
+            'background:#fef3c7;color:#92400e;border:none;border-radius:6px;' +
+            'font-weight:800;font-size:12px;cursor:pointer">Yes, keep me logged in</button>';
+        }
+      }
+    }
+    // ────────────────────────────────────────────────────────────
+
+    // Session countdown display
     var left = Math.max(0, Math.floor((state.sessionExpiry - new Date()) / 1000));
     var m = Math.floor(left/60), s = left % 60;
     var txt = '⏱ ' + m + ':' + (s<10?'0':'') + s;
     var e1 = document.getElementById('sess-timer'), e2 = document.getElementById('sess-timer-survey');
     if(e1) e1.textContent = txt; if(e2) e2.textContent = txt;
 
-    // Local expiry
+    // Session expired
     if (left === 0) {
       clearInterval(state.sessionTimerInterval);
       toast('⏰ Session expired. Please login again.', 'red');
       setTimeout(function(){ doLogout(true); }, 2000);
       return;
     }
-    if (left === 60) toast('⚠️ Session expires in 1 minute!', 'org');
+    if (left === 300) toast('⚠️ Session expires in 5 minutes!', 'org');
 
-    // Server heartbeat every 60 seconds — detects if session was invalidated
-    // (e.g. same ZCRIM logged in from another device)
+    // Server heartbeat every 60s — detect duplicate login from another device
     heartbeatTick++;
     if (heartbeatTick % 60 === 0 && state.token) {
       google.script.run
@@ -790,6 +863,8 @@ function renderDcrimProgress(d) {
 // ── LOGOUT ────────────────────────────────────
 function doLogout(auto) {
   clearInterval(state.sessionTimerInterval);
+  var warn = document.getElementById('idle-warning');
+  if (warn) warn.style.display = 'none';
   if(state.token) google.script.run.logoutSession(state.token);
   state.token=null; state.zcrim=null; state.selectedWard=null;
   document.getElementById('inp-mobile').value='';
