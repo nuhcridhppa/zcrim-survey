@@ -519,11 +519,40 @@ function togglePwd() {
 // ── DEVICE FINGERPRINT ───────────────────────────────────────────
 // Builds a stable hash from hardware/browser properties
 // Cannot be spoofed easily without developer tools knowledge
+function isMobileDevice() {
+  var ua  = navigator.userAgent.toLowerCase();
+  var plt = (navigator.platform || '').toLowerCase();
+
+  // Known desktop platforms
+  var desktopPlatforms = ['win32','win64','macintel','macppc','linux x86_64','linux i686'];
+  if (desktopPlatforms.indexOf(plt) > -1) return false;
+
+  // Touch screen check — desktops almost never have this
+  var hasTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+  // UA mobile keywords
+  var mobileUA = /android|iphone|ipad|ipod|mobile|tablet|blackberry|windows phone/i.test(ua);
+
+  // Screen size — desktops typically wider than 1024px
+  var narrowScreen = screen.width <= 1024;
+
+  // Must pass at least 2 of 3 checks to be considered mobile
+  var score = (hasTouch?1:0) + (mobileUA?1:0) + (narrowScreen?1:0);
+  return score >= 2;
+}
+
 function doLogin() {
   var mob=document.getElementById('inp-mobile').value.trim();
   var pwd=document.getElementById('inp-password').value.trim();
   if(mob.length!==10){showErr('login-err','Enter valid 10-digit mobile.'); return;}
   if(!pwd){showErr('login-err','Enter your password.'); return;}
+
+  // Block login from desktop/PC
+  if (!isMobileDevice()) {
+    showErr('login-err', '🚫 Login only allowed from mobile phones. Desktop/PC access is not permitted.');
+    return;
+  }
+
   showErr('login-err','');
   var btn=document.getElementById('btn-login');
   btn.innerHTML='<span class="spinner"></span> Logging in…'; btn.disabled=true;
@@ -547,7 +576,7 @@ function doLogin() {
       loadVillagePicker();
     })
     .withFailureHandler(function(e){btn.innerHTML='Login →';btn.disabled=false;showErr('login-err',e.message);})
-    .loginZcrim(mob, pwd);
+    .loginZcrim(mob, pwd, navigator.platform + " | " + screen.width + "x" + screen.height);
 }
 
 // ── SESSION TIMER + SERVER HEARTBEAT ─────────
