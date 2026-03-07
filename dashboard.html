@@ -101,23 +101,28 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
 
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-9SSHrwMgKfHw-1qEFqH-cmKDjNjNLbGOu5DN9yD9YMp-iTESK4TkdWl5kDCax-uT3w/exec';
-var ADMIN_KEY = 'ZCRIM_ADMIN';
+var ADMIN_KEY = '';   // set at runtime via PIN — never hardcoded
 var charts   = {};
 var dashData = null;
 
 function callAPI(fn, args, cb) {
-  var url = APPS_SCRIPT_URL + '?fn=' + encodeURIComponent(fn) + '&args=' + encodeURIComponent(JSON.stringify(args||[]));
+  // Add timestamp to prevent caching of sensitive responses
+  var ts  = Date.now();
+  var url = APPS_SCRIPT_URL + '?fn=' + encodeURIComponent(fn)
+          + '&args=' + encodeURIComponent(JSON.stringify(args||[]))
+          + '&_t=' + ts;
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
     if (xhr.readyState !== 4) return;
     if (xhr.status !== 200) { cb('HTTP ' + xhr.status); return; }
     try { cb(null, JSON.parse(xhr.responseText)); }
-    catch(e) { cb('Parse error: ' + xhr.responseText.slice(0,100)); }
+    catch(e) { cb('Parse failed'); }  // never expose raw response
   };
   xhr.onerror   = function(){ cb('Network error'); };
-  xhr.ontimeout = function(){ cb('Timeout'); };
+  xhr.ontimeout = function(){ cb('Request timed out'); };
   xhr.timeout   = 30000;
   xhr.open('GET', url, true);
+  xhr.setRequestHeader('Cache-Control', 'no-store');
   xhr.send();
 }
 
@@ -372,7 +377,50 @@ function exportCSV() {
   a.click();
 }
 
-window.addEventListener('load', function(){ loadData(); });
+window.addEventListener('load', function(){ showPinPrompt(); });
+
+function showPinPrompt() {
+  var body = document.getElementById('dashboard-body');
+  body.innerHTML =
+    '<div style="min-height:80vh;display:flex;align-items:center;justify-content:center">' +
+    '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:32px;width:100%;max-width:340px;text-align:center">' +
+      '<div style="font-size:48px;margin-bottom:12px">&#x1F511;</div>' +
+      '<h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Admin Access</h2>' +
+      '<p style="color:var(--mut);font-size:13px;margin-bottom:20px">ZCRIM Dashboard &mdash; Mewat/Nuh</p>' +
+      '<input id="admin-pin" type="password" placeholder="Enter admin key" ' +
+        'style="width:100%;background:#0f172a;border:1px solid var(--bdr);border-radius:8px;padding:12px;' +
+        'color:var(--txt);font-size:15px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:4px" ' +
+        'onkeydown="if(event.key===\"Enter\") verifyPin()"/>' +
+      '<button onclick="verifyPin()" ' +
+        'style="width:100%;padding:13px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">' +
+        'Access Dashboard &rarr;' +
+      '</button>' +
+      '<div id="pin-err" style="color:var(--red);font-size:12px;margin-top:10px"></div>' +
+    '</div></div>';
+  setTimeout(function(){ var el=document.getElementById('admin-pin'); if(el) el.focus(); }, 100);
+}
+
+function verifyPin() {
+  var pin = (document.getElementById('admin-pin').value || '').trim();
+  if (!pin) { document.getElementById('pin-err').textContent = 'Enter admin key'; return; }
+  // Send to backend to verify — key never stored in JS source
+  ADMIN_KEY = pin;
+  document.getElementById('dashboard-body').innerHTML =
+    '<div class="loading-screen"><div class="spinner"></div><span>Verifying&hellip;</span></div>';
+  callAPI('getDashboardData', [ADMIN_KEY], function(err, res) {
+    if (err || !res || !res.ok) {
+      ADMIN_KEY = ''; // clear on failure
+      showPinPrompt();
+      setTimeout(function(){
+        var e = document.getElementById('pin-err');
+        if (e) e.textContent = 'Invalid admin key';
+      }, 100);
+      return;
+    }
+    dashData = res;
+    renderDashboard(res);
+  });
+}
 setInterval(function(){ loadData(); }, 60000);
 </script>
 </body>
