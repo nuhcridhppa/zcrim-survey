@@ -68,6 +68,14 @@ body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;font
 .spinner{display:inline-block;width:22px;height:22px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-screen{min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:var(--mut)}
+.fb-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #1a0a00}
+.fb-row:last-child{border-bottom:none}
+.fb-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.fb-info{flex:1}
+.fb-family{font-weight:700;font-size:13px;color:var(--txt)}
+.fb-meta{font-size:11px;color:var(--mut);margin-top:2px}
+.fb-gps{font-size:10px;color:#475569;margin-top:1px}
+.fb-badge{background:#78350f;color:#fcd34d;font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;flex-shrink:0;align-self:center}
 </style>
 </head>
 <body>
@@ -114,6 +122,35 @@ function callAPI(fn, args, cb) {
 }
 
 function showError(msg) {
+  // Fallback photo alerts panel
+  var alerts = d.fallbackAlerts || [];
+  var alertCount = alerts.length;
+  var alertRows = alerts.length === 0
+    ? '<div class="empty" style="color:#22c55e">&#x2705; No fallback uploads detected — all photos captured via camera</div>'
+    : alerts.map(function(a){
+        return '<div class="fb-row">'+
+          '<div class="fb-icon">&#x26A0;&#xFE0F;</div>'+
+          '<div class="fb-info">'+
+            '<div class="fb-family">'+a.familyId+' &mdash; <span style="color:#f59e0b">'+a.photoLabel+'</span></div>'+
+            '<div class="fb-meta">ZCRIM: <b>'+a.zcrimName+'</b> &middot; '+a.timestamp+'</div>'+
+            '<div class="fb-gps">GPS: '+a.gpsLat+', '+a.gpsLng+'</div>'+
+          '</div>'+
+          '<div class="fb-badge">FALLBACK</div>'+
+        '</div>';
+      }).join('');
+
+  var fallbackHtml =
+    '<div class="panel" style="margin-bottom:24px;border-color:'+(alertCount>0?'#f59e0b':'#334155')+'">'+
+      '<h3 style="color:'+(alertCount>0?'#f59e0b':'var(--mut)')+'">'+
+        '&#x1F4F7; Photo Fallback Alerts '+
+        '<span style="font-size:11px;font-weight:400;padding:2px 10px;border-radius:8px;background:'+(alertCount>0?'#78350f':'#1e293b')+';color:'+(alertCount>0?'#fcd34d':'var(--mut)')+'">'+
+          alertCount+(alertCount===1?' upload':' uploads')+
+        '</span>'+
+      '</h3>'+
+      (alertCount>0?'<div style="font-size:11px;color:#f59e0b;margin-bottom:12px;padding:8px 12px;background:#1c1000;border-radius:6px">These families had photos uploaded from gallery instead of live camera. Please verify field visit was genuine.</div>':'')+
+      '<div id="fb-list">'+alertRows+'</div>'+
+    '</div>';
+
   document.getElementById('dashboard-body').innerHTML =
     '<div class="loading-screen" style="color:var(--red)"><div style="font-size:36px">&#x274C;</div><b>' + msg + '</b><small style="color:var(--mut)">Check Apps Script URL or deployment</small><button class="btn btn-blue" onclick="loadData()" style="margin-top:8px">Retry</button></div>';
 }
@@ -195,6 +232,35 @@ function renderDashboard(d) {
     '</div>';
   }).join('') || '<div class="empty">No village data</div>';
 
+  // Fallback photo alerts panel
+  var alerts = d.fallbackAlerts || [];
+  var alertCount = alerts.length;
+  var alertRows = alerts.length === 0
+    ? '<div class="empty" style="color:#22c55e">&#x2705; No fallback uploads detected — all photos captured via camera</div>'
+    : alerts.map(function(a){
+        return '<div class="fb-row">'+
+          '<div class="fb-icon">&#x26A0;&#xFE0F;</div>'+
+          '<div class="fb-info">'+
+            '<div class="fb-family">'+a.familyId+' &mdash; <span style="color:#f59e0b">'+a.photoLabel+'</span></div>'+
+            '<div class="fb-meta">ZCRIM: <b>'+a.zcrimName+'</b> &middot; '+a.timestamp+'</div>'+
+            '<div class="fb-gps">GPS: '+a.gpsLat+', '+a.gpsLng+'</div>'+
+          '</div>'+
+          '<div class="fb-badge">FALLBACK</div>'+
+        '</div>';
+      }).join('');
+
+  var fallbackHtml =
+    '<div class="panel" style="margin-bottom:24px;border-color:'+(alertCount>0?'#f59e0b':'#334155')+'">'+
+      '<h3 style="color:'+(alertCount>0?'#f59e0b':'var(--mut)')+'">'+
+        '&#x1F4F7; Photo Fallback Alerts '+
+        '<span style="font-size:11px;font-weight:400;padding:2px 10px;border-radius:8px;background:'+(alertCount>0?'#78350f':'#1e293b')+';color:'+(alertCount>0?'#fcd34d':'var(--mut)')+'">'+
+          alertCount+(alertCount===1?' upload':' uploads')+
+        '</span>'+
+      '</h3>'+
+      (alertCount>0?'<div style="font-size:11px;color:#f59e0b;margin-bottom:12px;padding:8px 12px;background:#1c1000;border-radius:6px">These families had photos uploaded from gallery instead of live camera. Please verify field visit was genuine.</div>':'')+
+      '<div id="fb-list">'+alertRows+'</div>'+
+    '</div>';
+
   document.getElementById('dashboard-body').innerHTML =
     kpiHtml + progHtml +
     '<div class="grid2">'+
@@ -206,11 +272,12 @@ function renderDashboard(d) {
       '<div class="panel"><h3>&#x1F550; Recent Submissions</h3>'+actHtml+'</div>'+
       '<div class="panel"><h3>&#x1F5C2; Block Summary</h3>'+blockHtml+'</div>'+
     '</div>'+
-    '<div class="panel" style="margin-bottom:24px">'+
+    '<div class="panel" style="margin-bottom:20px">'+
       '<h3>&#x1F3D8; Village / Ward Breakdown <span style="font-weight:400;font-size:11px">'+(d.wards||[]).length+' villages</span></h3>'+
       '<input class="search-box" id="ward-search" placeholder="Search village..." oninput="filterWards(this.value)"/>'+
       '<div id="ward-list">'+wardRows+'</div>'+
-    '</div>';
+    '</div>'+
+    fallbackHtml;
 
   // Populate block filter dropdown from real data
   var sel = document.getElementById('block-filter');
