@@ -1064,80 +1064,68 @@ function openCamera(t){
 }
 
 function showCameraError(target, msg) {
-  // Show error inside the photo box so user knows what happened
   var boxId = target==='selfie' ? 'selfie-box' : 'pb-'+target;
-  var box = document.getElementById(boxId);
-  if(box) {
-    box.style.borderColor='var(--red)';
-    box.innerHTML=
-      '<div style="padding:12px;text-align:center">'+
-      '<div style="font-size:24px;margin-bottom:6px">📵</div>'+
-      '<div style="color:var(--red);font-weight:700;font-size:12px;margin-bottom:6px">Camera Blocked</div>'+
-      '<div style="color:var(--mut);font-size:11px;line-height:1.5">'+msg+'</div>'+
-      '<div style="margin-top:10px"><label style="background:var(--acc);color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">'+
-      '📁 Upload Photo Instead'+
-      '<input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleFileUpload(event,\'' + target + '\')"/>'+
-      '</label></div></div>';
-    box.onclick=null; // remove onclick to prevent re-triggering
+  var box   = document.getElementById(boxId);
+  if (!box) return;
+
+  // Detect device type for specific instructions
+  var isIphone  = /iphone|ipad/i.test(navigator.userAgent);
+  var isAndroid = /android/i.test(navigator.userAgent);
+
+  var steps = '';
+  if (isIphone) {
+    steps =
+      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
+      '<b style="color:#f59e0b">📍 Allow Location:</b><br>' +
+      '1. Open iPhone <b>Settings</b><br>' +
+      '2. Scroll to <b>Safari</b><br>' +
+      '3. Tap <b>Location</b> → Select <b>Allow</b><br><br>' +
+      '<b style="color:#f59e0b">📷 Allow Camera:</b><br>' +
+      '1. Open iPhone <b>Settings</b><br>' +
+      '2. Scroll to <b>Safari</b><br>' +
+      '3. Tap <b>Camera</b> → Select <b>Allow</b><br><br>' +
+      '<b style="color:#22c55e">Then close and reopen this page.</b>' +
+      '</div>';
+  } else if (isAndroid) {
+    steps =
+      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
+      '<b style="color:#f59e0b">📍 Allow Location:</b><br>' +
+      '1. Tap the <b>🔒 lock icon</b> in Chrome address bar<br>' +
+      '2. Tap <b>Permissions</b><br>' +
+      '3. Set <b>Location</b> → <b>Allow</b><br><br>' +
+      '<b style="color:#f59e0b">📷 Allow Camera:</b><br>' +
+      '1. Tap the <b>🔒 lock icon</b> in Chrome address bar<br>' +
+      '2. Tap <b>Permissions</b><br>' +
+      '3. Set <b>Camera</b> → <b>Allow</b><br><br>' +
+      '<b style="color:#22c55e">Then tap the photo box again.</b>' +
+      '</div>';
+  } else {
+    steps =
+      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
+      '<b style="color:#f59e0b">📍 Allow Location + 📷 Camera:</b><br>' +
+      '1. Tap the <b>lock/info icon</b> in your browser address bar<br>' +
+      '2. Set <b>Camera</b> and <b>Location</b> to <b>Allow</b><br>' +
+      '3. Refresh the page and try again.<br>' +
+      '</div>';
   }
-  toast('📵 Camera blocked — see instructions in photo box','red');
+
+  box.style.borderColor = 'var(--red)';
+  box.innerHTML =
+    '<div style="padding:14px;text-align:center">' +
+    '<div style="font-size:32px;margin-bottom:6px">🚫</div>' +
+    '<div style="color:var(--red);font-weight:800;font-size:13px;margin-bottom:4px">Camera / Location Blocked</div>' +
+    '<div style="color:var(--mut);font-size:11px">You must allow Camera and Location to continue.</div>' +
+    steps +
+    '<button onclick="openCamera(\"' + target + '\")" ' +
+      'style="margin-top:14px;width:100%;padding:10px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">' +
+      '🔄 Try Again' +
+    '</button>' +
+    '</div>';
+  box.onclick = null;
+  toast('🚫 Allow Camera and Location to take photos', 'red');
 }
 
-function handleFileUpload(event, target) {
-  var file = event.target.files[0];
-  if (!file) return;
-
-  // Security: only accept actual image files, block everything else
-  if (!file.type.match(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i)) {
-    toast('Only JPG/PNG photos allowed', 'red');
-    event.target.value = '';
-    return;
-  }
-
-  // Security: block suspiciously small files (likely not real photos — min 10KB)
-  if (file.size < 10240) {
-    toast('Photo too small — looks invalid', 'red');
-    event.target.value = '';
-    return;
-  }
-
-  // Security: block suspiciously large files (over 15MB)
-  if (file.size > 15728640) {
-    toast('Photo too large — max 15MB', 'red');
-    event.target.value = '';
-    return;
-  }
-
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var dataUrl = e.target.result;
-    // Flag this as camera-fallback upload — GPS will be current location, not photo metadata
-    var g = state.gps || {lat:'N/A', lng:'N/A'};
-
-    // Mark photo as fallback so backend/report knows it was not live-captured
-    var photoObj = {dataUrl:dataUrl, gps:g, fallback:true};
-
-    if (target==='selfie') {
-      state.selfie = dataUrl;
-      state.selfieFallback = true;
-      var box = document.getElementById('selfie-box');
-      box.style.borderColor = '#f59e0b';
-      box.innerHTML = '<img src="'+dataUrl+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/>'
-        + '<div class="overlay" style="background:rgba(217,119,6,0.85)">⚠ Camera Fallback · GPS: '+(g.lat!=='N/A'?g.lat+','+g.lng:'N/A')+'</div>';
-      box.onclick = function(){ openCamera('selfie'); };
-    } else {
-      state.photos[target] = photoObj;
-      var box2 = document.getElementById('pb-'+target);
-      box2.style.borderColor = '#f59e0b';
-      box2.innerHTML = '<img src="'+dataUrl+'"/>'
-        + '<div class="overlay" style="background:rgba(217,119,6,0.85)">⚠ Camera Fallback · Tap to retake</div>';
-      box2.onclick = function(){ openCamera(target); };
-      updatePhotosStatus();
-    }
-    toast('⚠ Uploaded as fallback — camera preferred', 'org');
-  };
-  reader.readAsDataURL(file);
-}
+// File upload removed — camera only, no fallback upload allowed
 
 function closeCamera(){
   if(state.cameraStream){state.cameraStream.getTracks().forEach(function(t){t.stop();});state.cameraStream=null;}
@@ -1427,7 +1415,7 @@ function submitForm(){
           lat:        capturedG.lat,
           lng:        capturedG.lng,
           timestamp:  ts,
-          fallback:   item.fallback || false
+          fallback:   false
         });
     })(key, label, g);
   });
