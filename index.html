@@ -1,1921 +1,1438 @@
-// ═══════════════════════════════════════════════════════════════════
-//  ZCRIM INCOME VERIFICATION SYSTEM — Code.gs
-//  Sheet  : 1pXnQwkMTuR3Tj5-3YcsTOAnk-PlfZ0co0BgyokQaIPs
-//  Drive  : 1qhpXdKTjkKRHVl-RYvoypo5Hjfgqu41M
-// ═══════════════════════════════════════════════════════════════════
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>ZCRIM Verification</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card:#1e293b;--bdr:#334155;--acc:#3b82f6;--grn:#22c55e;--org:#f59e0b;--red:#ef4444;--txt:#f1f5f9;--mut:#94a3b8;--inp:#0f172a}
 
-var SHEET_ID      = "1pXnQwkMTuR3Tj5-3YcsTOAnk-PlfZ0co0BgyokQaIPs";
-var DRIVE_ROOT    = "1qhpXdKTjkKRHVl-RYvoypo5Hjfgqu41M";
-var MASTER_MOBILE = "9466610668";
-var ADMIN_EMAIL   = "nuhcridhppa@gmail.com"; // sender + admin
-var SESSION_MINS  = 30;
-var MAX_ATTEMPTS  = 3;
-var LOCKOUT_MINS  = 30;
+/* ── BASE ── */
+html,body{height:100%;width:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;font-size:14px;min-height:100vh;-webkit-text-size-adjust:100%}
 
-var ZCRIMS = [
-  { name:"AJAHRUDDIN",   mobile:"9812515972", email:"zcrimnaginahppa@gmail.com",   block:"NAGINA BL"           },
-  { name:"BALWANT GERA", mobile:"9896452129", email:"cabalwantgera@gmail.com",      block:"TAORU MC"            },
-  { name:"HASHMAT",      mobile:"9671810095", email:"zcrimhppanuh@gmail.com",       block:"NUH BL"              },
-  { name:"IKLAS",        mobile:"9813915203", email:"iklaskhan203@gmail.com",        block:"INDRI BL"            },
-  { name:"IRSHAD",       mobile:"9671775772", email:"irshad.redrose77@gmail.com",   block:"PINGWAN BL"          },
-  { name:"LAXMAN",       mobile:"8814947799", email:"laxmanrahul99@gmail.com",      block:"FEROZEPUR JHIRKA BL" },
-  { name:"MAHESH GARG",  mobile:"9899966661", email:"maheshgarg099@gmail.com",      block:"FEROZEPUR JHIRKA MC" },
-  { name:"MOHSHIN KHAN", mobile:"9671996296", email:"mohshink6792@gmail.com",       block:"TAORU BL"            },
-  { name:"MONU",         mobile:"9992689413", email:"monuprajapat66@gmail.com",     block:"PUNAHANA MC"         },
-  { name:"SHAUKAT ALI",  mobile:"7027125382", email:"zcrim.nuhmc@gmail.com",        block:"NUH MC"              },
-  { name:"VARISH",       mobile:"8930034360", email:"varishkhan422@gmail.com",      block:"PUNAHANA BL"         },
-  { name:"ANEES",        mobile:"9466610668", email:"nuhcridhppa@gmail.com",        block:"ALL (Master)", master:true },
-];
+/* ── INPUTS ── */
+input,select{width:100%;background:var(--inp);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;color:var(--txt);font-size:16px;outline:none;-webkit-appearance:none;appearance:none}
+input[type=number]{-moz-appearance:textfield}
+select option{background:#1e293b}
+label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-bottom:5px}
 
-// ─────────────────────────────────────────────────────────────────
-//  TIMESTAMP FORMATTER — always dd/mm/yyyy hh:mm:ss AM/PM
-// ─────────────────────────────────────────────────────────────────
-function formatTS(d) {
-  if (!d) d = new Date();
-  if (typeof d === 'string' || typeof d === 'number') d = new Date(d);
-  var dd   = String(d.getDate()).padStart(2,'0');
-  var mm   = String(d.getMonth()+1).padStart(2,'0');
-  var yyyy = d.getFullYear();
-  var h    = d.getHours();
-  var min  = String(d.getMinutes()).padStart(2,'0');
-  var sec  = String(d.getSeconds()).padStart(2,'0');
-  var ampm = h >= 12 ? 'PM' : 'AM';
-  h = h % 12; if (h === 0) h = 12;
-  return dd+'/'+mm+'/'+yyyy+' '+String(h).padStart(2,'0')+':'+min+':'+sec+' '+ampm;
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:14px}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--acc);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+
+/* ── GRID ── */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:360px){.row2{grid-template-columns:1fr}}
+.field{margin-bottom:10px}
+
+/* ── BUTTONS ── */
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;font-weight:700;font-size:16px;cursor:pointer;text-align:center;margin-bottom:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn-blue{background:var(--acc);color:#fff}
+.btn-green{background:var(--grn);color:#fff}
+.btn-gray{background:#475569;color:#fff}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-org{background:#f59e0b22;color:var(--org);border:1px solid #f59e0b44}
+.badge-grn{background:#22c55e22;color:var(--grn);border:1px solid #22c55e44}
+.badge-blu{background:#3b82f622;color:var(--acc);border:1px solid #3b82f644}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--bdr);background:var(--card);position:sticky;top:48px;z-index:40;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{flex:1;min-width:60px;padding:10px 4px;border:none;background:none;color:var(--mut);font-size:11px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.tab.active{color:var(--acc);font-weight:700;border-bottom-color:var(--acc)}
+.tab.locked{color:#475569;cursor:not-allowed;opacity:0.5}
+.tab.done{color:var(--grn)}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--card);border-bottom:1px solid var(--bdr);padding:8px 12px;position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;gap:6px}
+
+/* ── PHOTO BOX ── */
+.photo-box{border:2px dashed var(--bdr);border-radius:8px;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.photo-box img{width:100%;height:100px;object-fit:cover;border-radius:6px}
+.photo-box .overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);font-size:10px;padding:3px 6px;color:#fff}
+
+/* ── MEMBER CARD ── */
+.member-card{background:#0f172a;border:1px solid var(--bdr);border-left:3px solid var(--acc);border-radius:8px;padding:14px;margin-bottom:12px}
+
+/* ── ERROR ── */
+.err{color:var(--red);font-size:12px;margin-top:6px;min-height:18px}
+
+/* ── INFO GRID ── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.info-item .k{font-size:10px;color:var(--mut);text-transform:uppercase}
+.info-item .v{font-size:13px;font-weight:600;margin-top:2px}
+
+/* ── CAMERA — ABSOLUTE LAYOUT (works on iOS + Android) ── */
+#camera-wrap{
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:#000;
+  z-index:9999;
+  overflow:hidden;
 }
+#btn-capture:active{opacity:0.85;transform:scale(0.97)}
 
-// ─────────────────────────────────────────────────────────────────
-//  ENTRY POINT
-// ─────────────────────────────────────────────────────────────────
-function doGet(e) {
-  // ── API call from GitHub Pages ──
-  if (e && e.parameter && e.parameter.fn) {
-    return handleApiRequest(e.parameter.fn, e.parameter.args);
-  }
-  // ── Serve HTML app ──
-  ensureSheetsExist();
-  return HtmlService
-    .createHtmlOutputFromFile("index")
-    .setTitle("ZCRIM Income Verification")
-    .addMetaTag("viewport","width=device-width,initial-scale=1,maximum-scale=1")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--bdr);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:600;z-index:10000;display:none;box-shadow:0 4px 24px rgba(0,0,0,.4);max-width:90vw;text-align:center}
+
+/* ── PASSWORD ── */
+.pwd-wrap{position:relative}
+.pwd-wrap input{padding-right:46px}
+.pwd-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mut);cursor:pointer;font-size:18px;padding:4px;-webkit-tap-highlight-color:transparent}
+
+/* ── GPS PILL ── */
+.gps-pill{display:inline-flex;align-items:center;gap:5px;background:#22c55e18;border:1px solid #22c55e44;border-radius:20px;padding:3px 10px;font-size:11px;color:var(--grn)}
+.gps-pill.waiting{background:#f59e0b18;border-color:#f59e0b44;color:var(--org)}
+
+/* ── SESSION BAR ── */
+.session-bar{background:#1e3a5f;border:1px solid #3b82f644;border-radius:8px;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px}
+
+/* ── RESPONSIVE ── */
+@media(min-width:600px){
+  .card{padding:22px}
+  .btn{font-size:17px}
+  #screen-login > div,
+  #screen-village > div{max-width:480px;margin:0 auto}
+  #screen-survey > div[style]{max-width:600px;margin:0 auto}
+  .photo-box{min-height:140px}
+  .photo-box img{height:140px}
 }
-
-function doPost(e) {
-  try {
-    var raw  = e.postData ? e.postData.contents : "{}";
-    var body = JSON.parse(raw);
-    return handleApiRequest(body.fn, JSON.stringify(body.args || []));
-  } catch(err) {
-    return jsonResponse({ok:false, msg:"doPost error: "+err.message});
-  }
+@media(min-width:900px){
+  body{font-size:15px}
+  .topbar{padding:12px 24px}
+  .tabs{top:52px}
+  #screen-survey{max-width:700px;margin:0 auto}
 }
-
-// ─────────────────────────────────────────────────────────────────
-//  API HANDLER — receives fetch() calls from GitHub Pages
-// ─────────────────────────────────────────────────────────────────
-function handleApiRequest(fn, argsStr) {
-  try {
-    var args = JSON.parse(decodeURIComponent(argsStr || "[]"));
-    var allowed = ["loginZcrim","logLogin","logoutSession","validateSession",
-                   "getWardsForZcrim","getNextFamily","getFamiliesForZcrim",
-                   "uploadPhoto","submitSurvey","skipFamily","getLeaderboard","getDashboardData","flagResurvey"];
-    if (allowed.indexOf(fn) === -1) return jsonResponse({ok:false, msg:"Not allowed: "+fn});
-    var fnMap = {
-      loginZcrim:          function(a){ return loginZcrim(a[0], a[1]); },
-      logLogin:            function(a){ return logLogin(a[0]); },
-      logoutSession:       function(a){ return logoutSession(a[0]); },
-      validateSession:     function(a){ return validateSession(a[0]); },
-      getWardsForZcrim:    function(a){ return getWardsForZcrim(a[0]); },
-      getNextFamily:       function(a){ return getNextFamily(a[0], a[1]); },
-      getFamiliesForZcrim: function(a){ return getFamiliesForZcrim(a[0], a[1]); },
-      uploadPhoto:         function(a){ return uploadPhoto(a[0], a[1]); },
-      submitSurvey:        function(a){ return submitSurvey(a[0], a[1]); },
-      skipFamily:          function(a){ return skipFamily(a[0], a[1], a[2], a[3]); },
-      getLeaderboard:      function(a){ return getLeaderboard(a[0]); },
-      getDashboardData:    function(a){ return getDashboardData(a[0]); },
-      flagResurvey:        function(a){ return flagResurvey(a[0], a[1], a[2]); }
-    };
-    return jsonResponse(fnMap[fn](args));
-  } catch(err) {
-    return jsonResponse({ok:false, msg:err.message});
-  }
-}
-
-function jsonResponse(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  GENERATE RANDOM PASSWORD — 8 chars, mixed case + digits
-// ─────────────────────────────────────────────────────────────────
-function generatePassword() {
-  var chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  var pwd = "";
-  for (var i = 0; i < 8; i++) {
-    pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return pwd;
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  SEND PASSWORDS TO ALL ZCRIMs — run from Sheet menu
-// ─────────────────────────────────────────────────────────────────
-function sendAllPasswords() {
-  var ui = SpreadsheetApp.getUi();
-  var res = ui.alert("📧 Send Passwords",
-    "This will generate NEW passwords for all ZCRIMs and email them.\n\nExisting passwords will be replaced.\n\nContinue?",
-    ui.ButtonSet.YES_NO);
-  if (res !== ui.Button.YES) return;
-
-  ensureSheetsExist();
-  var ss    = SpreadsheetApp.openById(SHEET_ID);
-  var pwSh  = ss.getSheetByName("Passwords");
-  var sent  = 0, failed = 0, log = [];
-
-  ZCRIMS.forEach(function(z) {
-    if (!z.email) return;
-    var pwd    = generatePassword();
-    var hashed = hashPassword(pwd);
-    var now    = formatTS(new Date());
-
-    // Save to Passwords sheet (upsert by mobile)
-    var data     = pwSh.getDataRange().getValues();
-    var found    = false;
-    for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]).trim() === z.mobile) {
-        pwSh.getRange(i+1, 1, 1, 6).setValues([[z.mobile, z.name, z.email, hashed, now, "active"]]);
-        found = true; break;
-      }
-    }
-    if (!found) pwSh.appendRow([z.mobile, z.name, z.email, hashed, now, "active"]);
-
-    // Send email via Gmail
-    var emailResult = sendPasswordEmail(z, pwd);
-    if (emailResult.ok) { sent++; log.push("✅ "+z.name+" → "+z.email); }
-    else                { failed++; log.push("❌ "+z.name+" → "+emailResult.msg); }
-  });
-
-  ui.alert("📧 Password Emails Sent",
-    "Sent: "+sent+"  Failed: "+failed+"\n\n"+log.join("\n"),
-    ui.ButtonSet.OK);
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  RESET PASSWORD FOR ONE ZCRIM — run from Sheet menu
-// ─────────────────────────────────────────────────────────────────
-function resetOnePassword() {
-  var ui  = SpreadsheetApp.getUi();
-  var res = ui.prompt("🔄 Reset Password", "Enter ZCRIM mobile number:", ui.ButtonSet.OK_CANCEL);
-  if (res.getSelectedButton() !== ui.Button.OK) return;
-  var mobile = res.getResponseText().trim();
-  var zcrim  = ZCRIMS.filter(function(z){ return z.mobile === mobile; })[0];
-  if (!zcrim) { ui.alert("❌ Mobile not found: "+mobile); return; }
-
-  var pwd    = generatePassword();
-  var hashed = hashPassword(pwd);
-  var now    = formatTS(new Date());
-  var ss     = SpreadsheetApp.openById(SHEET_ID);
-  var pwSh   = ss.getSheetByName("Passwords");
-  var data   = pwSh.getDataRange().getValues();
-  var found  = false;
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim() === mobile) {
-      pwSh.getRange(i+1,1,1,6).setValues([[mobile, zcrim.name, zcrim.email, hashed, now, "active"]]);
-      found = true; break;
-    }
-  }
-  if (!found) pwSh.appendRow([mobile, zcrim.name, zcrim.email, hashed, now, "active"]);
-
-  // Invalidate existing sessions
-  var sessSh = ss.getSheetByName("Sessions");
-  var sessData = sessSh.getDataRange().getValues();
-  for (var j = 1; j < sessData.length; j++) {
-    if (String(sessData[j][1]).trim() === mobile && String(sessData[j][5]).trim() === "active") {
-      sessSh.getRange(j+1, 6).setValue("invalidated");
-    }
-  }
-
-  var result = sendPasswordEmail(zcrim, pwd);
-  if (result.ok) ui.alert("✅ Password reset and emailed to "+zcrim.email);
-  else           ui.alert("⚠️ Password saved but email failed: "+result.msg+"\n\nTemporary password: "+pwd);
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  SEND PASSWORD EMAIL via Gmail
-// ─────────────────────────────────────────────────────────────────
-function sendPasswordEmail(zcrim, pwd) {
-  try {
-    var appUrl = ScriptApp.getService().getUrl();
-    var subject = "ZCRIM Survey — Your Login Password";
-    var body =
-      "Dear " + zcrim.name + ",\n\n" +
-      "Your login details for ZCRIM Income Verification Survey:\n\n" +
-      "━━━━━━━━━━━━━━━━━━━━━━━━\n" +
-      "  Mobile   : " + zcrim.mobile + "\n" +
-      "  Password : " + pwd + "\n" +
-      "  Block     : " + zcrim.block + "\n" +
-      "━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
-      "Open the survey app and enter your mobile number and password to login.\n\n" +
-      (appUrl ? "App Link: " + appUrl + "\n\n" : "") +
-      "⚠️ Do NOT share your password with anyone.\n" +
-      "Your session will expire after 30 minutes of inactivity.\n\n" +
-      "— ZCRIM Survey Admin\n" +
-      "  Nuh / Mewat District";
-
-    var htmlBody =
-      "<div style='font-family:Arial,sans-serif;max-width:480px;margin:0 auto'>" +
-      "<div style='background:#1a56a0;padding:20px;border-radius:8px 8px 0 0;text-align:center'>" +
-        "<h2 style='color:#fff;margin:0'>🏛️ ZCRIM Survey</h2>" +
-        "<p style='color:#bfd7ff;margin:4px 0 0'>Income Verification · Mewat/Nuh</p>" +
-      "</div>" +
-      "<div style='background:#f8fafc;padding:24px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px'>" +
-        "<p style='color:#334155'>Dear <strong>"+zcrim.name+"</strong>,</p>" +
-        "<p style='color:#475569'>Your login credentials for the ZCRIM Income Verification Survey:</p>" +
-        "<div style='background:#fff;border:2px solid #3b82f6;border-radius:8px;padding:16px;margin:16px 0;text-align:center'>" +
-          "<div style='margin-bottom:12px'><span style='font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px'>Mobile Number</span><br>" +
-          "<span style='font-size:24px;font-weight:700;color:#1e293b;letter-spacing:2px'>"+zcrim.mobile+"</span></div>" +
-          "<div><span style='font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px'>Password</span><br>" +
-          "<span style='font-size:28px;font-weight:700;color:#1a56a0;letter-spacing:3px;background:#eff6ff;padding:6px 16px;border-radius:6px;display:inline-block'>"+pwd+"</span></div>" +
-        "</div>" +
-        "<div style='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px;margin:12px 0'>" +
-          "<p style='color:#166534;margin:0;font-size:13px'>📍 Assigned Block: <strong>"+zcrim.block+"</strong></p>" +
-        "</div>" +
-        (appUrl ? "<div style='text-align:center;margin:16px 0'><a href='"+appUrl+"' style='background:#1a56a0;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Open Survey App →</a></div>" : "") +
-        "<p style='color:#ef4444;font-size:12px;margin-top:16px'>⚠️ Do NOT share your password. Session expires after 30 minutes.</p>" +
-        "<hr style='border:none;border-top:1px solid #e2e8f0;margin:16px 0'>" +
-        "<p style='color:#94a3b8;font-size:11px;margin:0'>ZCRIM Survey Admin · Nuh / Mewat District</p>" +
-      "</div></div>";
-
-    GmailApp.sendEmail(zcrim.email, subject, body, {
-      htmlBody: htmlBody,
-      name:     "ZCRIM Survey Admin",
-      replyTo:  ADMIN_EMAIL
-    });
-    return { ok:true };
-  } catch(e) {
-    Logger.log("Email error for "+zcrim.name+": "+e.message);
-    return { ok:false, msg:e.message };
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  SIMPLE HASH — stores passwords hashed (not plaintext)
-// ─────────────────────────────────────────────────────────────────
-function hashPassword(pwd) {
-  var raw  = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,
-               pwd + "ZCRIM_SALT_NUH2024",
-               Utilities.Charset.UTF_8);
-  return raw.map(function(b){ return ('0'+(b & 0xFF).toString(16)).slice(-2); }).join('');
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  LOGIN — verify mobile + password
-// ─────────────────────────────────────────────────────────────────
-function loginZcrim(mobile, password) {
-  mobile   = mobile.trim();
-  password = password.trim();
-
-  var zcrim = ZCRIMS.filter(function(z){ return z.mobile === mobile; })[0];
-  if (!zcrim) return { ok:false, msg:"Mobile number not registered." };
-
-  var ss     = SpreadsheetApp.openById(SHEET_ID);
-  var pwSh   = ss.getSheetByName("Passwords");
-  var data   = pwSh.getDataRange().getValues();
-  var now    = new Date();
-
-  // Find password row
-  var pwRow = null, pwRowIdx = -1;
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim() === mobile) { pwRow = data[i]; pwRowIdx = i; break; }
-  }
-
-  if (!pwRow) return { ok:false, msg:"No password set. Contact admin to send your password." };
-  if (String(pwRow[5]).trim() === "locked") {
-    var lockedAt   = pwRow[6] ? new Date(pwRow[6]) : null;
-    if (lockedAt) {
-      var unlockTime = new Date(lockedAt.getTime() + LOCKOUT_MINS * 60000);
-      if (now < unlockTime) {
-        var minsLeft = Math.ceil((unlockTime - now) / 60000);
-        return { ok:false, msg:"Account locked due to too many failed attempts. Try again in "+minsLeft+" minutes." };
-      } else {
-        // Auto-unlock after lockout period
-        pwSh.getRange(pwRowIdx+1, 6).setValue("active");
-        pwSh.getRange(pwRowIdx+1, 7).setValue("");
-        pwSh.getRange(pwRowIdx+1, 8).setValue(0);
-      }
-    }
-  }
-
-  var hashed   = hashPassword(password);
-  var attempts = Number(pwRow[7]) || 0;
-
-  if (hashed !== String(pwRow[3]).trim()) {
-    var newAttempts = attempts + 1;
-    pwSh.getRange(pwRowIdx+1, 8).setValue(newAttempts);
-    if (newAttempts >= MAX_ATTEMPTS) {
-      pwSh.getRange(pwRowIdx+1, 6).setValue("locked");
-      pwSh.getRange(pwRowIdx+1, 7).setValue(now.toISOString());
-      return { ok:false, msg:"Wrong password. Account locked for "+LOCKOUT_MINS+" minutes.", locked:true };
-    }
-    var remaining = MAX_ATTEMPTS - newAttempts;
-    return { ok:false, msg:"Wrong password. "+remaining+" attempt(s) remaining." };
-  }
-
-  // Password correct — reset attempts
-  pwSh.getRange(pwRowIdx+1, 8).setValue(0);
-
-  // Create session
-  var token        = Utilities.getUuid();
-  var sessSh       = ss.getSheetByName("Sessions");
-  var sessExpiry   = new Date(now.getTime() + SESSION_MINS * 60000);
-
-  // Invalidate existing sessions
-  var sessData = sessSh.getDataRange().getValues();
-  for (var j = 1; j < sessData.length; j++) {
-    if (String(sessData[j][1]).trim() === mobile && String(sessData[j][5]).trim() === "active") {
-      sessSh.getRange(j+1, 6).setValue("invalidated");
-    }
-  }
-
-  sessSh.appendRow([token, mobile, zcrim.name, now.toISOString(), sessExpiry.toISOString(), "active", "", ""]);
-
-  return {
-    ok:      true,
-    token:   token,
-    zcrim:   zcrim,
-    expires: sessExpiry.toISOString()
-  };
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  VALIDATE SESSION
-// ─────────────────────────────────────────────────────────────────
-function validateSession(token) {
-  if (!token) return { ok:false, msg:"No session. Please login again.", relogin:true };
-  var ss     = SpreadsheetApp.openById(SHEET_ID);
-  var sessSh = ss.getSheetByName("Sessions");
-  var data   = sessSh.getDataRange().getValues();
-  var now    = new Date();
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if (String(row[0]).trim() !== token) continue;
-    if (String(row[5]).trim() !== "active") return { ok:false, msg:"Session expired. Please login again.", relogin:true };
-    var expires = new Date(row[4]);
-    if (now > expires) {
-      sessSh.getRange(i+1, 6).setValue("expired");
-      return { ok:false, msg:"Session expired. Please login again.", relogin:true };
-    }
-    // Extend session on activity
-    sessSh.getRange(i+1, 5).setValue(new Date(now.getTime() + SESSION_MINS * 60000).toISOString());
-    var mobile = String(row[1]).trim();
-    return { ok:true, mobile:mobile, zcrim:ZCRIMS.filter(function(z){ return z.mobile===mobile; })[0] };
-  }
-  return { ok:false, msg:"Invalid session. Please login again.", relogin:true };
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  LOGOUT
-// ─────────────────────────────────────────────────────────────────
-function logoutSession(token) {
-  var ss     = SpreadsheetApp.openById(SHEET_ID);
-  var sessSh = ss.getSheetByName("Sessions");
-  var data   = sessSh.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim() === token) {
-      sessSh.getRange(i+1, 6).setValue("logged_out");
-      sessSh.getRange(i+1, 8).setValue(formatTS(new Date()));
-      return { ok:true };
-    }
-  }
-  return { ok:false };
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  LOGIN LOG
-// ─────────────────────────────────────────────────────────────────
-function logLogin(payload) {
-  var auth = validateSession(payload.token);
-  if (!auth.ok) return;
-  var ss = SpreadsheetApp.openById(SHEET_ID);
-  ss.getSheetByName("LoginLog").appendRow([
-    payload.timestamp, payload.zcrimName, payload.mobile,
-    payload.lat, payload.lng, payload.deviceInfo, payload.userAgent||""
-  ]);
-  var sessSh = ss.getSheetByName("Sessions");
-  var data   = sessSh.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim() === payload.token) {
-      sessSh.getRange(i+1, 7).setValue(payload.lat+","+payload.lng); break;
-    }
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  SHOW ACTIVE SESSIONS — admin menu
-// ─────────────────────────────────────────────────────────────────
-function showActiveSessions() {
-  var ss     = SpreadsheetApp.openById(SHEET_ID);
-  var data   = ss.getSheetByName("Sessions").getDataRange().getValues().slice(1);
-  var now    = new Date();
-  var active = data.filter(function(r){ return String(r[5]).trim()==="active" && new Date(r[4])>now; });
-  if (!active.length) { SpreadsheetApp.getUi().alert("No active sessions right now."); return; }
-  var msg = "── Active Sessions ──\n\n";
-  active.forEach(function(r){
-    var left = Math.ceil((new Date(r[4])-now)/60000);
-    msg += r[2]+" ("+r[1]+")\n  Expires in: "+left+" min  GPS: "+(r[6]||"N/A")+"\n\n";
-  });
-  SpreadsheetApp.getUi().alert(msg);
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  FORCE LOGOUT — admin menu
-// ─────────────────────────────────────────────────────────────────
-function forceLogoutZcrim() {
-  var ui  = SpreadsheetApp.getUi();
-  var res = ui.prompt("🚫 Force Logout", "Enter ZCRIM mobile number to logout:", ui.ButtonSet.OK_CANCEL);
-  if (res.getSelectedButton() !== ui.Button.OK) return;
-  var mobile = res.getResponseText().trim();
-  var ss     = SpreadsheetApp.openById(SHEET_ID);
-  var sessSh = ss.getSheetByName("Sessions");
-  var data   = sessSh.getDataRange().getValues();
-  var count  = 0;
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][1]).trim()===mobile && String(data[i][5]).trim()==="active") {
-      sessSh.getRange(i+1, 6).setValue("force_logout");
-      count++;
-    }
-  }
-  ui.alert(count>0 ? "✅ Logged out "+count+" session(s) for "+mobile : "No active sessions found for "+mobile);
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  WARDS FOR ZCRIM
-// ─────────────────────────────────────────────────────────────────
-function getWardsForZcrim(token) {
-  var auth = validateSession(token);
-  if (!auth.ok) return { ok:false, msg:auth.msg, relogin:auth.relogin };
-  var mobile   = auth.mobile, isMaster = mobile === MASTER_MOBILE;
-  var ss       = SpreadsheetApp.openById(SHEET_ID);
-  var data     = ss.getSheetByName("Families").getDataRange().getValues();
-  var wardMap  = {};
-  var totalResurvey = 0;
-  for (var i = 1; i < data.length; i++) {
-    var row    = data[i];
-    if (!isMaster && String(row[8]).trim() !== mobile) continue;
-    var ward   = String(row[7]).trim() || "Unknown";
-    var status = String(row[9]).trim().toLowerCase();
-    if (!wardMap[ward]) wardMap[ward] = {total:0, done:0, resurvey:0};
-    wardMap[ward].total++;
-    if (status === "done")     wardMap[ward].done++;
-    if (status === "resurvey") { wardMap[ward].resurvey++; totalResurvey++; }
-  }
-  return { ok:true, totalResurvey:totalResurvey, wards:Object.keys(wardMap).sort().map(function(w){
-    return {ward:w, total:wardMap[w].total, done:wardMap[w].done,
-            pending:wardMap[w].total - wardMap[w].done,
-            resurvey:wardMap[w].resurvey};
-  })};
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  RE-SURVEY FLAG — admin marks family for redo
-// ─────────────────────────────────────────────────────────────────
-function flagResurvey(token, familyId, reason) {
-  var auth = validateSession(token);
-  if (!auth.ok) return { ok:false, msg:auth.msg };
-  if (!auth.master) return { ok:false, msg:'Only admin can flag for re-survey' };
-  var ss  = SpreadsheetApp.openById(SHEET_ID);
-  var sh  = ss.getSheetByName("Families");
-  var data = sh.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim() === String(familyId).trim()) {
-      sh.getRange(i+1, 10).setValue("resurvey");
-      // Log in ResurveyLog sheet
-      var logSh = ss.getSheetByName("ResurveyLog");
-      if (!logSh) {
-        logSh = ss.insertSheet("ResurveyLog");
-        logSh.appendRow(["Timestamp","AdminName","FamilyID","FamilyName","Reason"]);
-        logSh.getRange(1,1,1,5).setBackground("#1a56a0").setFontColor("#fff").setFontWeight("bold");
-      }
-      logSh.appendRow([formatTS(new Date()), auth.zcrim.name, familyId, data[i][1], reason||"Admin flagged"]);
-      return { ok:true, msg:"Family "+familyId+" flagged for re-survey" };
-    }
-  }
-  return { ok:false, msg:"Family ID not found: "+familyId };
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  SKIP FAMILY — mark as absent/unavailable
-// ─────────────────────────────────────────────────────────────────
-function skipFamily(token, rowIndex, familyId, familyName) {
-  var auth = validateSession(token);
-  if (!auth.ok) return { ok:false, msg:auth.msg };
-  try {
-    var ss  = SpreadsheetApp.openById(SHEET_ID);
-    var sh  = ss.getSheetByName("Families");
-    sh.getRange(rowIndex, 10).setValue("absent");
-    // Log skip
-    var skipSh = ss.getSheetByName("SkipLog");
-    if (!skipSh) {
-      skipSh = ss.insertSheet("SkipLog");
-      skipSh.appendRow(["Timestamp","ZCRIMName","Mobile","FamilyID","FamilyName","Reason"]);
-      skipSh.getRange(1,1,1,6).setBackground("#1a56a0").setFontColor("#ffffff").setFontWeight("bold");
-    }
-    skipSh.appendRow([formatTS(new Date()), auth.zcrim.name, auth.mobile, familyId, familyName, "Absent/Unavailable"]);
-    return { ok:true };
-  } catch(e) { return { ok:false, msg:e.message }; }
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  GET NEXT FAMILY
-// ─────────────────────────────────────────────────────────────────
-function getNextFamily(token, selectedWard) {
-  var auth = validateSession(token);
-  if (!auth.ok) return { ok:false, msg:auth.msg, relogin:auth.relogin };
-  var mobile = auth.mobile, isMaster = mobile === MASTER_MOBILE;
-  var filterWard = selectedWard ? selectedWard.trim() : null;
-  // Read only first 10 columns — faster, avoids loading all extra cols
-  var _famSh = SpreadsheetApp.openById(SHEET_ID).getSheetByName("Families");
-  var _last  = _famSh.getLastRow();
-  var data   = _last > 1 ? _famSh.getRange(1, 1, _last, 10).getValues() : [];
-
-  // Two-pass: resurvey families first, then normal pending
-  var passes = ["resurvey", "pending"];
-  for (var p = 0; p < passes.length; p++) {
-    for (var i = 1; i < data.length; i++) {
-      var row    = data[i];
-      if (!(isMaster || String(row[8]).trim()===mobile)) continue;
-      var status = String(row[9]).trim().toLowerCase();
-      if (status==="done" || status==="absent") continue;
-      var ward   = String(row[7]).trim();
-      if (filterWard && ward!==filterWard) continue;
-      var isResurvey = status==="resurvey";
-      if (passes[p]==="resurvey" && !isResurvey) continue;
-      if (passes[p]==="pending"  &&  isResurvey) continue;
-      return { ok:true, rowIndex:i+1, isResurvey:isResurvey,
-               family:{id:row[0],name:row[1],mobile:row[2],age:row[3],gender:row[4],
-                       address:row[5],block:row[6],ward:ward,assignedTo:String(row[8]).trim()} };
-    }
-  }
-  if (filterWard) return { ok:false, msg:"No pending families in village: "+filterWard };
-  return { ok:false, msg:"No pending families assigned to you." };
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  PROGRESS COUNTER
-// ─────────────────────────────────────────────────────────────────
-function getFamiliesForZcrim(token, selectedWard) {
-  var auth = validateSession(token);
-  if (!auth.ok) return { ok:false, msg:auth.msg, relogin:auth.relogin };
-  var mobile = auth.mobile, isMaster = mobile === MASTER_MOBILE;
-  var filterWard = selectedWard ? selectedWard.trim() : null;
-  var _pSh  = SpreadsheetApp.openById(SHEET_ID).getSheetByName("Families");
-  var _pLast = _pSh.getLastRow();
-  var data   = _pLast > 1 ? _pSh.getRange(1, 1, _pLast, 10).getValues() : [];
-  var total=0, done=0;
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if (!(isMaster || String(row[8]).trim()===mobile)) continue;
-    if (filterWard && String(row[7]).trim()!==filterWard) continue;
-    total++;
-    if (String(row[9]).trim().toLowerCase()==="done") done++;
-  }
-  return { ok:true, total:total, done:done, remaining:total-done };
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  DASHBOARD DATA — full stats for admin dashboard
-// ─────────────────────────────────────────────────────────────────
-function getDashboardData(adminKey) {
-  if (adminKey !== "ZCRIM_ADMIN") return {ok:false, msg:"Invalid admin key"};
-  var ss      = SpreadsheetApp.openById(SHEET_ID);
-  var famData = ss.getSheetByName("Families").getDataRange().getValues().slice(1);
-  var surData = ss.getSheetByName("SurveyData") ? ss.getSheetByName("SurveyData").getDataRange().getValues().slice(1) : [];
-
-  // Per-ZCRIM stats — read from ZCRIMS config
-  var stats = {};
-  ZCRIMS.forEach(function(z){
-    stats[z.mobile] = {name:z.name, block:z.block, total:0, done:0, absent:0, pending:0, lastActive:'Never'};
-  });
-
-  // Block stats — read dynamically from Families sheet col 7 (index 6)
-  var blockStats = {};
-  // Ward stats — read dynamically from Families sheet col 8 (index 7)
-  var wardStats  = {};
-
-  famData.forEach(function(r){
-    var mobile = String(r[8]).trim();
-    var status = String(r[9]).trim().toLowerCase();
-    var block  = String(r[6]).trim();
-    var ward   = String(r[7]).trim();
-
-    // ZCRIM stats
-    if (stats[mobile]) {
-      stats[mobile].total++;
-      if (status==='done')   stats[mobile].done++;
-      if (status==='absent') stats[mobile].absent++;
-      if (status!=='done' && status!=='absent') stats[mobile].pending++;
-    }
-
-    // Block stats — built from actual data
-    if (block) {
-      if (!blockStats[block]) blockStats[block] = {block:block, total:0, done:0, absent:0};
-      blockStats[block].total++;
-      if (status==='done')   blockStats[block].done++;
-      if (status==='absent') blockStats[block].absent++;
-    }
-
-    // Ward stats — built from actual data, tagged with block
-    if (ward) {
-      if (!wardStats[ward]) wardStats[ward] = {ward:ward, block:block, total:0, done:0, absent:0};
-      wardStats[ward].total++;
-      if (status==='done')   wardStats[ward].done++;
-      if (status==='absent') wardStats[ward].absent++;
-    }
-  });
-
-  // Last active per ZCRIM from SurveyData
-  surData.forEach(function(r){
-    var mobile = String(r[2]).trim();
-    if (stats[mobile] && r[0]) {
-      var ts = formatTS(new Date(r[0]));
-      if (stats[mobile].lastActive==='Never' || new Date(r[0]) > new Date(stats[mobile].lastActiveRaw||0)) {
-        stats[mobile].lastActive    = ts;
-        stats[mobile].lastActiveRaw = r[0];
-      }
-    }
-  });
-
-  // Today's submissions
-  var today      = new Date().toDateString();
-  var todayCount = 0;
-  surData.forEach(function(r){
-    if (r[0] && new Date(r[0]).toDateString()===today) todayCount++;
-  });
-
-  // Daily trend — last 14 days
-  var trend = [];
-  for (var d=13; d>=0; d--) {
-    var dd = new Date(); dd.setDate(dd.getDate()-d);
-    var ds = dd.toDateString();
-    var count = surData.filter(function(r){ return r[0] && new Date(r[0]).toDateString()===ds; }).length;
-    trend.push({date: ('0'+(dd.getDate())).slice(-2)+'/'+('0'+(dd.getMonth()+1)).slice(-2), count:count});
-  }
-
-  // Recent activity (last 10)
-  var recent = surData.slice(-10).reverse().map(function(r){
-    return {time:r[0]||'', zcrim:r[1]||'', family:r[4]||'', ward:r[10]||''};
-  });
-
-  var totalAll  = famData.length;
-  var doneAll   = famData.filter(function(r){ return String(r[9]).trim().toLowerCase()==='done'; }).length;
-  var absentAll = famData.filter(function(r){ return String(r[9]).trim().toLowerCase()==='absent'; }).length;
-
-  var board = ZCRIMS.filter(function(z){ return !z.master; }).map(function(z){
-    var s = stats[z.mobile] || {total:0, done:0, absent:0, pending:0, lastActive:'Never'};
-    return {name:z.name, block:z.block, mobile:z.mobile,
-            total:s.total, done:s.done, absent:s.absent, pending:s.pending,
-            lastActive: s.lastActive||'Never',
-            pct: s.total>0 ? Math.round(s.done/s.total*100) : 0};
-  }).sort(function(a,b){ return b.done - a.done; });
-
-  // Block list sorted alphabetically — read from real data
-  var blocks     = Object.values(blockStats).sort(function(a,b){ return a.block.localeCompare(b.block); });
-  var blockNames = blocks.map(function(b){ return b.block; }); // for dropdown
-
-  var wards = Object.values(wardStats).sort(function(a,b){ return b.total - a.total; });
-
-  return {
-    ok:       true,
-    summary:  {total:totalAll, done:doneAll, absent:absentAll, pending:totalAll-doneAll-absentAll, todayCount:todayCount},
-    board:    board,
-    blocks:   blocks,
-    blockNames: blockNames,  // ← sent to frontend for dropdown
-    wards:    wards,
-    recent:   recent,
-    trend:    trend,
-    updated:  formatTS(new Date())
-  };
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  LEADERBOARD
-// ─────────────────────────────────────────────────────────────────
-function getLeaderboard(token) {
-  var auth = validateSession(token);
-  if (!auth.ok) return { ok:false, msg:auth.msg };
-  var ss      = SpreadsheetApp.openById(SHEET_ID);
-  var famData = ss.getSheetByName("Families").getDataRange().getValues().slice(1);
-  var surSheet= ss.getSheetByName("SurveyData");
-  var surData = surSheet ? surSheet.getDataRange().getValues().slice(1) : [];
-
-  // Per-ZCRIM stats
-  var stats = {};
-  ZCRIMS.forEach(function(z){ stats[z.mobile]={name:z.name,block:z.block,total:0,done:0,absent:0,lastActive:'Never'}; });
-  famData.forEach(function(r){
-    var m=String(r[8]).trim(), s=String(r[9]).trim().toLowerCase();
-    if(!stats[m]) return;
-    stats[m].total++;
-    if(s==='done')   stats[m].done++;
-    if(s==='absent') stats[m].absent++;
-  });
-
-  // Last active time from SurveyData (col 2 = zcrimName, col 0 = timestamp)
-  // Build mobile->name map
-  var nameToMobile = {};
-  ZCRIMS.forEach(function(z){ nameToMobile[z.name.toUpperCase()] = z.mobile; });
-  surData.forEach(function(r){
-    var zName  = String(r[1]||'').trim().toUpperCase();
-    var mobile = nameToMobile[zName];
-    var ts     = r[0];
-    if(!mobile || !stats[mobile] || !ts) return;
-    // Keep latest timestamp
-    if(stats[mobile].lastActive === 'Never' || new Date(ts) > new Date(stats[mobile].lastActive)){
-      stats[mobile].lastActive = ts ? formatTS(new Date(ts)) : 'Never';
-    }
-  });
-
-  // Block-wise summary
-  var blockStats = {};
-  famData.forEach(function(r){
-    var block  = String(r[6]||'').trim();
-    var status = String(r[9]||'').trim().toLowerCase();
-    if(!block) return;
-    if(!blockStats[block]) blockStats[block]={block:block,total:0,done:0,absent:0};
-    blockStats[block].total++;
-    if(status==='done')   blockStats[block].done++;
-    if(status==='absent') blockStats[block].absent++;
-  });
-  var blocks = Object.values(blockStats).sort(function(a,b){ return b.total-a.total; });
-
-  // Daily trend — last 14 days
-  var dayMap = {};
-  var today  = new Date();
-  for(var d=13; d>=0; d--){
-    var dd = new Date(today); dd.setDate(dd.getDate()-d);
-    var key = dd.getDate()+'/'+(dd.getMonth()+1);
-    dayMap[key] = 0;
-  }
-  surData.forEach(function(r){
-    if(!r[0]) return;
-    var dt  = new Date(r[0]);
-    var key = dt.getDate()+'/'+(dt.getMonth()+1);
-    if(dayMap[key] !== undefined) dayMap[key]++;
-  });
-  var trend = Object.keys(dayMap).map(function(k){ return {date:k, count:dayMap[k]}; });
-
-  var board = ZCRIMS.filter(function(z){ return !z.master; }).map(function(z){
-    var s = stats[z.mobile]||{total:0,done:0,absent:0,lastActive:'Never'};
-    return {mobile:z.mobile, name:z.name, block:z.block,
-            total:s.total, done:s.done, absent:s.absent,
-            pending:s.total-s.done-s.absent,
-            pct:s.total>0?Math.round(s.done/s.total*100):0,
-            lastActive:s.lastActive};
-  }).sort(function(a,b){ return b.done-a.done; });
-
-  // Session status — logged in / logged out
-  var activeSessions = [], expiredSessions = [];
-  try {
-    var sesSh = ss.getSheetByName("Sessions");
-    if(sesSh){
-      var sesData = sesSh.getDataRange().getValues().slice(1);
-      sesData.forEach(function(r){
-        var mobile  = String(r[1]||'').trim();
-        var loginAt = r[2] ? formatTS(new Date(r[2])) : '';
-        var lastSeen= r[3] ? formatTS(new Date(r[3])) : '';
-        var status  = String(r[4]||'').trim().toLowerCase();
-        var zcrim   = ZCRIMS.filter(function(z){ return z.mobile===mobile; })[0];
-        var name    = zcrim ? zcrim.name : mobile;
-        var info    = {name:name, mobile:mobile, loginAt:loginAt, lastSeen:lastSeen, status:status};
-        if(status==='active') activeSessions.push(info);
-        else expiredSessions.push(info);
-      });
-      // Deduplicate — keep latest per mobile
-      var seen = {};
-      activeSessions  = activeSessions.filter(function(s){ if(seen[s.mobile]) return false; seen[s.mobile]=true; return true; });
-      var seen2 = {};
-      expiredSessions = expiredSessions.filter(function(s){ if(seen2[s.mobile]) return false; seen2[s.mobile]=true; return true; });
-    }
-  } catch(e){ Logger.log('Sessions error: '+e.message); }
-
-  // Ward stats
-  var wardStats = {};
-  famData.forEach(function(r){
-    var ward   = String(r[7]||'').trim();
-    var block  = String(r[6]||'').trim();
-    var status = String(r[9]||'').trim().toLowerCase();
-    if(!ward) return;
-    if(!wardStats[ward]) wardStats[ward]={ward:ward,block:block,total:0,done:0,absent:0};
-    wardStats[ward].total++;
-    if(status==='done')   wardStats[ward].done++;
-    if(status==='absent') wardStats[ward].absent++;
-  });
-  var wards = Object.values(wardStats).sort(function(a,b){ return b.total-a.total; });
-
-  return { ok:true, board:board, blocks:blocks, trend:trend, wards:wards,
-           activeSessions:activeSessions, expiredSessions:expiredSessions,
-           updated: formatTS(new Date()) };
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  PHOTO UPLOAD
-// ─────────────────────────────────────────────────────────────────
-function uploadPhoto(token, payload) {
-  var auth = validateSession(token);
-  if (!auth.ok) return { ok:false, msg:auth.msg, relogin:auth.relogin };
-  try {
-    var rootFolder = DriveApp.getFolderById(DRIVE_ROOT);
-
-    // All photos go in ONE folder named after PPPID
-    // Use document lock (per-spreadsheet) instead of script lock
-    // This allows different ZCRIMs to upload simultaneously — only
-    // blocks if two uploads for the SAME family happen at once
-    var lock = LockService.getDocumentLock();
-    var pppFolder;
-    var folderName = String(payload.pppId).trim();
-    var subFolderName = payload.surveyTag && payload.surveyTag !== "Original" ? payload.surveyTag : "";
-    var lockAcquired = false;
-    try {
-      lockAcquired = lock.tryLock(8000); // try for 8s — don't block forever
-    } catch(e) { lockAcquired = false; }
-    try {
-      // Search for existing folder — retry once after short pause
-      var iter = rootFolder.getFoldersByName(folderName);
-      if (iter.hasNext()) {
-        pppFolder = iter.next();
-      } else {
-        if (lockAcquired) Utilities.sleep(300); // small pause to let parallel call finish
-        var iter2 = rootFolder.getFoldersByName(folderName);
-        if (iter2.hasNext()) {
-          pppFolder = iter2.next();
-        } else {
-          pppFolder = rootFolder.createFolder(folderName);
-        }
-      }
-      // Resurvey subfolder
-      if (subFolderName) {
-        var subIter = pppFolder.getFoldersByName(subFolderName);
-        pppFolder = subIter.hasNext() ? subIter.next() : pppFolder.createFolder(subFolderName);
-      }
-    } finally {
-      try { if (lockAcquired) lock.releaseLock(); } catch(e) {}
-    }
-
-    // File naming: PPPID_PhotoLabel_ZCRIMName_Timestamp.jpg
-    var safe  = function(s){ return s.replace(/[^a-zA-Z0-9]/g,"_"); };
-    var ts    = payload.timestamp.replace(/[/:, ]/g,"-");
-    var fname = safe(payload.pppId)
-              + "_" + safe(payload.photoLabel)
-              + "_" + safe(payload.zcrimName||"ZCRIM")
-              + "_" + ts + ".jpg";
-
-    var decoded = Utilities.base64Decode(payload.base64.split(",")[1]);
-    var file    = pppFolder.createFile(Utilities.newBlob(decoded, payload.mimeType, fname));
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    var viewUrl = "https://drive.google.com/file/d/"+file.getId()+"/view";
-
-    // Log to PhotoLog sheet
-    var isFallback = payload.fallback ? "FALLBACK" : "CAMERA";
-    SpreadsheetApp.openById(SHEET_ID).getSheetByName("PhotoLog").appendRow([
-      payload.timestamp, payload.pppId, payload.zcrimName||"",
-      payload.photoLabel, fname, viewUrl,
-      payload.lat, payload.lng, file.getId(), isFallback
-    ]);
-
-    return { ok:true, url:viewUrl, fileId:file.getId(), fname:fname };
-  } catch(e) { return { ok:false, msg:e.message }; }
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  SUBMIT SURVEY
-// ─────────────────────────────────────────────────────────────────
-function submitSurvey(token, payload) {
-  var auth = validateSession(token);
-  if (!auth.ok) return { ok:false, msg:auth.msg, relogin:auth.relogin };
-  try {
-    var ss = SpreadsheetApp.openById(SHEET_ID);
-    var f=payload.family, a=payload.assets, ts=payload.timestamp;
-    var survSh = ss.getSheetByName("SurveyData");
-
-    // Count existing surveys for this family to assign SurveyNo
-    var existingData = survSh.getDataRange().getValues();
-    var surveyNo = 1;
-    for (var ei = 1; ei < existingData.length; ei++) {
-      if (String(existingData[ei][3]).trim().toUpperCase() === String(f.id).trim().toUpperCase()) surveyNo++;
-    }
-    var surveyTag = surveyNo === 1 ? "Original" : "Resurvey-" + surveyNo;
-
-    // Always APPEND — never overwrite — preserves full history
-    survSh.appendRow([ts, payload.zcrimName, auth.mobile,
-      f.id,f.name,f.mobile,f.age,f.gender,f.address,f.block,f.ward,
-      a.houseRent,a.rentAmt,a.houseSize,a.houseCondition,a.electricity,
-      a.splitFamily,a.propertyId,a.taxPayer,a.twoWheeler,a.fourWheeler,
-      a.otherLand,a.agriLand,a.shopBusiness,a.cattle,
-      payload.gps.lat,payload.gps.lng,payload.selfieUrl||"",
-      payload.photoUrls.front||"",payload.photoUrls.kitchen||"",
-      payload.photoUrls.familyPhoto||"",payload.photoUrls.surroundings||"",
-      payload.photoUrls.surveyorFamily||"",
-      payload.elapsedSec||"", surveyTag   // cols 34=duration, 35=SurveyTag
-    ]);
-    var lastRow = survSh.getLastRow();
-    [{col:29,url:payload.photoUrls.front,label:"Front"},
-     {col:30,url:payload.photoUrls.kitchen,label:"Kitchen"},
-     {col:31,url:payload.photoUrls.familyPhoto,label:"Family"},
-     {col:32,url:payload.photoUrls.surroundings,label:"Surroundings"},
-     {col:33,url:payload.photoUrls.surveyorFamily,label:"SurveyorFamily"}]
-    .forEach(function(p){ if(p.url) survSh.getRange(lastRow,p.col).setFormula('=HYPERLINK("'+p.url+'","'+p.label+'")'); });
-
-    // If resurvey, highlight this row in yellow to distinguish
-    if (surveyNo > 1) {
-      survSh.getRange(lastRow, 1, 1, survSh.getLastColumn()).setBackground("#fff9c4");
-    }
-
-    // Members — tag with SurveyNo so we know which survey they belong to
-    var memSh = ss.getSheetByName("MemberData");
-    payload.members.forEach(function(m,idx){
-      if(!m.name&&!m.income) return;
-      memSh.appendRow([ts,f.id,f.name,f.block,f.ward,idx+1,m.name,m.age,m.income,m.occupation,m.remarks,payload.zcrimName,surveyTag]);
-    });
-
-    // Update Families status to done (clears resurvey flag too)
-    ss.getSheetByName("Families").getRange(payload.familyRowIndex,10).setValue("done");
-    // Remove orange highlight from Families row
-    ss.getSheetByName("Families").getRange(payload.familyRowIndex,1,1,10).setBackground(surveyNo>1?"#d4edda":"");
-
-    return { ok:true, surveyNo:surveyNo, surveyTag:surveyTag };
-  } catch(e) { return { ok:false, msg:e.message }; }
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  SETUP SHEETS
-// ─────────────────────────────────────────────────────────────────
-function ensureSheetsExist() {
-  var ss    = SpreadsheetApp.openById(SHEET_ID);
-  var specs = {
-    "Families":   ["FamilyID","FullName","Mobile","Age","Gender","Address","Block","Ward","AssignedZCRIM","Status"],  // Status: pending/done/absent
-    "SurveyData": ["Timestamp","ZCRIMName","ZCRIMMobile","FamilyID","FamilyName","FamilyMobile","Age","Gender",
-                   "Address","Block","Ward","HouseRent","RentAmt","HouseSize","HouseCondition","Electricity",
-                   "SplitFamily","PropertyID","TaxPayer","TwoWheeler","FourWheeler","OtherLand","AgriLand",
-                   "ShopBusiness","Cattle","GPS_Lat","GPS_Lng","SelfieURL",
-                   "Photo_Front","Photo_Kitchen","Photo_Family","Photo_Surroundings","Photo_SurveyorFamily"],
-    "MemberData": ["Timestamp","FamilyID","FamilyName","Block","Ward","MemberNo","MemberName","Age","IncomeRange","Occupation","Remarks","ZCRIM"],
-    "PhotoLog":   ["Timestamp","FamilyID","ZCRIMName","PhotoLabel","FileName","DriveURL","GPS_Lat","GPS_Lng","FileID"],
-    "LoginLog":   ["Timestamp","ZCRIMName","Mobile","GPS_Lat","GPS_Lng","DeviceInfo","UserAgent"],
-    "Passwords":  ["Mobile","ZCRIMName","Email","HashedPassword","SentAt","Status","LockedAt","FailedAttempts"],
-    "Sessions":   ["Token","Mobile","ZCRIMName","CreatedAt","ExpiresAt","Status","GPS","LoggedOutAt"]
-  };
-  Object.keys(specs).forEach(function(name){
-    var sh = ss.getSheetByName(name);
-    if (!sh) {
-      sh = ss.insertSheet(name);
-      sh.appendRow(specs[name]);
-      sh.getRange(1,1,1,specs[name].length).setBackground("#1a56a0").setFontColor("#ffffff").setFontWeight("bold");
-      sh.setFrozenRows(1);
-    }
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  IMPORT FAMILIES
-// ─────────────────────────────────────────────────────────────────
-var ZCRIM_LIST = [
-  {name:"AJAHRUDDIN",  mobile:"9812515972",block:"NAGINA BL"},
-  {name:"BALWANT GERA",mobile:"9896452129",block:"TAORU MC"},
-  {name:"HASHMAT",     mobile:"9671810095",block:"NUH BL"},
-  {name:"IKLAS",       mobile:"9813915203",block:"INDRI BL"},
-  {name:"IRSHAD",      mobile:"9671775772",block:"PINGWAN BL"},
-  {name:"LAXMAN",      mobile:"8814947799",block:"FEROZEPUR JHIRKA BL"},
-  {name:"MAHESH GARG", mobile:"9899966661",block:"FEROZEPUR JHIRKA MC"},
-  {name:"MOHSHIN KHAN",mobile:"9671996296",block:"TAORU BL"},
-  {name:"MONU",        mobile:"9992689413",block:"PUNAHANA MC"},
-  {name:"SHAUKAT ALI", mobile:"7027125382",block:"NUH MC"},
-  {name:"VARISH",      mobile:"8930034360",block:"PUNAHANA BL"},
-  {name:"ANEES",       mobile:"9466610668",block:"ALL (Master)"},
-];
-var BLOCK_TO_ZCRIM={};
-ZCRIM_LIST.forEach(function(z){BLOCK_TO_ZCRIM[z.block.toUpperCase()]=z.mobile;});
-var SHEET_ID_IMP="1pXnQwkMTuR3Tj5-3YcsTOAnk-PlfZ0co0BgyokQaIPs";
-var DRIVE_ROOT_IMP="1qhpXdKTjkKRHVl-RYvoypo5Hjfgqu41M";
-var SHEET_FAM="Families";
-
-function loadFromDriveXlsx() {
-  var folder=DriveApp.getFolderById(DRIVE_ROOT_IMP);
-  var files=folder.getFilesByName("Declared_data.xlsx");
-  if(!files.hasNext()) files=DriveApp.getFilesByName("Declared_data.xlsx");
-  if(!files.hasNext()){SpreadsheetApp.getUi().alert("❌ Declared_data.xlsx not found.");return;}
-  var xlsxFile=files.next(), token=ScriptApp.getOAuthToken();
-  var response=UrlFetchApp.fetch("https://www.googleapis.com/drive/v2/files/"+xlsxFile.getId()+"/copy",{
-    method:"POST",contentType:"application/json",
-    payload:JSON.stringify({title:"_ZCRIM_TEMP_"+Date.now(),mimeType:"application/vnd.google-apps.spreadsheet"}),
-    headers:{Authorization:"Bearer "+token},muteHttpExceptions:true
-  });
-  var result=JSON.parse(response.getContentText());
-  if(!result.id){SpreadsheetApp.getUi().alert("❌ Conversion failed. Use loadFromGoogleSheet() instead.");return;}
-  var allRows=SpreadsheetApp.openById(result.id).getSheets()[0].getDataRange().getValues();
-  DriveApp.getFileById(result.id).setTrashed(true);
-  writeToFamiliesSheet(allRows.slice(1));
-}
-
-function loadFromGoogleSheet() {
-  var id="PASTE_SHEET_ID_HERE";
-  writeToFamiliesSheet(SpreadsheetApp.openById(id).getSheets()[0].getDataRange().getValues().slice(1));
-}
-
-function writeToFamiliesSheet(dataRows) {
-  ensureSheetsExist();
-  var ss=SpreadsheetApp.openById(SHEET_ID_IMP);
-  var sh=ss.getSheetByName(SHEET_FAM);
-  if(sh.getLastRow()>1) sh.getRange(2,1,sh.getLastRow()-1,10).clearContent();
-  var rows=[],unassigned=[],zcrimCount={};
-  dataRows.forEach(function(r){
-    var fid=String(r[0]||"").trim(); if(!fid) return;
-    var block=String(r[6]||"").trim();
-    var zm=BLOCK_TO_ZCRIM[block.toUpperCase()]||"UNASSIGNED";
-    if(zm==="UNASSIGNED") unassigned.push({fid:fid,block:block});
-    zcrimCount[zm]=(zcrimCount[zm]||0)+1;
-    rows.push([fid,String(r[1]||"").trim(),String(r[2]||"").trim(),String(r[3]||"").trim(),
-               String(r[4]||"").trim(),String(r[5]||"").trim(),block,String(r[7]||"").trim(),zm,""]);
-  });
-  if(rows.length>0) sh.getRange(2,1,rows.length,10).setValues(rows);
-  var colors=["#e8f5e9","#e3f2fd","#fff3e0","#fce4ec","#f3e5f5","#e0f7fa","#f9fbe7","#ede7f6","#fbe9e7","#e8eaf6","#e0f2f1"];
-  var mobileList=ZCRIM_LIST.map(function(z){return z.mobile;});
-  rows.forEach(function(row,i){var idx=mobileList.indexOf(row[8]); if(idx>=0) sh.getRange(i+2,1,1,10).setBackground(colors[idx%colors.length]);});
-  sh.autoResizeColumns(1,10);
-  var summary="✅ Import Complete!\nTotal: "+rows.length+"  Unassigned: "+unassigned.length+"\n\n";
-  ZCRIM_LIST.forEach(function(z){summary+=z.name+" → "+z.block+": "+(zcrimCount[z.mobile]||0)+"\n";});
-  Logger.log(summary);
-  try{SpreadsheetApp.getUi().alert(summary);}catch(e){}
-}
-
-function showProgressSummary() {
-  var data = SpreadsheetApp.openById(SHEET_ID).getSheetByName("Families").getDataRange().getValues().slice(1);
-  var stats = {};
-  ZCRIMS.forEach(function(z){ stats[z.mobile]={name:z.name,block:z.block,total:0,done:0,absent:0}; });
-  data.forEach(function(r){
-    var m=String(r[8]).trim(), s=String(r[9]).trim().toLowerCase();
-    if(!stats[m]) return;
-    stats[m].total++;
-    if(s==="done")   stats[m].done++;
-    if(s==="absent") stats[m].absent++;
-  });
-  var msg = "ZCRIM Progress Report\n\n";
-  ZCRIMS.forEach(function(z){
-    var s=stats[z.mobile]||{total:0,done:0,absent:0};
-    var pct=s.total>0?Math.round(s.done/s.total*100):0;
-    msg+=z.name+" ("+z.block+")\nTotal:"+s.total+" Done:"+s.done+" Absent:"+s.absent+" Pending:"+(s.total-s.done-s.absent)+" ["+pct+"%]\n\n";
-  });
-  Logger.log(msg);
-  try { SpreadsheetApp.getUi().alert(msg); } catch(e) { Logger.log("Open from Sheet menu to see popup. Check Logs above."); }
-}
-
-function clearAndReimport() {
-  var ui=SpreadsheetApp.getUi();
-  if(ui.alert("⚠️ Re-import?","Delete all and re-import?",ui.ButtonSet.YES_NO)===ui.Button.YES) loadFromDriveXlsx();
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  DAILY REPORT — triggered automatically every evening at 7 PM
-// ─────────────────────────────────────────────────────────────────
-function sendDailyReport() {
-  var data  = SpreadsheetApp.openById(SHEET_ID).getSheetByName("Families").getDataRange().getValues().slice(1);
-  var stats = {};
-  ZCRIMS.forEach(function(z){ stats[z.mobile]={name:z.name,block:z.block,total:0,done:0,absent:0}; });
-  data.forEach(function(r){
-    var m=String(r[8]).trim(), s=String(r[9]).trim().toLowerCase();
-    if(!stats[m]) return;
-    stats[m].total++;
-    if(s==='done')   stats[m].done++;
-    if(s==='absent') stats[m].absent++;
-  });
-  var totalAll=0,doneAll=0;
-  var rows = ZCRIMS.map(function(z){
-    var s=stats[z.mobile]||{total:0,done:0,absent:0};
-    totalAll+=s.total; doneAll+=s.done;
-    var pct=s.total>0?Math.round(s.done/s.total*100):0;
-    return '<tr style="border-bottom:1px solid #e2e8f0">'+
-      '<td style="padding:8px 12px;font-weight:600">'+z.name+'</td>'+
-      '<td style="padding:8px 12px;color:#64748b">'+z.block+'</td>'+
-      '<td style="padding:8px 12px;text-align:center">'+s.total+'</td>'+
-      '<td style="padding:8px 12px;text-align:center;color:#22c55e;font-weight:700">'+s.done+'</td>'+
-      '<td style="padding:8px 12px;text-align:center;color:#f59e0b">'+s.absent+'</td>'+
-      '<td style="padding:8px 12px;text-align:center;color:#ef4444">'+(s.total-s.done-s.absent)+'</td>'+
-      '<td style="padding:8px 12px;text-align:center"><div style="background:#e2e8f0;border-radius:4px;height:8px;width:80px;display:inline-block"><div style="background:'+(pct>=75?'#22c55e':pct>=40?'#f59e0b':'#ef4444')+';width:'+pct+'%;height:100%;border-radius:4px"></div></div> '+pct+'%</td>'+
-      '</tr>';
-  }).join('');
-  var overallPct = totalAll>0?Math.round(doneAll/totalAll*100):0;
-  var today = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  var html =
-    '<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto">'+
-    '<div style="background:#1a56a0;padding:20px;border-radius:8px 8px 0 0;text-align:center">'+
-      '<h2 style="color:#fff;margin:0">🏛️ ZCRIM Survey — Daily Report</h2>'+
-      '<p style="color:#bfd7ff;margin:6px 0 0">'+today+'</p>'+
-    '</div>'+
-    '<div style="background:#f8fafc;padding:20px;border:1px solid #e2e8f0">'+
-      '<div style="display:flex;gap:12px;margin-bottom:20px">'+
-        '<div style="flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;text-align:center"><div style="font-size:28px;font-weight:700;color:#1a56a0">'+doneAll+'</div><div style="color:#64748b;font-size:12px">COMPLETED</div></div>'+
-        '<div style="flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;text-align:center"><div style="font-size:28px;font-weight:700;color:#f59e0b">'+(totalAll-doneAll)+'</div><div style="color:#64748b;font-size:12px">PENDING</div></div>'+
-        '<div style="flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;text-align:center"><div style="font-size:28px;font-weight:700;color:#22c55e">'+overallPct+'%</div><div style="color:#64748b;font-size:12px">OVERALL</div></div>'+
-      '</div>'+
-      '<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0">'+
-        '<thead><tr style="background:#1a56a0;color:#fff">'+
-          '<th style="padding:10px 12px;text-align:left">ZCRIM</th>'+
-          '<th style="padding:10px 12px;text-align:left">Block</th>'+
-          '<th style="padding:10px 12px;text-align:center">Total</th>'+
-          '<th style="padding:10px 12px;text-align:center">Done</th>'+
-          '<th style="padding:10px 12px;text-align:center">Absent</th>'+
-          '<th style="padding:10px 12px;text-align:center">Pending</th>'+
-          '<th style="padding:10px 12px;text-align:center">Progress</th>'+
-        '</tr></thead><tbody>'+rows+'</tbody>'+
-      '</table>'+
-    '</div>'+
-    '<div style="background:#1a56a0;padding:12px;text-align:center;border-radius:0 0 8px 8px">'+
-      '<p style="color:#bfd7ff;margin:0;font-size:12px">Auto-generated by ZCRIM Survey System · Mewat/Nuh District</p>'+
-    '</div></div>';
-  GmailApp.sendEmail(ADMIN_EMAIL,
-    '📊 ZCRIM Daily Report — '+today+' ('+overallPct+'% complete)',
-    'See HTML version', {htmlBody:html, name:'ZCRIM Survey System'});
-  Logger.log("Daily report sent to "+ADMIN_EMAIL);
-}
-
-function setupDailyTrigger() {
-  // Delete existing triggers
-  ScriptApp.getProjectTriggers().forEach(function(t){
-    if(t.getHandlerFunction()==='sendDailyReport') ScriptApp.deleteTrigger(t);
-  });
-  // Create new trigger at 7 PM daily
-  ScriptApp.newTrigger('sendDailyReport')
-    .timeBased().everyDays(1).atHour(19).create();
-  SpreadsheetApp.getUi().alert('Daily report trigger set! Report will be emailed to '+ADMIN_EMAIL+' every day at 7 PM.');
-}
-
-
-
-// ─────────────────────────────────────────────────────────────────
-//  MERGE DUPLICATE FOLDERS + UPDATE ALL SHEET LINKS
-// ─────────────────────────────────────────────────────────────────
-function mergeDuplicateFolders() {
-  var ui  = SpreadsheetApp.getUi();
-  var ss  = SpreadsheetApp.openById(SHEET_ID);
-  var root = DriveApp.getFolderById(DRIVE_ROOT);
-
-  Logger.log("Starting duplicate folder merge...");
-
-  // ── STEP 1: Find all folders and group by name ──────────────────
-  var allFolders = root.getFolders();
-  var folderMap  = {}; // name → [folder, folder, ...]
-  while (allFolders.hasNext()) {
-    var f = allFolders.next();
-    var n = f.getName().trim();
-    if (!folderMap[n]) folderMap[n] = [];
-    folderMap[n].push(f);
-  }
-
-  // ── STEP 2: For each PPP ID with duplicates, merge into one ─────
-  var mergedCount   = 0;
-  var filesMoved    = 0;
-  var urlMap        = {}; // oldFileId → newFileId (for link updates)
-
-  Object.keys(folderMap).forEach(function(name) {
-    var folders = folderMap[name];
-    if (folders.length <= 1) return; // no duplicates
-
-    // Primary = folder with most files
-    folders.sort(function(a, b) {
-      var aCount = 0, bCount = 0;
-      var af = a.getFiles(); while(af.hasNext()){ af.next(); aCount++; }
-      var bf = b.getFiles(); while(bf.hasNext()){ bf.next(); bCount++; }
-      return bCount - aCount;
-    });
-
-    var primary = folders[0];
-    Logger.log("Merging into: " + name + " (" + folders.length + " folders)");
-
-    for (var i = 1; i < folders.length; i++) {
-      var src   = folders[i];
-      var files = src.getFiles();
-      while (files.hasNext()) {
-        var file    = files.next();
-        var oldId   = file.getId();
-        var oldUrl  = "https://drive.google.com/file/d/" + oldId + "/view";
-        // Move file to primary folder
-        primary.addFile(file);
-        src.removeFile(file);
-        var newUrl  = "https://drive.google.com/file/d/" + file.getId() + "/view";
-        urlMap[oldUrl] = newUrl; // same file, same ID — url stays same actually
-        filesMoved++;
-        Logger.log("  Moved: " + file.getName());
-      }
-      // Delete empty duplicate folder
-      try { src.setTrashed(true); } catch(e) { Logger.log("Could not trash: " + e.message); }
-      mergedCount++;
-    }
-  });
-
-  Logger.log("Merged " + mergedCount + " duplicate folders, moved " + filesMoved + " files.");
-  Logger.log("Note: File IDs and URLs remain the same after moving — no link updates needed.");
-
-  // ── STEP 3: Verify PhotoLog links are accessible ─────────────────
-  var photoLogSh = ss.getSheetByName("PhotoLog");
-  var brokenLinks = 0;
-  if (photoLogSh) {
-    var plData = photoLogSh.getDataRange().getValues();
-    for (var r = 1; r < plData.length; r++) {
-      var fileId = String(plData[r][8]||'').trim();
-      if (!fileId) continue;
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="screen-login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:380px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:44px">🏛️</div>
+      <div style="font-size:22px;font-weight:700;margin-top:8px">ZCRIM Portal</div>
+      <div style="color:var(--mut);font-size:13px;margin-top:4px">Income Verification · Mewat/Nuh</div>
+    </div>
+    <div class="card">
+      <div class="sec-title">Field Verifier Login</div>
+      <div class="field">
+        <label>Registered Mobile Number</label>
+        <input id="inp-mobile" type="tel" maxlength="10" placeholder="10-digit mobile number"
+          onkeydown="if(event.key==='Enter') document.getElementById('inp-password').focus()" />
+      </div>
+      <div class="field">
+        <label>Password <span style="color:var(--mut);font-size:10px;text-transform:none;font-weight:400">(sent to your email)</span></label>
+        <div class="pwd-wrap">
+          <input id="inp-password" type="password" placeholder="Enter your password"
+            onkeydown="if(event.key==='Enter') doLogin()" />
+          <button class="pwd-toggle" onclick="togglePwd()" type="button">👁</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+        <span class="gps-pill waiting" id="gps-pill">⏳ Locating…</span>
+        <span style="font-size:11px;color:var(--mut)">Works without GPS</span>
+      </div>
+      <button class="btn btn-blue" id="btn-login" onclick="doLogin()">Login →</button>
+      <div class="err" id="login-err"></div>
+    </div>
+    <div style="text-align:center;color:var(--mut);font-size:12px">
+      Password was emailed to you by admin · Contact admin if not received
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VILLAGE PICKER ═══ -->
+<div id="screen-village" style="display:none;min-height:100vh;padding:20px">
+  <div style="max-width:480px;margin:0 auto">
+    <div style="text-align:center;padding:20px 0 16px">
+      <div style="font-size:32px">🏘️</div>
+      <div style="font-size:18px;font-weight:700;margin-top:8px" id="village-title">Select Village</div>
+      <div style="color:var(--mut);font-size:12px;margin-top:4px">Choose where you are working today</div>
+    </div>
+    <div class="session-bar">
+      <span>👤 <span id="sess-name">—</span></span>
+      <span id="sess-timer" style="color:var(--org)">⏱ 30:00</span>
+      <button onclick="doLogout()" style="background:none;border:1px solid var(--bdr);border-radius:6px;padding:3px 10px;color:var(--mut);font-size:11px;cursor:pointer">Logout</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button onclick="showTab('village-tab')" id="tab-villages-btn" style="flex:1;padding:9px;border:1px solid var(--acc);border-radius:8px;background:var(--acc);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🏘️ Villages</button>
+      <button onclick="showTab('leaderboard-tab')" id="tab-board-btn" style="flex:1;padding:9px;border:1px solid var(--bdr);border-radius:8px;background:transparent;color:var(--mut);font-weight:700;font-size:13px;cursor:pointer">🏆 Leaderboard</button>
+    </div>
+    <div id="village-tab">
+    <input id="village-search" type="text" placeholder="🔍 Search village..." oninput="filterVillages()" style="margin-bottom:12px" />
+    <div style="display:flex;gap:8px;margin-bottom:14px" id="village-stats-bar"></div>
+    <div id="village-list"></div>
+    </div>
+    <div id="leaderboard-tab" style="display:none">
+      <div id="leaderboard-list"><div style="text-align:center;padding:30px;color:var(--mut)"><span class="spinner"></span> Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SURVEY SCREEN ═══ -->
+<div id="screen-survey" style="display:none;padding-bottom:80px">
+  <div class="topbar">
+    <div>
+      <div style="font-weight:700;font-size:14px" id="hdr-name">—</div>
+      <div style="color:var(--mut);font-size:10px" id="hdr-gps">📍 Getting location…</div>
+    </div>
+    <div style="text-align:center;flex:1">
+      <span onclick="switchVillage()" style="cursor:pointer">
+        <span style="background:#1e3a5f;border:1px solid #3b82f644;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#93c5fd">🏘️ <span id="active-village-name">—</span> ▾</span>
+      </span>
+    </div>
+    <div style="text-align:right">
+      <div class="badge badge-org" id="hdr-remaining">—</div>
+      <div style="color:var(--org);font-size:10px;margin-top:2px" id="sess-timer-survey">⏱ —</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-0" onclick="tryTab(0)">👨‍👩‍👧 Family</button>
+    <button class="tab locked" id="tab-btn-1" onclick="tryTab(1)">👥 Members</button>
+    <button class="tab locked" id="tab-btn-2" onclick="tryTab(2)">🏠 Assets</button>
+    <button class="tab locked" id="tab-btn-3" onclick="tryTab(3)">📷 Photos</button>
+  </div>
+  <div style="padding:14px">
+    <!-- TAB 0 -->
+    <div id="tab0">
+      <div id="dup-banner" style="display:none;background:#ef444422;border:2px solid var(--red);border-radius:8px;padding:12px;margin-bottom:12px;color:var(--red);font-weight:700;text-align:center;font-size:13px">
+        ⚠️ DUPLICATE ALERT — This family may have already been surveyed. Verify before submitting.
+      </div>
+      <div id="survey-timer" style="text-align:center;padding:6px;font-size:12px;color:#94a3b8;margin-bottom:8px">⏱ Survey time: <span id="timer-display">0:00</span></div>
+      <div class="card">
+        <div class="sec-title">📋 Family Record</div>
+        <div class="info-grid" id="family-info"></div>
+        <div style="margin-top:10px"><div class="info-item"><div class="k">Address</div><div class="v" id="fi-address" style="font-size:12px"></div></div></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="fi-badges"></div>
+      </div>
+      <div class="card">
+        <div class="sec-title">🤳 Surveyor Selfie <span style="color:var(--red)">*</span></div>
+        <div class="photo-box" id="selfie-box" onclick="openCamera('selfie')">
+          <div style="font-size:32px">🤳</div>
+          <div style="color:var(--org);font-weight:600;font-size:13px">Capture Surveyor Photo</div>
+          <div style="color:var(--mut);font-size:11px">Front camera · Required</div>
+        </div>
+      </div>
+      <button class="btn btn-blue" onclick="validateAndNext(0)">Next: Members →</button>
+      <button class="btn btn-gray" id="btn-skip" onclick="skipFamily()" style="background:#475569;font-size:13px;padding:10px" disabled>⏭ Skip Family (Mark Absent / Unavailable)</button>
+    </div>
+    <!-- TAB 1 -->
+    <div id="tab1" style="display:none">
+      <div style="color:var(--mut);font-size:12px;margin-bottom:10px">Enter all family members. Use ＋ to add more.</div>
+      <div id="members-list"></div>
+      <button class="btn btn-gray" onclick="addMember()" style="margin-bottom:12px">＋ Add Member</button>
+      <button class="btn btn-blue" onclick="validateAndNext(1)">Next: Assets →</button>
+    </div>
+    <!-- TAB 2 -->
+    <div id="tab2" style="display:none">
+      <div class="card">
+        <div class="sec-title">🏠 Housing</div>
+        <div class="row2">
+          <div class="field"><label>House on Rent</label><select id="a-houseRent" onchange="toggleRent()"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+          <div class="field" id="rent-field" style="display:none"><label>Rent Amount (₹/month)</label><input type="number" id="a-rentAmt" placeholder="Amount" /></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>House Size (Sq Yards)</label><input type="number" id="a-houseSize" placeholder="0" /></div>
+          <div class="field"><label>House Condition</label><select id="a-houseCondition"><option value="">Select</option><option>Kachha</option><option>Pucca</option></select></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Electricity</label><select id="a-electricity"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+          <div class="field"><label>Property ID</label><input id="a-propertyId" placeholder="If any" /></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title">📄 Legal & Admin</div>
+        <div class="row2">
+          <div class="field"><label>Tax Payer</label><select id="a-taxPayer"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+          <div class="field"><label>Split from Parents</label><select id="a-splitFamily"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title">🚗 Vehicles</div>
+        <div class="row2">
+          <div class="field"><label>Two Wheeler</label><input id="a-twoWheeler" placeholder="e.g. HR28AB1234" /></div>
+          <div class="field"><label>Four Wheeler</label><input id="a-fourWheeler" placeholder="e.g. HR28CD5678" /></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title">🌾 Land & Business</div>
+        <div class="row2">
+          <div class="field"><label>Agriculture Land</label><input id="a-agriLand" placeholder="e.g. 2 acres" /></div>
+          <div class="field"><label>Other Land</label><input id="a-otherLand" placeholder="Details if any" /></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Shop / Business</label><select id="a-shopBusiness"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+          <div class="field"><label>Cattle / Buffalo</label><input type="number" id="a-cattle" placeholder="0" /></div>
+        </div>
+      </div>
+      <button class="btn btn-blue" onclick="validateAndNext(2)">Next: Photos →</button>
+    </div>
+    <!-- TAB 3 -->
+    <div id="tab3" style="display:none">
+      <div class="card" style="border-color:var(--org)">
+        <div style="color:var(--org);font-weight:700;margin-bottom:4px">📷 Camera-Only Mode</div>
+        <div style="color:var(--mut);font-size:12px">All 4 photos mandatory. GPS auto-tagged.</div>
+      </div>
+      <div class="row2" id="photos-grid"></div>
+      <div style="height:14px"></div>
+      <div class="card" id="photos-status"></div>
+      <div style="height:14px"></div>
+      <button class="btn btn-green" id="btn-submit" onclick="submitForm()">✅ Submit Verification</button>
+      <div class="err" id="submit-err" style="text-align:center"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CAMERA ═══ -->
+<div id="camera-wrap" style="display:none">
+  <video id="cam-video" autoplay playsinline muted
+    style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1">
+  </video>
+  <!-- Overlay bar at top -->
+  <div style="position:absolute;top:0;left:0;right:0;z-index:10;background:linear-gradient(rgba(0,0,0,0.7),transparent);padding:14px 16px;display:flex;align-items:center;gap:12px">
+    <button onclick="closeCamera()" style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding:8px 14px;border-radius:8px;-webkit-tap-highlight-color:transparent">✕ Close</button>
+    <div style="font-weight:700;font-size:16px;color:#fff;flex:1;text-align:center" id="cam-label">Camera</div>
+    <div style="width:80px"></div>
+  </div>
+  <!-- Capture button fixed at bottom -->
+  <div style="position:absolute;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:20px 20px 36px">
+    <div style="color:rgba(255,255,255,0.7);font-size:12px;text-align:center;margin-bottom:10px" id="cam-gps-label">📍 Acquiring GPS…</div>
+    <div id="cam-error" style="display:none;color:#fca5a5;font-size:12px;text-align:center;margin-bottom:10px;padding:8px;background:rgba(239,68,68,0.2);border-radius:6px"></div>
+    <button id="btn-capture" onclick="capturePhoto()"
+      style="display:block;width:100%;padding:20px;background:#3b82f6;color:#fff;border:none;border-radius:16px;font-size:20px;font-weight:800;cursor:pointer;letter-spacing:1px;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 20px rgba(59,130,246,0.5)">
+      📸 &nbsp; CAPTURE PHOTO
+    </button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── APPS SCRIPT BACKEND URL ──────────────────
+// Replace this with your deployed Apps Script URL
+var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-9SSHrwMgKfHw-1qEFqH-cmKDjNjNLbGOu5DN9yD9YMp-iTESK4TkdWl5kDCax-uT3w/exec";
+
+// ── XHR WRAPPER — handles Apps Script CORS redirects ──
+function gsr(fnName, args, onSuccess, onFailure) {
+  var isLarge = fnName === 'uploadPhoto' || fnName === 'submitSurvey';
+  var xhr = new XMLHttpRequest();
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4) return;
+    if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
       try {
-        var f2 = DriveApp.getFileById(fileId);
-        // Ensure sharing is set correctly
-        f2.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        var res = JSON.parse(xhr.responseText);
+        if (onSuccess) onSuccess(res);
       } catch(e) {
-        brokenLinks++;
-        Logger.log("Broken file ID at row "+(r+1)+": "+fileId);
+        if (onFailure) onFailure({message: 'Invalid JSON: ' + xhr.responseText.substring(0,100)});
+        else console.error('JSON parse error', e, xhr.responseText.substring(0,200));
       }
+    } else {
+      var err = {message: 'HTTP ' + xhr.status + ': ' + xhr.statusText};
+      if (onFailure) onFailure(err);
+      else console.error(fnName, err);
     }
+  };
+
+  xhr.onerror = function() {
+    var err = {message: 'Network error. Check internet connection.'};
+    if (onFailure) onFailure(err);
+  };
+
+  if (isLarge) {
+    // POST for photos/large data
+    xhr.open('POST', APPS_SCRIPT_URL, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain'); // text/plain avoids CORS preflight
+    xhr.send(JSON.stringify({fn: fnName, args: args || []}));
+  } else {
+    // GET for normal calls
+    var url = APPS_SCRIPT_URL
+      + '?fn='   + encodeURIComponent(fnName)
+      + '&args=' + encodeURIComponent(JSON.stringify(args || []));
+    xhr.open('GET', url, true);
+    xhr.send();
   }
-
-  // ── STEP 4: Show summary ─────────────────────────────────────────
-  var msg = "Merge Complete!\n\nDuplicate folders merged: " + mergedCount + "\nFiles moved: " + filesMoved + "\nBroken links: " + brokenLinks + (brokenLinks > 0 ? "\nCheck Apps Script Logs for broken file IDs." : "\nAll photo links verified OK.");
-
-  Logger.log(msg);
-  try { ui.alert("Merge Complete", msg, ui.ButtonSet.OK); }
-  catch(e) { Logger.log("Done. Check Logs for full report."); }
 }
 
-// ─────────────────────────────────────────────────────────────────
-//  REBUILD PHOTO LINKS — re-fetch all Drive URLs from FileIDs in PhotoLog
-//  and update SurveyData columns 28-33 (photo URL columns)
-// ─────────────────────────────────────────────────────────────────
-function rebuildPhotoLinks() {
-  var ui = SpreadsheetApp.getUi();
-  var ss = SpreadsheetApp.openById(SHEET_ID);
+// ── google.script.run REPLACEMENT ────────────
+// Supports: google.script.run.withSuccessHandler(fn).withFailureHandler(fn).fnName(args)
+var google = {
+  script: {
+    run: (function() {
+      function Runner() {
+        this._ok  = function(){};
+        this._err = function(e){ console.error(e); };
+      }
+      Runner.prototype.withSuccessHandler = function(fn) { this._ok  = fn; return this; };
+      Runner.prototype.withFailureHandler = function(fn) { this._err = fn; return this; };
+      Runner.prototype._call = function(fn, args) {
+        var self = this;
+        gsr(fn, args, function(res){ self._ok(res); }, function(e){ self._err(e); });
+      };
 
-  var photoLogSh = ss.getSheetByName("PhotoLog");
-  var survDataSh = ss.getSheetByName("SurveyData");
-  if (!photoLogSh || !survDataSh) {
-    try { ui.alert("Error: PhotoLog or SurveyData sheet not found."); } catch(e){}
+      // Return an object where any property access returns a new Runner
+      // that calls the backend function when invoked
+      var handler = {
+        withSuccessHandler: function(fn) {
+          var r = new Runner(); r._ok = fn; return r;
+        },
+        withFailureHandler: function(fn) {
+          var r = new Runner(); r._err = fn; return r;
+        }
+      };
+
+      // Attach all known backend functions directly
+      var fns = ['loginZcrim','logLogin','logoutSession','validateSession',
+                 'getWardsForZcrim','getNextFamily','getFamiliesForZcrim',
+                 'uploadPhoto','submitSurvey'];
+      fns.forEach(function(fn) {
+        handler[fn] = function() {
+          var args = Array.prototype.slice.call(arguments);
+          var r = new Runner();
+          setTimeout(function(){ r._call(fn, args); }, 0);
+          return r;
+        };
+      });
+
+      // Also attach to Runner prototype
+      fns.forEach(function(fn) {
+        Runner.prototype[fn] = function() {
+          var args = Array.prototype.slice.call(arguments);
+          this._call(fn, args);
+        };
+      });
+
+      return handler;
+    })()
+  }
+};
+
+var state = {
+  zcrim:null, token:null, sessionExpiry:null,
+  family:null, familyRowIndex:null,
+  gps:null, memberCount:6,
+  photos:{front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null},
+  selfie:null, cameraTarget:null, cameraStream:null,
+  selectedWard:null, allWards:[],
+  sessionTimerInterval:null
+};
+
+// Start GPS after state is ready
+initGPS();
+var tabUnlocked = [true,false,false,false];
+var PHOTO_KEYS      = ['front','kitchen','familyPhoto','surroundings','surveyorFamily'];
+var PHOTO_LABELS    = ['Full House (Front)','Kitchen','With Family Members','Surrounding Area','Surveyor with Family'];
+var PHOTO_MANDATORY = ['front','surroundings','surveyorFamily']; // selfie also mandatory — checked separately
+var PHOTO_OPTIONAL  = ['kitchen','familyPhoto'];
+var INCOME_RANGES = ['0 - 5,000','5,000 - 10,000','10,000 - 25,000','25,000 - 50,000',
+  '50,000 - 75,000','75,000 - 1,00,000','1,00,000 - 1,40,000','1,40,000 - 1,80,000',
+  '1,80,000 - 3,00,000','3,00,000 - 5,00,000','5,00,000 - 6,00,000','6,00,000 - 7,00,000',
+  '7,00,000 - 8,00,000','8,00,000 - 9,00,000','9,00,000 - 10,00,000','Above 10,00,000'];
+
+// ── GPS ──────────────────────────────────────
+function getGPS(cb) {
+  if (!navigator.geolocation) { cb({lat:'N/A',lng:'N/A',acc:''}); return; }
+  var done = false;
+  function fin(c){ if(done) return; done=true; cb(c); }
+  // Strategy 1: high accuracy
+  navigator.geolocation.getCurrentPosition(
+    function(p){ fin({lat:p.coords.latitude.toFixed(6), lng:p.coords.longitude.toFixed(6), acc:Math.round(p.coords.accuracy)+'m'}); },
+    function(err){
+      // Strategy 2: low accuracy (wifi/network, faster)
+      navigator.geolocation.getCurrentPosition(
+        function(p){ fin({lat:p.coords.latitude.toFixed(6), lng:p.coords.longitude.toFixed(6), acc:Math.round(p.coords.accuracy)+'m'}); },
+        function(){ fin({lat:'N/A',lng:'N/A',acc:''}); },
+        {timeout:10000, enableHighAccuracy:false, maximumAge:60000}
+      );
+    },
+    {timeout:8000, enableHighAccuracy:true, maximumAge:15000}
+  );
+}
+
+function initGPS() {
+  var pill = document.getElementById('gps-pill');
+  if (!pill) return;
+
+  if (!navigator.geolocation) {
+    pill.className  = 'gps-pill waiting';
+    pill.textContent = '❌ GPS not supported';
     return;
   }
 
-  // Build map: FamilyID + PhotoLabel → DriveURL (from PhotoLog)
-  var plData  = photoLogSh.getDataRange().getValues().slice(1);
-  var linkMap = {}; // "PPPID|Label" → url
-  plData.forEach(function(r) {
-    var pppId    = String(r[1]||'').trim();
-    var label    = String(r[3]||'').trim().toLowerCase();
-    var fileId   = String(r[8]||'').trim();
-    if (!pppId || !fileId) return;
-    var url = "https://drive.google.com/file/d/" + fileId + "/view";
-    linkMap[pppId + "|" + label] = url;
-  });
-
-  // Column mapping in SurveyData (0-indexed from col 0)
-  // Col 27 = SelfieURL, 28 = Photo_Front, 29 = Kitchen, 30 = Family, 31 = Surroundings, 32 = SurveyorFamily
-  var labelToCol = {
-    "surveyor_selfie": 27, "selfie": 27,
-    "front_of_house":  28, "front": 28,
-    "kitchen":         29,
-    "family_photo":    30, "family": 30,
-    "surroundings":    31,
-    "surveyor_with_family": 32, "surveyorfamily": 32
-  };
-
-  var sdData   = survDataSh.getDataRange().getValues();
-  var updated  = 0;
-  var updates  = []; // {row, col, val}
-
-  for (var r = 1; r < sdData.length; r++) {
-    var pppId = String(sdData[r][3]||'').trim(); // col 3 = FamilyID
-    if (!pppId) continue;
-    Object.keys(labelToCol).forEach(function(label) {
-      var key = pppId + "|" + label;
-      if (linkMap[key]) {
-        var col = labelToCol[label];
-        if (sdData[r][col] !== linkMap[key]) {
-          updates.push({row: r+1, col: col+1, val: linkMap[key]});
-          updated++;
-        }
+  // Check permission state first (Chrome/Android)
+  if (navigator.permissions) {
+    navigator.permissions.query({name:'geolocation'}).then(function(result){
+      if (result.state === 'denied') {
+        pill.className  = 'gps-pill waiting';
+        pill.textContent = '🚫 GPS blocked — enable in browser settings';
+        return;
       }
-    });
+      startGPSFetch(pill);
+    }).catch(function(){ startGPSFetch(pill); });
+  } else {
+    startGPSFetch(pill);
   }
+}
 
-  // Batch update
-  updates.forEach(function(u) {
-    survDataSh.getRange(u.row, u.col).setValue(u.val);
+function startGPSFetch(pill) {
+  pill.className  = 'gps-pill waiting';
+  pill.textContent = '⏳ Getting location…';
+
+  getGPS(function(c) {
+    state.gps = c;
+    if (c.lat !== 'N/A') {
+      pill.className  = 'gps-pill';
+      pill.textContent = '📍 ' + c.lat + ', ' + c.lng + (c.acc ? ' ±'+c.acc : '');
+      pill.onclick    = null;
+      // Update header GPS if survey is open
+      var hdr = document.getElementById('hdr-gps');
+      if (hdr) hdr.textContent = '📍 ' + c.lat + ', ' + c.lng;
+    } else {
+      pill.className  = 'gps-pill waiting';
+      pill.textContent = '⚠️ GPS unavailable — tap to retry';
+      pill.style.cursor = 'pointer';
+      pill.onclick = function() {
+        pill.textContent = '⏳ Retrying…';
+        pill.onclick = null;
+        startGPSFetch(pill);
+      };
+    }
   });
-
-  var msg = "Rebuild Complete!  Photo links updated in SurveyData: " + updated;
-  Logger.log(msg);
-  try { ui.alert("Rebuild Complete", msg, ui.ButtonSet.OK); }
-  catch(e) { Logger.log("Done. Check Logs."); }
 }
 
-// ─────────────────────────────────────────────────────────────────
-//  SEARCH FAMILY & PRINT REPORT
-// ─────────────────────────────────────────────────────────────────
-function getFileBase64(fileId) {
-  // Fetch image from Drive and convert to base64 data URI
-  try {
-    var file  = DriveApp.getFileById(fileId);
-    var blob  = file.getBlob();
-    var b64   = Utilities.base64Encode(blob.getBytes());
-    var mime  = blob.getContentType() || "image/jpeg";
-    return "data:" + mime + ";base64," + b64;
-  } catch(e) {
-    Logger.log("getFileBase64 error for " + fileId + ": " + e.message);
-    return "";
-  }
+// ── TOGGLE PASSWORD VISIBILITY ───────────────
+function togglePwd() {
+  var inp=document.getElementById('inp-password');
+  inp.type=inp.type==='password'?'text':'password';
 }
 
-function extractFileId(url) {
-  if (!url) return "";
-  var m = String(url).match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (m) return m[1];
-  m = String(url).match(/id=([a-zA-Z0-9_-]+)/);
-  if (m) return m[1];
-  return "";
-}
+// ── LOGIN ─────────────────────────────────────
+function doLogin() {
+  var mob=document.getElementById('inp-mobile').value.trim();
+  var pwd=document.getElementById('inp-password').value.trim();
+  if(mob.length!==10){showErr('login-err','Enter valid 10-digit mobile.'); return;}
+  if(!pwd){showErr('login-err','Enter your password.'); return;}
+  showErr('login-err','');
+  var btn=document.getElementById('btn-login');
+  btn.innerHTML='<span class="spinner"></span> Logging in…'; btn.disabled=true;
 
-function searchAndPrintReport() {
-  var ui   = SpreadsheetApp.getUi();
-  var resp = ui.prompt("Print Family Report", "Enter PPP ID / Family ID to search:", ui.ButtonSet.OK_CANCEL);
-  if (resp.getSelectedButton() !== ui.Button.OK) return;
-  var familyId = resp.getResponseText().trim().toUpperCase();
-  if (!familyId) { ui.alert("Please enter a valid Family ID."); return; }
-
-  var ss     = SpreadsheetApp.openById(SHEET_ID);
-  var famSh  = ss.getSheetByName("Families");
-  var surSh  = ss.getSheetByName("SurveyData");
-  var memSh  = ss.getSheetByName("MemberData");
-  var photSh = ss.getSheetByName("PhotoLog");
-
-  // Find family row
-  var famData = famSh.getDataRange().getValues();
-  var famRow  = null;
-  for (var i = 1; i < famData.length; i++) {
-    if (String(famData[i][0]).trim().toUpperCase() === familyId) { famRow = famData[i]; break; }
-  }
-  if (!famRow) { ui.alert("Family ID not found: " + familyId); return; }
-
-  // Find ALL survey entries for this family — sorted chronologically
-  var allSurveys = [];
-  if (surSh) {
-    var surData = surSh.getDataRange().getValues();
-    for (var j = 1; j < surData.length; j++) {
-      if (String(surData[j][3]).trim().toUpperCase() === familyId) allSurveys.push(surData[j]);
-    }
-    // Sort by timestamp ascending
-    allSurveys.sort(function(a,b){ return new Date(a[0]) - new Date(b[0]); });
-  }
-
-  // Find ALL members grouped by SurveyTag (col 12)
-  var membersBySurvey = {};
-  if (memSh) {
-    var memData = memSh.getDataRange().getValues();
-    for (var k = 1; k < memData.length; k++) {
-      if (String(memData[k][1]).trim().toUpperCase() !== familyId) continue;
-      var mTag = String(memData[k][12]||"Original").trim();
-      if (!membersBySurvey[mTag]) membersBySurvey[mTag] = [];
-      membersBySurvey[mTag].push(memData[k]);
-    }
-  }
-
-  // Collect photo file IDs grouped by SurveyTag from PhotoLog
-  // PhotoLog col: 0=Timestamp, 1=FamilyID, 2=ZCRIMName, 3=PhotoLabel, 4=FileName, 5=URL, 6=Lat, 7=Lng, 8=FileID
-  var photoKeys   = ["frontofhouse","kitchen","familyphoto","surroundings","surveyorwithfamily","selfie"];
-  var photoLabels = {"frontofhouse":"Front of House","kitchen":"Kitchen","familyphoto":"Family Photo",
-                     "surroundings":"Surroundings","surveyorwithfamily":"Surveyor with Family","selfie":"Surveyor Selfie"};
-
-  // Group photos by SurveyTag using filename pattern (Resurvey-YYYY-MM-DD in filename or path)
-  // Simpler: group by timestamp proximity to each survey entry
-  var photoBySurvey = {}; // surveyTag -> {label: fileId}
-
-  if (photSh) {
-    var photData = photSh.getDataRange().getValues();
-    for (var pp = 1; pp < photData.length; pp++) {
-      if (String(photData[pp][1]).trim().toUpperCase() !== familyId) continue;
-      var rawLabel = String(photData[pp][3]).trim().toLowerCase().replace(/[^a-z]/g,"");
-      var fileId   = String(photData[pp][8]).trim();
-      var photoTs  = photData[pp][0] ? new Date(photData[pp][0]) : null;
-      if (!fileId || !photoTs) continue;
-
-      // Normalize label
-      var plabel = rawLabel;
-      if (rawLabel.indexOf("front") > -1)                                                    plabel = "frontofhouse";
-      else if (rawLabel.indexOf("kitchen") > -1)                                             plabel = "kitchen";
-      else if (rawLabel.indexOf("familyphoto") > -1 || rawLabel === "familyphoto")           plabel = "familyphoto";
-      else if (rawLabel.indexOf("surrounding") > -1)                                         plabel = "surroundings";
-      else if (rawLabel.indexOf("surveyorwith") > -1 || rawLabel.indexOf("surveyorfamily") > -1) plabel = "surveyorwithfamily";
-      else if (rawLabel.indexOf("selfie") > -1 || rawLabel.indexOf("surveyorselfie") > -1)  plabel = "selfie";
-
-      // Match photo to nearest survey entry by timestamp (within 2 hours)
-      var bestTag = "Original";
-      var bestDiff = Infinity;
-      allSurveys.forEach(function(sr){
-        var srTs = sr[0] ? new Date(sr[0]) : null;
-        if (!srTs) return;
-        var diff = Math.abs(photoTs - srTs);
-        if (diff < bestDiff) { bestDiff = diff; bestTag = String(sr[34]||"Original").trim(); }
+  google.script.run
+    .withSuccessHandler(function(res){
+      btn.innerHTML='Login →'; btn.disabled=false;
+      if(!res.ok){showErr('login-err',res.msg); return;}
+      state.zcrim=res.zcrim; state.token=res.token;
+      state.sessionExpiry=new Date(res.expires);
+      getGPS(function(c){
+        state.gps=c;
+        google.script.run.logLogin({
+          token:res.token, zcrimName:res.zcrim.name, mobile:res.zcrim.mobile,
+          lat:c.lat, lng:c.lng,
+          deviceInfo:navigator.platform+' | '+screen.width+'x'+screen.height,
+          userAgent:navigator.userAgent, timestamp:(function(){var n=new Date(),d=String(n.getDate()).padStart(2,'0'),m=String(n.getMonth()+1).padStart(2,'0'),h=n.getHours(),mi=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0'),ap=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;return d+'/'+m+'/'+n.getFullYear()+' '+String(h).padStart(2,'0')+':'+mi+':'+s+' '+ap;})()
+        });
       });
+      startSessionTimer();
+      loadVillagePicker();
+    })
+    .withFailureHandler(function(e){btn.innerHTML='Login →';btn.disabled=false;showErr('login-err',e.message);})
+    .loginZcrim(mob,pwd);
+}
 
-      if (!photoBySurvey[bestTag]) photoBySurvey[bestTag] = {};
-      if (!photoBySurvey[bestTag][plabel]) photoBySurvey[bestTag][plabel] = fileId;
-    }
+// ── SESSION TIMER ────────────────────────────
+function startSessionTimer() {
+  clearInterval(state.sessionTimerInterval);
+  state.sessionTimerInterval=setInterval(function(){
+    var left=Math.max(0,Math.floor((state.sessionExpiry-new Date())/1000));
+    var m=Math.floor(left/60),s=left%60;
+    var txt='⏱ '+m+':'+(s<10?'0':'')+s;
+    var e1=document.getElementById('sess-timer'),e2=document.getElementById('sess-timer-survey');
+    if(e1)e1.textContent=txt; if(e2)e2.textContent=txt;
+    if(left===0){clearInterval(state.sessionTimerInterval);toast('⏰ Session expired. Please login again.','red');setTimeout(function(){doLogout(true);},2000);}
+    else if(left===60)toast('⚠️ Session expires in 1 minute!','org');
+  },1000);
+}
+
+// ── LOGOUT ────────────────────────────────────
+function doLogout(auto) {
+  clearInterval(state.sessionTimerInterval);
+  if(state.token) google.script.run.logoutSession(state.token);
+  state.token=null; state.zcrim=null; state.selectedWard=null;
+  document.getElementById('inp-mobile').value='';
+  document.getElementById('inp-password').value='';
+  if(!auto) toast('👋 Logged out.','green');
+  setTimeout(function(){showScreen('screen-login');},1000);
+}
+
+// ── VILLAGE PICKER ────────────────────────────
+function loadVillagePicker() {
+  showScreen('screen-village');
+  document.getElementById('sess-name').textContent=state.zcrim.name;
+  document.getElementById('village-list').innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)"><span class="spinner"></span> Loading…</div>';
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(!res.ok){handleSessionError(res);return;}
+      state.allWards=res.wards; renderVillageList(res.wards); renderVillageStats(res.wards, res.totalResurvey||0);
+    })
+    .withFailureHandler(function(e){toast('Error: '+e.message,'red');})
+    .getWardsForZcrim(state.token);
+}
+function renderVillageStats(wards, totalResurvey){
+  var tf=wards.reduce(function(s,w){return s+w.total;},0);
+  var df=wards.reduce(function(s,w){return s+w.done;},0);
+  var pf=wards.reduce(function(s,w){return s+w.pending;},0);
+  var rf=totalResurvey||wards.reduce(function(s,w){return s+(w.resurvey||0);},0);
+
+  // Show/hide top resurvey alert
+  var existing = document.getElementById('village-resurvey-alert');
+  if (existing) existing.remove();
+  if (rf > 0) {
+    var alert = document.createElement('div');
+    alert.id = 'village-resurvey-alert';
+    alert.style.cssText = 'background:#7f1d1d;border:2px solid #ef4444;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px';
+    alert.innerHTML = '<div style="font-size:28px">🔁</div>'
+      + '<div><div style="font-size:14px;font-weight:800;color:#fca5a5">'+rf+' RE-SURVEY'+(rf>1?'S':'')+' PENDING</div>'
+      + '<div style="font-size:12px;color:#fca5a5;margin-top:2px">Admin has flagged families for re-survey. These will appear first in your queue.</div></div>';
+    var villageScreen = document.getElementById('screen-village').querySelector('div');
+    if (villageScreen) villageScreen.insertBefore(alert, villageScreen.firstChild);
   }
 
-  // Also pull from SurveyData photo columns as fallback per survey
-  allSurveys.forEach(function(sr){
-    var tag = String(sr[34]||"Original").trim();
-    if (!photoBySurvey[tag]) photoBySurvey[tag] = {};
-    var sdMap = {"selfie":sr[27],"frontofhouse":sr[28],"kitchen":sr[29],
-                 "familyphoto":sr[30],"surroundings":sr[31],"surveyorwithfamily":sr[32]};
-    Object.keys(sdMap).forEach(function(k){
-      if (!photoBySurvey[tag][k] && sdMap[k]) {
-        var fid = extractFileId(String(sdMap[k]));
-        if (fid) photoBySurvey[tag][k] = fid;
+  document.getElementById('village-stats-bar').innerHTML=
+    '<div style="flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700">'+wards.length+'</div><div style="font-size:10px;color:var(--mut)">VILLAGES</div></div>'+
+    (rf>0?'<div style="flex:1;background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:#fca5a5">'+rf+'</div><div style="font-size:10px;color:#fca5a5">RE-SURVEY</div></div>':'')+
+    '<div style="flex:1;background:var(--card);border:1px solid #f59e0b44;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--org)">'+pf+'</div><div style="font-size:10px;color:var(--mut)">PENDING</div></div>'+
+    '<div style="flex:1;background:var(--card);border:1px solid #22c55e44;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--grn)">'+df+'</div><div style="font-size:10px;color:var(--mut)">DONE</div></div>';
+}
+function renderVillageList(wards){
+  var list=document.getElementById('village-list');
+  if(!wards||!wards.length){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">No villages found.</div>';return;}
+  list.innerHTML=wards.map(function(w){
+    var pct=w.total>0?Math.round(w.done/w.total*100):0, done=w.pending===0;
+    var bar=done?'#22c55e':'#3b82f6', bc=done?'#22c55e44':'var(--bdr)';
+    return '<div onclick="selectVillage(\''+w.ward.replace(/'/g,"\\'")+'\')\" style="background:var(--card);border:1px solid '+bc+';border-radius:10px;padding:14px;cursor:pointer;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<div style="font-weight:700">'+w.ward+'</div>'+
+        '<div style="display:flex;gap:6px;align-items:center">'+
+        (w.resurvey>0?'<span style="background:#7f1d1d;color:#fca5a5;border:1px solid #ef4444;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700">'+w.resurvey+' re-survey</span>':'')+
+        (done?'<span class="badge badge-grn">Complete</span>':'<span style="font-size:12px;color:var(--mut)">'+w.done+'/'+w.total+'</span>')+
+        '</div>'+
+      '</div>'+
+      '<div style="background:#334155;border-radius:4px;height:4px"><div style="background:'+bar+';width:'+pct+'%;height:100%;border-radius:4px"></div></div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:6px">'+
+        '<span style="font-size:11px;color:var(--mut)">'+w.pending+' pending · '+w.done+' done</span>'+
+        '<span style="font-size:11px;color:'+bar+'">'+pct+'%</span>'+
+      '</div></div>';
+  }).join('');
+}
+function filterVillages(){
+  var q=document.getElementById('village-search').value.toLowerCase();
+  renderVillageList(state.allWards.filter(function(w){return w.ward.toLowerCase().indexOf(q)>=0;}));
+}
+function selectVillage(ward){
+  state.selectedWard=ward;
+  document.getElementById('active-village-name').textContent=ward;
+  document.getElementById('hdr-name').textContent='👤 '+state.zcrim.name;
+  // Reset skip button state
+  var skipBtn = document.getElementById('btn-skip');
+  if(skipBtn){ skipBtn.disabled=true; skipBtn.style.opacity='0.4'; }
+  var g=state.gps&&state.gps.lat!=='N/A'?'📍 '+state.gps.lat+', '+state.gps.lng:'📍 GPS unavailable';
+  document.getElementById('hdr-gps').textContent=g;
+  document.getElementById('cam-gps-label').textContent=g;
+  showScreen('screen-survey'); loadNextFamily();
+}
+function showTab(tabId){
+  document.getElementById('village-tab').style.display     = tabId==='village-tab'     ? 'block':'none';
+  document.getElementById('leaderboard-tab').style.display = tabId==='leaderboard-tab' ? 'block':'none';
+  document.getElementById('tab-villages-btn').style.background = tabId==='village-tab' ? 'var(--acc)':'transparent';
+  document.getElementById('tab-villages-btn').style.color      = tabId==='village-tab' ? '#fff':'var(--mut)';
+  document.getElementById('tab-board-btn').style.background    = tabId==='leaderboard-tab' ? 'var(--acc)':'transparent';
+  document.getElementById('tab-board-btn').style.color         = tabId==='leaderboard-tab' ? '#fff':'var(--mut)';
+  if(tabId==='leaderboard-tab') loadLeaderboard();
+}
+
+function loadLeaderboard(){
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(!res.ok){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px;text-align:center">'+res.msg+'</div>'; return; }
+      var html='<div style="font-size:11px;color:var(--mut);margin-bottom:10px;text-align:center">Updated live from Google Sheets</div>';
+      var medals=['🥇','🥈','🥉'];
+      res.board.forEach(function(z,i){
+        var pct = z.total>0 ? Math.round(z.done/z.total*100) : 0;
+        var col = pct===100?'var(--grn)':pct>50?'var(--acc)':'var(--org)';
+        html += '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:8px">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+            '<div style="font-weight:700;font-size:14px">'+(medals[i]||'#'+(i+1))+' '+z.name+'</div>'+
+            '<div style="font-size:12px;color:'+col+';font-weight:700">'+pct+'%</div>'+
+          '</div>'+
+          '<div style="background:#334155;border-radius:4px;height:6px;margin-bottom:6px">'+
+            '<div style="background:'+col+';width:'+pct+'%;height:100%;border-radius:4px;transition:width .4s"></div>'+
+          '</div>'+
+          '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)">'+
+            '<span>Block: '+z.block+'</span>'+
+            '<span>✅ '+z.done+' / '+z.total+' &nbsp; ⏳ '+z.pending+'</span>'+
+          '</div></div>';
+      });
+      document.getElementById('leaderboard-list').innerHTML = html;
+    })
+    .withFailureHandler(function(e){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px">Error: '+e.message+'</div>'; })
+    .getLeaderboard(state.token);
+}
+
+function switchVillage(){
+  showScreen('screen-village');
+  google.script.run
+    .withSuccessHandler(function(res){if(!res.ok){handleSessionError(res);return;} state.allWards=res.wards;renderVillageList(res.wards);renderVillageStats(res.wards,res.totalResurvey||0);document.getElementById('village-search').value='';})
+    .withFailureHandler(function(){})
+    .getWardsForZcrim(state.token);
+}
+
+// ── FAMILY ────────────────────────────────────
+function skipFamily(){
+  if(!state.family){ toast('No family loaded.','red'); return; }
+  if(!confirm('Skip '+state.family.name+' ('+state.family.id+')? Mark as Absent.')) return;
+
+  var rowSnap = state.familyRowIndex;
+  var idSnap  = state.family.id;
+  var nmSnap  = state.family.name;
+
+  // Clear state immediately
+  state.family         = null;
+  state.familyRowIndex = null;
+  state.selfie         = null;
+  state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+
+  showLoadingOverlay('Marking absent...');
+
+  // MUST wait for backend to mark absent BEFORE loading next family
+  // Otherwise getNextFamily returns the same family again
+  var done = false;
+  var timeout = setTimeout(function(){
+    if(done) return;
+    done = true;
+    toast('⚠️ Skip saved slowly — loading next','org');
+    loadNextFamily();
+  }, 16000);
+
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(done) return;
+      done = true;
+      clearTimeout(timeout);
+      if(r && !r.ok) toast('Skip warning: '+r.msg,'org');
+      else toast('⏭ '+nmSnap+' marked absent','org');
+      loadNextFamily(); // now safe — sheet is updated
+    })
+    .withFailureHandler(function(e){
+      if(done) return;
+      done = true;
+      clearTimeout(timeout);
+      toast('Skip error — loading next anyway','org');
+      loadNextFamily();
+    })
+    .skipFamily(state.token, rowSnap, idSnap, nmSnap);
+}
+function checkDuplicate(familyId, cb) {
+  // Quick check — look at Families sheet status
+  // If status is 'done' backend won't return it anyway
+  // But we add a client-side warning just in case
+  cb(false);
+}
+
+function loadNextFamily(){
+  // Show loading state
+  showLoadingOverlay('Loading next family...');
+  // Disable skip button while loading
+  var skipBtn = document.getElementById('btn-skip');
+  if(skipBtn){ skipBtn.disabled=true; skipBtn.style.opacity='0.4'; }
+
+  // Safety timeout — never get stuck on loading overlay
+  var loadDone = false;
+  var loadTimeout = setTimeout(function(){
+    if(loadDone) return;
+    loadDone = true;
+    hideLoadingOverlay();
+    toast('Connection slow — please tap a village to retry','red');
+    showScreen('screen-village');
+  }, 15000);
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(loadDone) return;
+      loadDone = true;
+      clearTimeout(loadTimeout);
+      hideLoadingOverlay();
+      if(!res.ok){
+        if(res.relogin){handleSessionError(res);return;}
+        document.getElementById('screen-survey').innerHTML=
+          '<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">'+
+          '<div><div style="font-size:56px">🎉</div><div style="font-size:20px;font-weight:700;color:#22c55e;margin-top:12px">All Families Verified!</div>'+
+          '<div style="color:#94a3b8;margin-top:8px">Great work, '+state.zcrim.name+'!</div>'+
+          '<button onclick="switchVillage()" class="btn btn-blue" style="margin-top:20px;width:auto;padding:12px 24px">← Switch Village</button></div></div>';
+        return;
       }
-    });
-  });
+      // Update state with new family
+      state.family         = res.family;
+      state.familyRowIndex = res.rowIndex;
+      state.isResurvey     = res.isResurvey || false;
+      state.surveyTag      = res.isResurvey ? ("Resurvey-" + new Date().toISOString().slice(0,10)) : "Original";
+      state.selfie         = null;
+      state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+      state.surveyStartTime = Date.now(); // ⏱ start timer
 
-  // Fetch base64 for ALL photos across all surveys
-  ui.alert("Preparing report with all " + allSurveys.length + " survey(s). Loading photos... Click OK and wait.");
-  var photoBase64BySurvey = {};
-  Object.keys(photoBySurvey).forEach(function(tag){
-    photoBase64BySurvey[tag] = {};
-    photoKeys.forEach(function(k){
-      if (photoBySurvey[tag][k]) {
-        var b64 = getFileBase64(photoBySurvey[tag][k]);
-        if (b64) photoBase64BySurvey[tag][k] = b64;
-      }
-    });
-  });
+      // Reset all tabs and go back to tab 0
+      resetTabLocks();
+      renderFamilyInfo();
+      renderMembersTab();
+      renderPhotosGrid();
+      resetForm();
+      switchTab(0);
+      startTimerDisplay(); // ⏱ start countdown display
+      window.scrollTo(0, 0);
+      // Enable skip button now that family is loaded
+      var skipBtn = document.getElementById('btn-skip');
+      if(skipBtn){ skipBtn.disabled=false; skipBtn.style.opacity='1'; }
 
-  var fieldDefs = [
-    [1,"ZCRIM Name"],[2,"ZCRIM Mobile"],[4,"Family Name"],[5,"Family Mobile"],
-    [6,"Age"],[7,"Gender"],[8,"Address"],[9,"Block"],[10,"Ward"],
-    [11,"House Rent"],[12,"Rent Amount"],[13,"House Size"],[14,"House Condition"],
-    [15,"Electricity"],[16,"Split Family"],[17,"Property ID"],[18,"Tax Payer"],
-    [19,"Two Wheeler"],[20,"Four Wheeler"],[21,"Other Land"],[22,"Agri Land"],
-    [23,"Shop/Business"],[24,"Cattle"],[25,"GPS Lat"],[26,"GPS Lng"]
-  ];
-
-  var html = buildMultiSurveyReportHTML(familyId, famRow, allSurveys, membersBySurvey, photoBase64BySurvey, photoKeys, photoLabels, fieldDefs);
-  var htmlOutput = HtmlService.createHtmlOutput(html)
-    .setWidth(980).setHeight(800)
-    .setTitle("Family Report - " + familyId);
-  SpreadsheetApp.getUi().showModalDialog(htmlOutput, "Family Report - " + familyId);
+      // Update progress counter
+      google.script.run
+        .withSuccessHandler(function(r){ if(r.ok) document.getElementById('hdr-remaining').textContent = r.remaining+' remaining'; })
+        .getFamiliesForZcrim(state.token, state.selectedWard);
+    })
+    .withFailureHandler(function(e){ hideLoadingOverlay(); toast('Error: '+e.message,'red'); })
+    .getNextFamily(state.token, state.selectedWard);
 }
 
-function buildReportHTML(familyId, famRow, surRow, members, photos, photoKeys, photoLabels, fields) {
-  // photoKeys and photoLabels now passed in from caller
-  if (!photoKeys) {
-    photoKeys   = ["frontofhouse","kitchen","familyphoto","surroundings","surveyorwithfamily","selfie"];
-    photoLabels = {"frontofhouse":"Front of House","kitchen":"Kitchen","familyphoto":"Family Photo",
-                   "surroundings":"Surroundings","surveyorwithfamily":"Surveyor with Family","selfie":"Surveyor Selfie"};
+function showLoadingOverlay(msg) {
+  var el = document.getElementById('loading-overlay');
+  if(el){ el.style.display='flex'; el.querySelector('.lo-msg').textContent = msg||'Loading...'; return; }
+  var div = document.createElement('div');
+  div.id = 'loading-overlay';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px';
+  div.innerHTML = '<span class="spinner" style="width:36px;height:36px;border-width:4px"></span>'+
+    '<div class="lo-msg" style="color:#f1f5f9;font-size:16px;font-weight:600">'+(msg||'Loading...')+'</div>';
+  document.body.appendChild(div);
+}
+function hideLoadingOverlay() {
+  var el = document.getElementById('loading-overlay');
+  if(el) el.style.display = 'none';
+}
+function renderFamilyInfo(){
+  var f=state.family;
+
+  // Show/hide RE-SURVEY banner
+  var existingBanner = document.getElementById('resurvey-banner');
+  if (existingBanner) existingBanner.remove();
+  if (state.isResurvey) {
+    var banner = document.createElement('div');
+    banner.id = 'resurvey-banner';
+    banner.style.cssText = 'background:#7f1d1d;border:2px solid #ef4444;border-radius:10px;padding:12px 16px;margin:0 0 14px;text-align:center';
+    banner.innerHTML = '<div style="font-size:16px;font-weight:900;color:#fca5a5;letter-spacing:1px">RE-SURVEY REQUIRED</div>'
+      + '<div style="font-size:12px;color:#fca5a5;margin-top:4px">This family has been flagged by admin. Please re-photograph and re-submit all fields carefully.</div>';
+    var tab0 = document.getElementById('tab0');
+    if (tab0) tab0.insertBefore(banner, tab0.firstChild);
   }
 
-  var name    = famRow ? String(famRow[1]||"")  : familyId;
-  var block   = famRow ? String(famRow[6]||"")  : "";
-  var ward    = famRow ? String(famRow[7]||"")  : "";
-  var address = famRow ? String(famRow[5]||"")  : "";
-  var ts      = surRow ? String(surRow[0]||"")  : "";
-  var zcrim   = surRow ? String(surRow[1]||"")  : "";
-  var mobile  = surRow ? String(surRow[2]||"")  : "";
-  var status  = famRow ? String(famRow[9]||"pending") : "pending";
-  var now     = formatTS(new Date());
-  var statusBg  = status === "done" ? "#dcfce7" : "#fef3c7";
-  var statusCol = status === "done" ? "#16a34a" : "#d97706";
-
-  // Members rows
-  var memRows = members.map(function(m, i){
-    return "<tr><td>"+(i+1)+"</td><td>"+String(m[6]||"")+"</td><td>"+String(m[7]||"")+"</td>"
-      +"<td>"+String(m[8]||"")+"</td><td>"+String(m[9]||"")+"</td>"
-      +"<td>"+String(m[10]||"-")+"</td><td>"+String(m[11]||"")+"</td></tr>";
-  }).join("");
-
-  // Survey fields in 2-col table
-  var fieldRows = "";
-  for (var i = 0; i < fields.length; i += 2) {
-    fieldRows += "<tr>"
-      +"<td class='fn'>"+(i+1)+". "+fields[i].label+"</td><td class='fv'>"+fields[i].value+"</td>";
-    if (fields[i+1])
-      fieldRows += "<td class='fn'>"+(i+2)+". "+fields[i+1].label+"</td><td class='fv'>"+fields[i+1].value+"</td>";
-    else
-      fieldRows += "<td colspan='2'></td>";
-    fieldRows += "</tr>";
+  document.getElementById('family-info').innerHTML=[['PPP ID',f.id],['Name',f.name],['Mobile',f.mobile||'—'],['Age',f.age],['Gender',f.gender==='M'?'Male':'Female'],['Ward',f.ward]]
+    .map(function(p){return '<div class="info-item"><div class="k">'+p[0]+'</div><div class="v">'+p[1]+'</div></div>';}).join('');
+  document.getElementById('fi-address').textContent=f.address;
+  document.getElementById('fi-badges').innerHTML='<span class="badge badge-blu">'+f.block+'</span> <span class="badge '+(f.gender==='M'?'badge-blu':'badge-org')+'">'+(f.gender==='M'?'Male':'Female')+'</span> <span class="badge badge-grn">Age '+f.age+'</span>';
+  // Duplicate check — warn if PPP ID seen this session
+  if(!state.surveyedIds) state.surveyedIds = {};
+  if(state.surveyedIds[f.id]){
+    toast('⚠️ WARNING: '+f.id+' was already surveyed this session!','red');
+    var dupBanner = document.getElementById('dup-banner');
+    if(dupBanner) dupBanner.style.display='block';
+  } else {
+    var dupBanner = document.getElementById('dup-banner');
+    if(dupBanner) dupBanner.style.display='none';
   }
+}
 
-  // All 6 photos — 4 on page 2, 2 on page 3
-  var available = photoKeys.filter(function(k){ return photos[k] && photos[k].length > 100; });
-  var totalPages = available.length > 0 ? (available.length > 4 ? 3 : 2) : 2;
+// ── MEMBERS ───────────────────────────────────
+function renderMembersTab(){state.memberCount=6;document.getElementById('members-list').innerHTML='';for(var i=0;i<6;i++)appendMemberCard(i);}
+function addMember(){appendMemberCard(state.memberCount);state.memberCount++;}
+function appendMemberCard(i){
+  var div=document.createElement('div');div.className='member-card';div.id='mc-'+i;
+  var opts=INCOME_RANGES.map(function(r){return '<option value="'+r+'">₹ '+r+'</option>';}).join('');
+  div.innerHTML='<div style="font-weight:700;color:var(--acc);margin-bottom:10px">Member '+(i+1)+'</div>'+
+    '<div class="row2"><div class="field"><label>Full Name</label><input id="m'+i+'-name" placeholder="Name"/></div>'+
+    '<div class="field"><label>Age</label><input id="m'+i+'-age" type="number" placeholder="Age"/></div></div>'+
+    '<div class="field"><label>Income Range</label><select id="m'+i+'-income"><option value="">-- Select --</option>'+opts+'</select></div>'+
+    '<div class="row2"><div class="field"><label>Occupation</label><input id="m'+i+'-occ" placeholder="e.g. Farmer"/></div>'+
+    '<div class="field"><label>Remarks</label><input id="m'+i+'-rem" placeholder="Optional"/></div></div>';
+  document.getElementById('members-list').appendChild(div);
+}
+function collectMembers(){
+  var arr=[];
+  for(var i=0;i<state.memberCount;i++){var n=val('m'+i+'-name'),inc=val('m'+i+'-income');if(!n&&!inc)continue;arr.push({name:n,age:val('m'+i+'-age'),income:inc,occupation:val('m'+i+'-occ'),remarks:val('m'+i+'-rem')});}
+  return arr;
+}
 
-  var CSS = '<style>'
-    +'*{box-sizing:border-box;margin:0;padding:0}'
-    +'body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff}'
-    +'.page{width:210mm;min-height:297mm;padding:14mm 14mm 12mm;page-break-after:always;position:relative}'
-    +'.page:last-child{page-break-after:auto}'
-    +'.hdr{background:#1a56a0;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:6px 6px 0 0}'
-    +'.hdr h1{font-size:15px;font-weight:800}'
-    +'.hdr .sub{font-size:10px;opacity:.85;margin-top:2px}'
-    +'.badge{background:#fff;color:#1a56a0;font-weight:800;font-size:13px;padding:3px 10px;border-radius:4px;white-space:nowrap}'
-    +'.sbadge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;background:'+statusBg+';color:'+statusCol+';margin-top:4px}'
-    +'.info-bar{background:#f0f4ff;border:1px solid #c7d7f5;border-top:none;padding:8px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;border-radius:0 0 6px 6px}'
-    +'.ib label{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;display:block;margin-bottom:2px}'
-    +'.ib span{font-size:12px;font-weight:700;color:#1e293b}'
-    +'.sec{font-size:11px;font-weight:800;color:#1a56a0;padding:5px 10px;background:#eef3ff;border-left:4px solid #1a56a0;margin:10px 0 5px}'
-    +'table{width:100%;border-collapse:collapse;font-size:11px}'
-    +'th{background:#1a56a0;color:#fff;padding:5px 8px;text-align:left;font-size:10px}'
-    +'td{padding:4px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top}'
-    +'tr:nth-child(even) td{background:#f8fafc}'
-    +'.fn{color:#64748b;font-size:10px;width:120px;white-space:nowrap}'
-    +'.fv{font-weight:600;font-size:11px}'
-    +'.footer{position:absolute;bottom:8mm;left:14mm;right:14mm;border-top:1px solid #e2e8f0;padding-top:5px;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8}'
-    +'.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}'
-    +'.pbox{border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;break-inside:avoid}'
-    +'.pbox img{width:100%;height:160px;object-fit:cover;display:block}'
-    +'.pbox-lg{border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;width:48%;display:inline-block;vertical-align:top}'
-    +'.pbox-lg img{width:100%;height:200px;object-fit:cover;display:block}'
-    +'.plbl{padding:5px 8px;font-size:10px;font-weight:700;color:#1a56a0;background:#f0f4ff;text-align:center}'
-    +'.noimg{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;height:160px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px}'
-    +'@media print{'
-    +'.no-print{display:none!important}'
-    +'.page{padding:10mm;page-break-after:always}'
-    +'body{-webkit-print-color-adjust:exact;print-color-adjust:exact}'
-    +'}'
-    +'</style>';
+// ── ASSETS ────────────────────────────────────
+function toggleRent(){document.getElementById('rent-field').style.display=document.getElementById('a-houseRent').value==='Yes'?'block':'none';}
+function collectAssets(){return{houseRent:val('a-houseRent'),rentAmt:val('a-rentAmt'),houseSize:val('a-houseSize'),houseCondition:val('a-houseCondition'),electricity:val('a-electricity'),splitFamily:val('a-splitFamily'),propertyId:val('a-propertyId'),taxPayer:val('a-taxPayer'),twoWheeler:val('a-twoWheeler'),fourWheeler:val('a-fourWheeler'),otherLand:val('a-otherLand'),agriLand:val('a-agriLand'),shopBusiness:val('a-shopBusiness'),cattle:val('a-cattle')};}
 
-  // Build photo pages
-  var pg2Html = "", pg3Html = "";
-  var first4 = photoKeys.slice(0,4);
-  var last2  = photoKeys.slice(4,6);
-
-  first4.forEach(function(k){
-    if (photos[k]) {
-      pg2Html += '<div class="pbox"><img src="'+photos[k]+'"/><div class="plbl">'+photoLabels[k]+'</div></div>';
-    } else {
-      pg2Html += '<div class="pbox"><div class="noimg">No Photo</div><div class="plbl">'+photoLabels[k]+'</div></div>';
+// ── PHOTOS ────────────────────────────────────
+function renderPhotosGrid(){
+  // Disable drag-drop on entire survey screen to prevent photo bypass
+  ['photos-grid','selfie-box'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('dragover',  function(e){ e.preventDefault(); e.stopPropagation(); });
+    el.addEventListener('drop',      function(e){ e.preventDefault(); e.stopPropagation(); toast('Use camera button — drag & drop not allowed','red'); });
+  });
+  state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+  // 5 photos: 2+2+1 layout
+  var html2 = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  PHOTO_KEYS.forEach(function(k,i){
+    if(i===4) {
+      html2 += '</div><div style="margin-top:10px">';
     }
+    var isOpt = PHOTO_OPTIONAL.indexOf(k) > -1;
+    var badge = isOpt
+      ? '<span style="color:#f59e0b;font-size:10px;font-weight:700;background:#fef3c7;padding:1px 6px;border-radius:4px;margin-left:4px">Optional</span>'
+      : '<span style="color:var(--red)">*</span>';
+    html2 += '<div><div style="font-size:11px;color:var(--mut);font-weight:600;margin-bottom:5px">'+(i+1)+'. '+PHOTO_LABELS[i]+' '+badge+'</div>'+
+      '<div class="photo-box" id="pb-'+k+'" onclick="openCamera(&quot;'+k+'&quot;)"><div style="font-size:28px">&#128247;</div><div style="color:var(--mut);font-size:11px">Tap to capture</div></div></div>';
+    if(i===4) html2 += '</div>';
   });
-
-  last2.forEach(function(k){
-    if (photos[k]) {
-      pg3Html += '<div class="pbox-lg"><img src="'+photos[k]+'"/><div class="plbl">'+photoLabels[k]+'</div></div>';
-    } else {
-      pg3Html += '<div class="pbox-lg"><div class="noimg" style="height:200px">No Photo</div><div class="plbl">'+photoLabels[k]+'</div></div>';
-    }
-  });
-
-  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report '+familyId+'</title>'+CSS+'</head><body>'
-
-  // ── PAGE 1: SURVEY DATA ────────────────────────────────────────
-  + '<div class="page">'
-  +   '<div class="hdr"><div><h1>ZCRIM Survey Report</h1><div class="sub">Mewat / Nuh District &middot; Printed: '+now+'</div></div>'
-  +   '<div style="text-align:right"><div class="badge">'+familyId+'</div><div class="sbadge">'+status.toUpperCase()+'</div></div></div>'
-  +   '<div class="info-bar">'
-  +     '<div class="ib"><label>Full Name</label><span>'+name+'</span></div>'
-  +     '<div class="ib"><label>Block</label><span>'+block+'</span></div>'
-  +     '<div class="ib"><label>Ward / Village</label><span>'+ward+'</span></div>'
-  +     '<div class="ib"><label>Surveyed By</label><span>'+zcrim+' ('+mobile+')</span></div>'
-  +     '<div class="ib" style="grid-column:span 3"><label>Address</label><span>'+address+'</span></div>'
-  +     '<div class="ib"><label>Survey Date</label><span>'+ts+'</span></div>'
-  +   '</div>'
-  +   '<div class="sec">Survey Fields</div>'
-  +   '<table><tbody>'+fieldRows+'</tbody></table>'
-  + (members.length > 0
-      ? '<div class="sec">Family Members ('+members.length+')</div>'
-      + '<table><thead><tr><th>#</th><th>Name</th><th>Age</th><th>Income Range</th><th>Occupation</th><th>Remarks</th><th>ZCRIM</th></tr></thead>'
-      + '<tbody>'+memRows+'</tbody></table>'
-      : '')
-  +   '<div class="footer">'
-  +     '<span>PPP ID: '+familyId+' | '+name+' | '+ward+' | '+block+'</span>'
-  +     '<span>Page 1 of '+totalPages+'</span>'
-  +     '<span>ZCRIM Survey System | Mewat/Nuh District</span>'
-  +   '</div>'
-  + '</div>'
-
-  // ── PAGE 2: PHOTOS 1-4 ────────────────────────────────────────
-  + '<div class="page">'
-  +   '<div class="hdr"><div><h1>Survey Photographs - '+familyId+'</h1><div class="sub">'+name+' | '+ward+' | '+block+'</div></div><div class="badge">Page 2</div></div>'
-  +   '<div class="pgrid">'+pg2Html+'</div>'
-  +   '<div class="footer"><span>'+familyId+' | '+name+'</span><span>Page 2 of '+totalPages+'</span><span>ZCRIM Survey System | Mewat/Nuh</span></div>'
-  + '</div>'
-
-  // ── PAGE 3: PHOTOS 5-6 ────────────────────────────────────────
-  + '<div class="page">'
-  +   '<div class="hdr"><div><h1>Survey Photographs (cont.) - '+familyId+'</h1><div class="sub">'+name+' | '+ward+'</div></div><div class="badge">Page 3</div></div>'
-  +   '<div style="display:flex;gap:16px;margin-top:12px;justify-content:center">'+pg3Html+'</div>'
-  +   '<div class="footer"><span>'+familyId+' | '+name+'</span><span>Page 3 of 3</span><span>ZCRIM Survey System | Mewat/Nuh</span></div>'
-  + '</div>'
-
-  + '<div class="no-print" style="position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:999">'
-  +   '<button onclick="window.print()" style="padding:12px 24px;background:#1a56a0;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Print / Save as PDF</button>'
-  +   '<button onclick="google.script.host.close()" style="padding:12px 24px;background:#e2e8f0;color:#1e293b;border:none;border-radius:8px;font-size:14px;cursor:pointer">Close</button>'
-  + '</div>'
-  + '</body></html>';
-
-  return html;
+  document.getElementById('photos-grid').innerHTML = html2;
+  updatePhotosStatus();
 }
-
-
-// ─────────────────────────────────────────────────────────────────
-//  FLAG FAMILY FOR RE-SURVEY (from Sheet menu)
-// ─────────────────────────────────────────────────────────────────
-function flagFamilyFromSheet() {
-  var ui = SpreadsheetApp.getUi();
-  var resp = ui.prompt("Flag for Re-Survey", "Enter PPP ID / Family ID:", ui.ButtonSet.OK_CANCEL);
-  if (resp.getSelectedButton() !== ui.Button.OK) return;
-  var familyId = resp.getResponseText().trim().toUpperCase();
-  if (!familyId) { ui.alert("Please enter a valid Family ID."); return; }
-
-  var resp2 = ui.prompt("Reason for Re-Survey", "Enter reason (e.g. blurry photos, wrong data):", ui.ButtonSet.OK_CANCEL);
-  if (resp2.getSelectedButton() !== ui.Button.OK) return;
-  var reason = resp2.getResponseText().trim() || "Admin flagged for re-survey";
-
-  var ss  = SpreadsheetApp.openById(SHEET_ID);
-  var sh  = ss.getSheetByName("Families");
-  var data = sh.getDataRange().getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim().toUpperCase() === familyId) {
-      var prevStatus = String(data[i][9]).trim();
-      sh.getRange(i+1, 10).setValue("resurvey");
-
-      // Log in ResurveyLog
-      var logSh = ss.getSheetByName("ResurveyLog");
-      if (!logSh) {
-        logSh = ss.insertSheet("ResurveyLog");
-        logSh.appendRow(["Timestamp","AdminName","FamilyID","FamilyName","PrevStatus","Reason"]);
-        logSh.getRange(1,1,1,6).setBackground("#1a56a0").setFontColor("#fff").setFontWeight("bold");
-      }
-      logSh.appendRow([formatTS(new Date()), "Admin", familyId, data[i][1], prevStatus, reason]);
-
-      // Highlight row in Families sheet in orange
-      sh.getRange(i+1, 1, 1, sh.getLastColumn()).setBackground("#fff3cd");
-
-      ui.alert("Flagged! " + familyId + " - " + data[i][1] + " marked for re-survey. Reason: " + reason);
-      return;
-    }
-  }
-  ui.alert("Family ID not found: " + familyId);
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  VIEW RE-SURVEY QUEUE
-// ─────────────────────────────────────────────────────────────────
-function viewResurveyQueue() {
-  var ui  = SpreadsheetApp.getUi();
-  var ss  = SpreadsheetApp.openById(SHEET_ID);
-  var sh  = ss.getSheetByName("Families");
-  var data = sh.getDataRange().getValues().slice(1);
-  var logSh = ss.getSheetByName("ResurveyLog");
-
-  // Build reason map from ResurveyLog
-  var reasonMap = {};
-  if (logSh) {
-    var logData = logSh.getDataRange().getValues().slice(1);
-    logData.forEach(function(r){ reasonMap[String(r[2]).trim()] = String(r[5]||"").trim(); });
-  }
-
-  var queue = data.filter(function(r){ return String(r[9]).trim().toLowerCase() === "resurvey"; });
-  if (queue.length === 0) { ui.alert("Re-Survey Queue", "No families currently flagged for re-survey.", ui.ButtonSet.OK); return; }
-
-  var msg = "RE-SURVEY QUEUE (" + queue.length + " families)  ";
-  queue.forEach(function(r, i){
-    var fid    = String(r[0]).trim();
-    var reason = reasonMap[fid] || "No reason given";
-    msg += (i+1) + ". " + fid + " - " + r[1] + " (" + r[7] + ") Reason: " + reason + "  ";
-  });
-  ui.alert("Re-Survey Queue", msg, ui.ButtonSet.OK);
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  BUILD MULTI-SURVEY REPORT — all surveys chronologically
-// ─────────────────────────────────────────────────────────────────
-function buildMultiSurveyReportHTML(familyId, famRow, allSurveys, membersBySurvey, photoBase64BySurvey, photoKeys, photoLabels, fieldDefs) {
-  var name    = famRow ? String(famRow[1]||"")  : familyId;
-  var block   = famRow ? String(famRow[6]||"")  : "";
-  var ward    = famRow ? String(famRow[7]||"")  : "";
-  var address = famRow ? String(famRow[5]||"")  : "";
-  var status  = famRow ? String(famRow[9]||"")  : "";
-  var now     = formatTS(new Date());
-  var totalSurveys = allSurveys.length;
-  var statusBg  = status === "done" ? "#dcfce7" : "#fef3c7";
-  var statusCol = status === "done" ? "#16a34a" : "#d97706";
-
-  var CSS = '<style>'
-    +'*{box-sizing:border-box;margin:0;padding:0}'
-    +'body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff}'
-    +'.page{width:210mm;min-height:297mm;padding:14mm 14mm 14mm;page-break-after:always;position:relative}'
-    +'.page:last-child{page-break-after:auto}'
-    +'.hdr{background:#1a56a0;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:6px 6px 0 0}'
-    +'.hdr-resurvey{background:#7f1d1d;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:6px 6px 0 0}'
-    +'.hdr h1,.hdr-resurvey h1{font-size:14px;font-weight:800}'
-    +'.hdr .sub,.hdr-resurvey .sub{font-size:10px;opacity:.85;margin-top:2px}'
-    +'.badge{background:#fff;color:#1a56a0;font-weight:800;font-size:12px;padding:3px 10px;border-radius:4px;white-space:nowrap}'
-    +'.badge-red{background:#fff;color:#7f1d1d;font-weight:800;font-size:12px;padding:3px 10px;border-radius:4px}'
-    +'.sbadge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;background:'+statusBg+';color:'+statusCol+';margin-top:4px}'
-    +'.survey-tag{display:inline-block;padding:3px 12px;border-radius:8px;font-size:11px;font-weight:800;margin-top:4px}'
-    +'.tag-orig{background:#dbeafe;color:#1d4ed8}'
-    +'.tag-resurvey{background:#fee2e2;color:#7f1d1d}'
-    +'.info-bar{background:#f0f4ff;border:1px solid #c7d7f5;border-top:none;padding:8px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;border-radius:0 0 6px 6px}'
-    +'.info-bar-r{background:#fff1f2;border:1px solid #fecaca;border-top:none;padding:8px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;border-radius:0 0 6px 6px}'
-    +'.ib label{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;display:block;margin-bottom:2px}'
-    +'.ib span{font-size:12px;font-weight:700;color:#1e293b}'
-    +'.sec{font-size:11px;font-weight:800;color:#1a56a0;padding:5px 10px;background:#eef3ff;border-left:4px solid #1a56a0;margin:10px 0 5px}'
-    +'.sec-r{font-size:11px;font-weight:800;color:#7f1d1d;padding:5px 10px;background:#fff1f2;border-left:4px solid #ef4444;margin:10px 0 5px}'
-    +'table{width:100%;border-collapse:collapse;font-size:11px}'
-    +'th{background:#1a56a0;color:#fff;padding:5px 8px;text-align:left;font-size:10px}'
-    +'th.r{background:#7f1d1d}'
-    +'td{padding:4px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top}'
-    +'tr:nth-child(even) td{background:#f8fafc}'
-    +'.fn{color:#64748b;font-size:10px;width:120px;white-space:nowrap}'
-    +'.fv{font-weight:600;font-size:11px}'
-    +'.footer{position:absolute;bottom:8mm;left:14mm;right:14mm;border-top:1px solid #e2e8f0;padding-top:5px;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8}'
-    +'.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}'
-    +'.pbox{border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}'
-    +'.pbox.r{border-color:#fecaca}'
-    +'.pbox img{width:100%;height:155px;object-fit:cover;display:block}'
-    +'.pbox-lg{border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;width:48%;display:inline-block;vertical-align:top}'
-    +'.pbox-lg img{width:100%;height:195px;object-fit:cover;display:block}'
-    +'.plbl{padding:5px 8px;font-size:10px;font-weight:700;color:#1a56a0;background:#f0f4ff;text-align:center}'
-    +'.plbl-r{padding:5px 8px;font-size:10px;font-weight:700;color:#7f1d1d;background:#fff1f2;text-align:center}'
-    +'.noimg{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;height:155px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px}'
-    +'.divider{margin:0 0 16px;border:none;border-top:3px dashed #e2e8f0}'
-    +'@media print{.no-print{display:none!important}.page{page-break-after:always}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
-    +'</style>';
-
-  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report '+familyId+'</title>'+CSS+'</head><body>';
-
-  // ── COVER PAGE: Summary of all surveys ──────────────────────────
-  html += '<div class="page">'
-    + '<div class="hdr"><div><h1>ZCRIM Survey Report - Complete History</h1><div class="sub">Mewat / Nuh District &middot; Printed: '+now+'</div></div>'
-    + '<div style="text-align:right"><div class="badge">'+familyId+'</div><div class="sbadge">'+status.toUpperCase()+'</div></div></div>'
-    + '<div class="info-bar">'
-    +   '<div class="ib"><label>Full Name</label><span>'+name+'</span></div>'
-    +   '<div class="ib"><label>Block</label><span>'+block+'</span></div>'
-    +   '<div class="ib"><label>Ward / Village</label><span>'+ward+'</span></div>'
-    +   '<div class="ib"><label>Total Surveys</label><span>'+totalSurveys+' entr'+(totalSurveys===1?'y':'ies')+'</span></div>'
-    +   '<div class="ib" style="grid-column:span 4"><label>Address</label><span>'+address+'</span></div>'
-    + '</div>'
-    + '<div class="sec">Survey History Summary</div>'
-    + '<table><thead><tr><th>#</th><th>Date &amp; Time</th><th>Survey Type</th><th>Surveyed By</th><th>GPS</th><th>Duration</th></tr></thead><tbody>';
-
-  allSurveys.forEach(function(sr, idx){
-    var tag = String(sr[34]||"Original").trim();
-    var isR = tag !== "Original";
-    var dur = sr[33] ? Math.round(sr[33]/60)+" min" : "-";
-    html += '<tr style="'+(isR?"background:#fff1f2":"")+'">'
-      + '<td>'+(idx+1)+'</td>'
-      + '<td>'+String(sr[0]||"")+'</td>'
-      + '<td><span class="survey-tag '+(isR?"tag-resurvey":"tag-orig")+'">'+tag+'</span></td>'
-      + '<td>'+String(sr[1]||"")+'</td>'
-      + '<td>'+String(sr[25]||"")+', '+String(sr[26]||"")+'</td>'
-      + '<td>'+dur+'</td>'
-      + '</tr>';
-  });
-
-  html += '</tbody></table>'
-    + '<div class="footer"><span>PPP ID: '+familyId+' | '+name+' | '+ward+'</span><span>Cover Page</span><span>ZCRIM Survey System | Mewat/Nuh</span></div>'
+function updatePhotosStatus(){
+  var total    = PHOTO_KEYS.filter(function(k){ return state.photos[k]; }).length;
+  var mandDone = PHOTO_MANDATORY.filter(function(k){ return state.photos[k]; }).length;
+  var selfieOk = !!state.selfie;
+  var ok       = mandDone === PHOTO_MANDATORY.length && selfieOk; // 3 mandatory + selfie
+  var optDone  = PHOTO_OPTIONAL.filter(function(k){ return state.photos[k]; }).length;
+  var msg = mandDone+'/'+PHOTO_MANDATORY.length+' mandatory';
+  if (optDone > 0) msg += ' &middot; '+optDone+'/'+PHOTO_OPTIONAL.length+' optional';
+  document.getElementById('photos-status').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="color:'+(ok?'#22c55e':'#94a3b8')+'">'+msg+'</div>'
+    + (ok ? '<span class="badge badge-grn">Ready to Submit</span>' : '<span style="font-size:11px;color:#f59e0b">Selfie + 3 mandatory required</span>')
     + '</div>';
+  document.getElementById('btn-submit').className = 'btn '+(ok?'btn-green':'btn-gray');
+}
 
-  // ── ONE SECTION PER SURVEY ──────────────────────────────────────
-  var pageNum = 2;
-  allSurveys.forEach(function(sr, surveyIdx) {
-    var tag   = String(sr[34]||"Original").trim();
-    var isR   = tag !== "Original";
-    var hdrCls = isR ? "hdr-resurvey" : "hdr";
-    var badgeCls = isR ? "badge-red" : "badge";
-    var infoCls  = isR ? "info-bar-r" : "info-bar";
-    var secCls   = isR ? "sec-r" : "sec";
-    var thCls    = isR ? "r" : "";
-    var zcrim    = String(sr[1]||"");
-    var ts       = String(sr[0]||"");
-    var dur      = sr[33] ? Math.round(sr[33]/60)+" min "+Math.round(sr[33]%60)+"s" : "-";
+// ── CAMERA ────────────────────────────────────
+function openCamera(t){
+  state.cameraTarget=t;
+  var labels={selfie:'Surveyor Selfie',front:PHOTO_LABELS[0],kitchen:PHOTO_LABELS[1],familyPhoto:PHOTO_LABELS[2],surroundings:PHOTO_LABELS[3]};
+  document.getElementById('cam-label').textContent=labels[t]||t;
+  document.getElementById('cam-error').style.display='none';
+  document.getElementById('cam-video').style.display='block';
+  document.getElementById('btn-capture').style.display='block';
 
-    // Survey fields
-    var fields = [];
-    fieldDefs.forEach(function(fd){
-      var val = sr[fd[0]];
-      if (val !== "" && val !== null && val !== undefined) fields.push({label:fd[1], value:String(val)});
+  getGPS(function(c){if(c.lat!=='N/A'){state.gps=c;document.getElementById('cam-gps-label').textContent='📍 '+c.lat+', '+c.lng;}});
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showCameraError(t,'Camera not supported. Use Chrome on Android or Safari on iPhone.');
+    return;
+  }
+
+  show('camera-wrap',true);
+  var vid = document.getElementById('cam-video');
+
+  function tryCamera(facingMode, fallback) {
+    var constraints = {video:{facingMode:facingMode}, audio:false};
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(s){
+        if(state.cameraStream){ state.cameraStream.getTracks().forEach(function(t){t.stop();}); }
+        state.cameraStream = s;
+        vid.srcObject = s;
+        vid.setAttribute('playsinline','');
+        vid.setAttribute('muted','');
+        vid.muted = true;
+        var p = vid.play();
+        if(p && p.catch) p.catch(function(e){ console.warn('play():', e.message); });
+      })
+      .catch(function(err){
+        console.warn('Camera attempt failed ('+facingMode+'): '+err.name+' '+err.message);
+        if(fallback){
+          fallback();
+        } else {
+          show('camera-wrap',false);
+          var msg = err.name==='NotAllowedError'
+            ? 'Camera blocked. iPhone: Settings→Safari→Camera→Allow. Android: Chrome→Site Settings→Camera→Allow'
+            : err.name==='NotFoundError'
+            ? 'No camera found on this device.'
+            : 'Camera error ('+err.name+'): '+err.message;
+          showCameraError(t, msg);
+        }
+      });
+  }
+
+  // Strategy: try exact facing mode → fallback to any camera
+  var facing = t==='selfie' ? 'user' : 'environment';
+  tryCamera(facing, function(){
+    tryCamera('user', function(){
+      // last resort — no facing mode constraint
+      navigator.mediaDevices.getUserMedia({video:true,audio:false})
+        .then(function(s){
+          state.cameraStream=s; vid.srcObject=s;
+          vid.muted=true; vid.setAttribute('playsinline','');
+          var p=vid.play(); if(p&&p.catch) p.catch(function(){});
+        })
+        .catch(function(err){
+          show('camera-wrap',false);
+          showCameraError(t,'Camera blocked. iPhone: Settings→Safari→Camera→Allow. Android: Chrome→Site Settings→Camera→Allow');
+        });
     });
-    var fieldRows = "";
-    for (var fi = 0; fi < fields.length; fi += 2) {
-      fieldRows += "<tr><td class='fn'>"+(fi+1)+". "+fields[fi].label+"</td><td class='fv'>"+fields[fi].value+"</td>";
-      if (fields[fi+1]) fieldRows += "<td class='fn'>"+(fi+2)+". "+fields[fi+1].label+"</td><td class='fv'>"+fields[fi+1].value+"</td>";
-      else fieldRows += "<td colspan='2'></td>";
-      fieldRows += "</tr>";
-    }
-
-    // Members for this survey
-    var members = membersBySurvey[tag] || membersBySurvey[""] || [];
-    var memRows = members.map(function(m,mi){
-      return "<tr><td>"+(mi+1)+"</td><td>"+String(m[6]||"")+"</td><td>"+String(m[7]||"")+"</td>"
-        +"<td>"+String(m[8]||"")+"</td><td>"+String(m[9]||"")+"</td>"
-        +"<td>"+String(m[10]||"-")+"</td></tr>";
-    }).join("");
-
-    // DATA PAGE
-    html += '<div class="page">'
-      + '<div class="'+hdrCls+'">'
-      +   '<div><h1>Survey '+(surveyIdx+1)+' of '+totalSurveys+' - '+tag+'</h1>'
-      +   '<div class="sub">'+name+' | '+ward+' | Surveyed: '+ts+'</div></div>'
-      +   '<div style="text-align:right"><div class="'+badgeCls+'">'+familyId+'</div>'
-      +   '<div style="font-size:10px;margin-top:4px;color:'+(isR?"#fca5a5":"#bfdbfe")+'">By: '+zcrim+' &middot; Duration: '+dur+'</div></div>'
-      + '</div>'
-      + '<div class="'+infoCls+'">'
-      +   '<div class="ib"><label>Name</label><span>'+name+'</span></div>'
-      +   '<div class="ib"><label>Block</label><span>'+block+'</span></div>'
-      +   '<div class="ib"><label>Ward</label><span>'+ward+'</span></div>'
-      +   '<div class="ib"><label>Surveyed By</label><span>'+zcrim+'</span></div>'
-      + '</div>'
-      + '<div class="'+secCls+'">Survey Fields</div>'
-      + '<table><tbody>'+fieldRows+'</tbody></table>'
-      + (members.length > 0
-          ? '<div class="'+secCls+'">Family Members ('+members.length+')</div>'
-          + '<table><thead><tr><th class="'+thCls+'">#</th><th class="'+thCls+'">Name</th><th class="'+thCls+'">Age</th>'
-          + '<th class="'+thCls+'">Income Range</th><th class="'+thCls+'">Occupation</th><th class="'+thCls+'">Remarks</th></tr></thead>'
-          + '<tbody>'+memRows+'</tbody></table>' : '')
-      + '<div class="footer"><span>'+familyId+' | '+name+' | Survey '+(surveyIdx+1)+'/'+totalSurveys+' - '+tag+'</span>'
-      + '<span>Page '+pageNum+'</span><span>ZCRIM Survey System | Mewat/Nuh</span></div>'
-      + '</div>';
-    pageNum++;
-
-    // PHOTOS PAGE(S) for this survey
-    var photos = photoBase64BySurvey[tag] || {};
-    var first4 = photoKeys.slice(0,4);
-    var last2  = photoKeys.slice(4,6);
-    var pboxCls = isR ? "pbox r" : "pbox";
-    var plblCls = isR ? "plbl-r" : "plbl";
-
-    var pg2 = "";
-    first4.forEach(function(k){
-      if (photos[k]) {
-        pg2 += '<div class="'+pboxCls+'"><img src="'+photos[k]+'"/><div class="'+plblCls+'">'+photoLabels[k]+'</div></div>';
-      } else {
-        pg2 += '<div class="'+pboxCls+'"><div class="noimg">No Photo</div><div class="'+plblCls+'">'+photoLabels[k]+'</div></div>';
-      }
-    });
-    var pg3 = "";
-    last2.forEach(function(k){
-      if (photos[k]) {
-        pg3 += '<div class="pbox-lg"><img src="'+photos[k]+'"/><div class="'+plblCls+'">'+photoLabels[k]+'</div></div>';
-      } else {
-        pg3 += '<div class="pbox-lg"><div class="noimg" style="height:195px">No Photo</div><div class="'+plblCls+'">'+photoLabels[k]+'</div></div>';
-      }
-    });
-
-    html += '<div class="page">'
-      + '<div class="'+hdrCls+'"><div><h1>Photos - Survey '+(surveyIdx+1)+' ('+tag+')</h1>'
-      + '<div class="sub">'+name+' | '+ward+' | '+ts+'</div></div><div class="'+badgeCls+'">Page '+pageNum+'</div></div>'
-      + '<div class="pgrid">'+pg2+'</div>'
-      + '<div class="footer"><span>'+familyId+' | Survey '+(surveyIdx+1)+'/'+totalSurveys+' - '+tag+'</span>'
-      + '<span>Page '+pageNum+'</span><span>ZCRIM Survey System | Mewat/Nuh</span></div>'
-      + '</div>';
-    pageNum++;
-
-    html += '<div class="page">'
-      + '<div class="'+hdrCls+'"><div><h1>Photos (cont.) - Survey '+(surveyIdx+1)+' ('+tag+')</h1>'
-      + '<div class="sub">'+name+' | '+ward+'</div></div><div class="'+badgeCls+'">Page '+pageNum+'</div></div>'
-      + '<div style="display:flex;gap:16px;margin-top:12px;justify-content:center">'+pg3+'</div>'
-      + '<div class="footer"><span>'+familyId+' | Survey '+(surveyIdx+1)+'/'+totalSurveys+' - '+tag+'</span>'
-      + '<span>Page '+pageNum+'</span><span>ZCRIM Survey System | Mewat/Nuh</span></div>'
-      + '</div>';
-    pageNum++;
   });
-
-  html += '<div class="no-print" style="position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:999">'
-    + '<button onclick="window.print()" style="padding:12px 24px;background:#1a56a0;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Print / Save as PDF</button>'
-    + '<button onclick="google.script.host.close()" style="padding:12px 24px;background:#e2e8f0;color:#1e293b;border:none;border-radius:8px;font-size:14px;cursor:pointer">Close</button>'
-    + '</div>'
-    + '</body></html>';
-
-  return html;
 }
 
-function onOpen() {
-  SpreadsheetApp.getUi().createMenu("⚙️ ZCRIM Admin")
-    .addItem("📧 Send Passwords to All ZCRIMs","sendAllPasswords")
-    .addItem("🔄 Reset Password for One ZCRIM","resetOnePassword")
-    .addItem("👁 View Active Sessions","showActiveSessions")
-    .addItem("🚫 Force Logout a ZCRIM","forceLogoutZcrim")
-    .addSeparator()
-    .addItem("📊 Show Progress / Leaderboard","showProgressSummary")
-    .addItem("📬 Send Daily Report Now","sendDailyReport")
-    .addItem("⏰ Setup Auto Daily Report (7 PM)","setupDailyTrigger")
-    .addSeparator()
-    .addItem("📥 Import Families from Drive xlsx","loadFromDriveXlsx")
-    .addItem("📋 Manual: Load from Google Sheet","loadFromGoogleSheet")
-    .addSeparator()
-    .addItem("🔁 Clear & Re-import Fresh","clearAndReimport")
-    .addItem("🏗️ Setup / Fix All Sheets","ensureSheetsExist")
-    .addSeparator()
-    .addItem("🗂️ Merge Duplicate Photo Folders","mergeDuplicateFolders")
-    .addItem("🔗 Rebuild Photo Links in SurveyData","rebuildPhotoLinks")
-    .addSeparator()
-    .addItem("🖨️ Search & Print Family Report (PDF)","searchAndPrintReport")
-    .addSeparator()
-    .addItem("🔁 Flag Family for Re-Survey","flagFamilyFromSheet")
-    .addItem("📋 View Re-Survey Queue","viewResurveyQueue")
-    .addToUi();
+function showCameraError(target, msg) {
+  // Show error inside the photo box so user knows what happened
+  var boxId = target==='selfie' ? 'selfie-box' : 'pb-'+target;
+  var box = document.getElementById(boxId);
+  if(box) {
+    box.style.borderColor='var(--red)';
+    box.innerHTML=
+      '<div style="padding:12px;text-align:center">'+
+      '<div style="font-size:24px;margin-bottom:6px">📵</div>'+
+      '<div style="color:var(--red);font-weight:700;font-size:12px;margin-bottom:6px">Camera Blocked</div>'+
+      '<div style="color:var(--mut);font-size:11px;line-height:1.5">'+msg+'</div>'+
+      '<div style="margin-top:10px"><label style="background:var(--acc);color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">'+
+      '📁 Upload Photo Instead'+
+      '<input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleFileUpload(event,\'' + target + '\')"/>'+
+      '</label></div></div>';
+    box.onclick=null; // remove onclick to prevent re-triggering
+  }
+  toast('📵 Camera blocked — see instructions in photo box','red');
 }
+
+function handleFileUpload(event, target) {
+  var file = event.target.files[0];
+  if (!file) return;
+
+  // Security: only accept actual image files, block everything else
+  if (!file.type.match(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i)) {
+    toast('Only JPG/PNG photos allowed', 'red');
+    event.target.value = '';
+    return;
+  }
+
+  // Security: block suspiciously small files (likely not real photos — min 10KB)
+  if (file.size < 10240) {
+    toast('Photo too small — looks invalid', 'red');
+    event.target.value = '';
+    return;
+  }
+
+  // Security: block suspiciously large files (over 15MB)
+  if (file.size > 15728640) {
+    toast('Photo too large — max 15MB', 'red');
+    event.target.value = '';
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var dataUrl = e.target.result;
+    // Flag this as camera-fallback upload — GPS will be current location, not photo metadata
+    var g = state.gps || {lat:'N/A', lng:'N/A'};
+
+    // Mark photo as fallback so backend/report knows it was not live-captured
+    var photoObj = {dataUrl:dataUrl, gps:g, fallback:true};
+
+    if (target==='selfie') {
+      state.selfie = dataUrl;
+      state.selfieFallback = true;
+      var box = document.getElementById('selfie-box');
+      box.style.borderColor = '#f59e0b';
+      box.innerHTML = '<img src="'+dataUrl+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/>'
+        + '<div class="overlay" style="background:rgba(217,119,6,0.85)">⚠ Camera Fallback · GPS: '+(g.lat!=='N/A'?g.lat+','+g.lng:'N/A')+'</div>';
+      box.onclick = function(){ openCamera('selfie'); };
+    } else {
+      state.photos[target] = photoObj;
+      var box2 = document.getElementById('pb-'+target);
+      box2.style.borderColor = '#f59e0b';
+      box2.innerHTML = '<img src="'+dataUrl+'"/>'
+        + '<div class="overlay" style="background:rgba(217,119,6,0.85)">⚠ Camera Fallback · Tap to retake</div>';
+      box2.onclick = function(){ openCamera(target); };
+      updatePhotosStatus();
+    }
+    toast('⚠ Uploaded as fallback — camera preferred', 'org');
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeCamera(){
+  if(state.cameraStream){state.cameraStream.getTracks().forEach(function(t){t.stop();});state.cameraStream=null;}
+  show('camera-wrap',false);
+}
+function burnGpsStamp(canvas, g, label, family) {
+  var ctx  = canvas.getContext('2d');
+  var w    = canvas.width, h = canvas.height;
+  var fs   = Math.max(16, Math.round(w / 40)); // font size scales with image
+
+  // Semi-transparent black bar at bottom
+  var barH = fs * 4.2;
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0, h - barH, w, barH);
+
+  // White text
+  ctx.fillStyle = '#ffffff';
+  ctx.font      = 'bold ' + fs + 'px Arial,sans-serif';
+  ctx.textAlign = 'left';
+
+  var now   = new Date();
+  var dateStr = now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear()+
+                '  '+now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes();
+  var gpsStr  = g.lat !== 'N/A' ? '📍 '+g.lat+', '+g.lng+(g.acc?' ±'+g.acc:'') : '📍 GPS unavailable';
+  var famStr  = family ? '🏠 '+family.id+' | '+family.name : '';
+  var lblStr  = '📷 '+label;
+
+  var pad = Math.round(w * 0.015);
+  var y1  = h - barH + fs * 1.1;
+  var y2  = y1 + fs * 1.15;
+  var y3  = y2 + fs * 1.15;
+
+  // Line 1: GPS
+  ctx.font = 'bold '+fs+'px Arial,sans-serif';
+  ctx.fillText(gpsStr, pad, y1);
+
+  // Line 2: Date + label
+  ctx.font = fs+'px Arial,sans-serif';
+  ctx.fillText(dateStr + '   ' + lblStr, pad, y2);
+
+  // Line 3: Family
+  if(famStr) { ctx.font = (fs*0.9)+'px Arial,sans-serif'; ctx.fillText(famStr, pad, y3); }
+
+  // ZCRIM watermark top-right
+  ctx.font      = Math.max(12, Math.round(w/55))+'px Arial,sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.textAlign = 'right';
+  ctx.fillText('ZCRIM Survey · Mewat/Nuh', w - pad, Math.round(w/55) + 8);
+}
+
+// ── PHOTO QUALITY CHECK ──────────────────────────────────────────
+function checkPhotoQuality(canvas) {
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  // Sample a grid of pixels to check brightness and contrast
+  var sampleSize = 20;
+  var stepX = Math.floor(w / sampleSize);
+  var stepY = Math.floor(h / sampleSize);
+  var pixels = ctx.getImageData(0, 0, w, h).data;
+  var brightnessValues = [];
+  for (var y = 0; y < sampleSize; y++) {
+    for (var x = 0; x < sampleSize; x++) {
+      var px = (y * stepY * w + x * stepX) * 4;
+      var r = pixels[px], g2 = pixels[px+1], b2 = pixels[px+2];
+      // Perceived brightness formula
+      var brightness = 0.299*r + 0.587*g2 + 0.114*b2;
+      brightnessValues.push(brightness);
+    }
+  }
+  var avgBrightness = brightnessValues.reduce(function(a,b){return a+b;},0) / brightnessValues.length;
+  // Contrast = standard deviation of brightness
+  var variance = brightnessValues.reduce(function(s,v){return s+Math.pow(v-avgBrightness,2);},0) / brightnessValues.length;
+  var contrast = Math.sqrt(variance);
+  return { brightness: Math.round(avgBrightness), contrast: Math.round(contrast), ok: avgBrightness > 40 && contrast > 18 };
+}
+
+function showQualityWarning(msg, onRetake, onKeep) {
+  // Show overlay warning on camera screen
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div style="background:#1e293b;border:2px solid #ef4444;border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center">'+
+    '<div style="font-size:48px;margin-bottom:12px">⚠️</div>'+
+    '<div style="font-size:17px;font-weight:800;color:#ef4444;margin-bottom:8px">Photo Quality Warning</div>'+
+    '<div style="font-size:14px;color:#94a3b8;margin-bottom:20px">'+msg+'</div>'+
+    '<button id="qw-retake" style="width:100%;padding:14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px">📸 Retake Photo</button>'+
+    '<button id="qw-keep" style="width:100%;padding:12px;background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:10px;font-size:14px;cursor:pointer">Use Anyway</button>'+
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector('#qw-retake').onclick = function(){ document.body.removeChild(overlay); onRetake(); };
+  overlay.querySelector('#qw-keep').onclick   = function(){ document.body.removeChild(overlay); onKeep(); };
+}
+
+function capturePhoto(){
+  var v      = document.getElementById('cam-video');
+  var canvas = document.createElement('canvas');
+  canvas.width  = v.videoWidth  || 1280;
+  canvas.height = v.videoHeight || 720;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(v, 0, 0);
+
+  var t = state.cameraTarget;
+  var g = state.gps || {lat:'N/A', lng:'N/A'};
+  var label = t==='selfie' ? 'Surveyor Selfie' : PHOTO_LABELS[PHOTO_KEYS.indexOf(t)] || t;
+
+  // Quality check BEFORE gps stamp
+  var quality = checkPhotoQuality(canvas);
+  var qualityMsg = '';
+  if (quality.brightness < 40)  qualityMsg = 'Photo is too dark (brightness: '+quality.brightness+'/255). Move to better lighting and retake.';
+  else if (quality.contrast < 18) qualityMsg = 'Photo appears blurry or has very low contrast. Please retake for a clearer image.';
+
+  if (qualityMsg) {
+    var savedCanvas = canvas;
+    showQualityWarning(qualityMsg,
+      function(){ /* retake — camera still open */ },
+      function(){
+        // User chose to keep — continue with GPS stamp and save
+        burnGpsStamp(savedCanvas, g, label, state.family);
+        var q = 0.78, dataUrl = savedCanvas.toDataURL('image/jpeg', q);
+        while(dataUrl.length*0.75>199000&&q>0.15){q-=0.1;dataUrl=savedCanvas.toDataURL('image/jpeg',q);}
+        closeCamera();
+        savePhoto(t, dataUrl, g);
+      }
+    );
+    return; // wait for user choice
+  }
+
+  // Quality OK — proceed normally
+  burnGpsStamp(canvas, g, label, state.family);
+  var q = 0.78, dataUrl = canvas.toDataURL('image/jpeg', q);
+  while(dataUrl.length * 0.75 > 199000 && q > 0.15){ q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q); }
+
+  closeCamera();
+  savePhoto(t, dataUrl, g);
+}
+
+function savePhoto(t, dataUrl, g) {
+  if(t === 'selfie'){
+    state.selfie = dataUrl;
+    var sb = document.getElementById('selfie-box');
+    sb.innerHTML = '<img src="'+dataUrl+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/>'+
+      '<div class="overlay">✓ GPS stamped · '+( g.lat!=='N/A' ? g.lat+','+g.lng : 'No GPS' )+'</div>';
+    sb.onclick = function(){ openCamera('selfie'); };
+  } else {
+    state.photos[t] = {dataUrl:dataUrl, gps:g};
+    var box = document.getElementById('pb-'+t);
+    box.innerHTML = '<img src="'+dataUrl+'"/>'+
+      '<div class="overlay">📍 GPS stamped · Tap retake</div>';
+    box.onclick = function(){ openCamera(t); };
+    updatePhotosStatus();
+  }
+}
+
+// ── TABS ──────────────────────────────────────
+// ── PRINT FAMILY REPORT ───────────────────────────────────────────
+function printFamilyReport(family, assets, members, photos) {
+  var win = window.open('', '_blank');
+  if (!win) { toast('Allow popups to print report','red'); return; }
+  var photoHtml = '';
+  var photoLabels = ['Front Photo','Kitchen','Family Photo','Surroundings','Surveyor+Family','Selfie'];
+  var photoKeys   = ['frontPhoto','kitchenPhoto','familyPhoto','surroundingsPhoto','surveyorFamilyPhoto','selfiePhoto'];
+  photoKeys.forEach(function(k,i){
+    if(photos[k]) photoHtml += '<div style="display:inline-block;margin:6px;vertical-align:top;text-align:center"><img src="'+photos[k]+'" style="width:180px;height:130px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0"/><div style="font-size:10px;color:#64748b;margin-top:3px">'+photoLabels[i]+'</div></div>';
+  });
+  var membersHtml = '';
+  (members||[]).forEach(function(m,i){
+    if(!m.name) return;
+    membersHtml += '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:6px 8px;font-size:12px">'+(i+1)+'</td><td style="padding:6px 8px;font-size:12px">'+m.name+'</td><td style="padding:6px 8px;font-size:12px">'+m.age+'</td><td style="padding:6px 8px;font-size:12px">'+m.gender+'</td><td style="padding:6px 8px;font-size:12px">'+m.relation+'</td><td style="padding:6px 8px;font-size:12px">'+(m.aadhaar||'—')+'</td></tr>';
+  });
+  var n=new Date(),dd=String(n.getDate()).padStart(2,'0'),mm=String(n.getMonth()+1).padStart(2,'0'),h=n.getHours(),mi=String(n.getMinutes()).padStart(2,'0'),ss=String(n.getSeconds()).padStart(2,'0'),ap=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;var now=dd+'/'+mm+'/'+n.getFullYear()+' '+String(h).padStart(2,'0')+':'+mi+':'+ss+' '+ap;
+  var gps = state.gps && state.gps.lat !== 'N/A' ? state.gps.lat+', '+state.gps.lng : 'Not available';
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Survey Report — '+family.id+'</title><style>body{font-family:Arial,sans-serif;font-size:13px;color:#1e293b;margin:0;padding:20px}h1{font-size:18px;color:#1a56a0;margin-bottom:4px}.header{background:#1a56a0;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;margin-bottom:0}.sub{font-size:12px;opacity:.8}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:12px}.info-item label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;display:block}.info-item span{font-size:13px;font-weight:600}table{width:100%;border-collapse:collapse}th{background:#1a56a0;color:#fff;padding:8px;font-size:11px;text-align:left}.sec{font-size:13px;font-weight:700;color:#1a56a0;margin:14px 0 8px;padding-bottom:4px;border-bottom:2px solid #e2e8f0}.footer{margin-top:20px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:10px;color:#94a3b8;text-align:center}@media print{button{display:none}}</style></head><body>'+
+    '<div class="header"><h1>🏛️ ZCRIM Survey Report</h1><div class="sub">Mewat/Nuh District · Generated: '+now+'</div></div>'+
+    '<div class="info-grid">'+
+      '<div class="info-item"><label>PPP ID</label><span>'+family.id+'</span></div>'+
+      '<div class="info-item"><label>Name</label><span>'+family.name+'</span></div>'+
+      '<div class="info-item"><label>Mobile</label><span>'+(family.mobile||'—')+'</span></div>'+
+      '<div class="info-item"><label>Age</label><span>'+(family.age||'—')+'</span></div>'+
+      '<div class="info-item"><label>Gender</label><span>'+(family.gender||'—')+'</span></div>'+
+      '<div class="info-item"><label>Ward</label><span>'+family.ward+'</span></div>'+
+      '<div class="info-item"><label>Block</label><span>'+family.block+'</span></div>'+
+      '<div class="info-item"><label>GPS</label><span>'+gps+'</span></div>'+
+      '<div class="info-item"><label>Address</label><span>'+(family.address||'—')+'</span></div>'+
+      '<div class="info-item"><label>Surveyed By</label><span>'+state.zcrim.name+'</span></div>'+
+    '</div>'+
+    '<div class="sec">👥 Family Members</div>'+
+    '<table><thead><tr><th>#</th><th>Name</th><th>Age</th><th>Gender</th><th>Relation</th><th>Aadhaar</th></tr></thead><tbody>'+membersHtml+'</tbody></table>'+
+    '<div class="sec">📷 Survey Photos</div>'+
+    '<div>'+photoHtml+'</div>'+
+    '<div class="footer">ZCRIM Survey System · Mewat/Nuh District · This is an official survey document</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#1a56a0;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;margin-right:10px">🖨️ Print</button>'+
+    '<button onclick="window.close()" style="padding:10px 24px;background:#e2e8f0;color:#1e293b;border:none;border-radius:6px;font-size:14px;cursor:pointer">✕ Close</button>'+
+    '</body></html>');
+  win.document.close();
+}
+
+// ── SURVEY TIMER ──────────────────────────────────────────────────
+var timerInterval = null;
+function startTimerDisplay() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function(){
+    if (!state.surveyStartTime) return;
+    var elapsed = Math.round((Date.now() - state.surveyStartTime) / 1000);
+    var mins = Math.floor(elapsed / 60);
+    var secs = elapsed % 60;
+    var el = document.getElementById('timer-display');
+    if (el) el.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    // Highlight if taking too long (>15 min)
+    var timerEl = document.getElementById('survey-timer');
+    if (timerEl) timerEl.style.color = elapsed > 900 ? '#ef4444' : '#94a3b8';
+  }, 1000);
+}
+
+function switchTab(i){
+  [0,1,2,3].forEach(function(n){
+    document.getElementById('tab'+n).style.display=n===i?'block':'none';
+    var b=document.getElementById('tab-btn-'+n);
+    if(b) b.className='tab'+(n===i?' active':tabUnlocked[n]?' done':' locked');
+  });
+}
+function tryTab(i){if(!tabUnlocked[i]){toast('🔒 Complete previous step first.','red');return;}switchTab(i);}
+function validateAndNext(cur){
+  if(cur===0){
+    if(!state.selfie){toast('🤳 Capture surveyor selfie first.','red');var b=document.getElementById('selfie-box');b.style.borderColor='var(--red)';setTimeout(function(){b.style.borderColor='';},2500);return;}
+    tabUnlocked[1]=true;switchTab(1);
+  } else if(cur===1){
+    var ok=false;for(var i=0;i<state.memberCount;i++){if(val('m'+i+'-name')){ok=true;break;}}
+    if(!ok){toast('👥 Enter at least 1 member name.','red');return;}
+    tabUnlocked[2]=true;switchTab(2);
+  } else if(cur===2){
+    if(!val('a-houseCondition')){toast('🏠 Select House Condition.','red');var el=document.getElementById('a-houseCondition');el.style.borderColor='var(--red)';setTimeout(function(){el.style.borderColor='';},2500);return;}
+    tabUnlocked[3]=true;switchTab(3);
+  }
+}
+function resetTabLocks(){tabUnlocked=[true,false,false,false];for(var i=0;i<4;i++){var b=document.getElementById('tab-btn-'+i);if(b)b.className=i===0?'tab active':'tab locked';}}
+
+// ── SUBMIT ────────────────────────────────────
+function submitForm(){
+  var missingMandatory = PHOTO_MANDATORY.filter(function(k){ return !state.photos[k]; });
+  if(!state.selfie) missingMandatory.push('selfie');
+  if(missingMandatory.length > 0){
+    var missingLabels = missingMandatory.map(function(k){
+      if(k==='selfie') return 'Surveyor Selfie';
+      return PHOTO_LABELS[PHOTO_KEYS.indexOf(k)];
+    });
+    showErr('submit-err','Missing mandatory photos: '+missingLabels.join(', ')); return;
+  }
+  showErr('submit-err','');
+  var btn=document.getElementById('btn-submit');
+  btn.innerHTML='<span class="spinner"></span> Uploading…';btn.disabled=true;
+  var now2=new Date();
+  var dd2=String(now2.getDate()).padStart(2,'0');
+  var mo2=String(now2.getMonth()+1).padStart(2,'0');
+  var yyyy2=now2.getFullYear();
+  var h2=now2.getHours(), min2=String(now2.getMinutes()).padStart(2,'0'), sec2=String(now2.getSeconds()).padStart(2,'0');
+  var ampm2=h2>=12?'PM':'AM'; h2=h2%12; if(h2===0)h2=12;
+  var ts=dd2+'/'+mo2+'/'+yyyy2+' '+String(h2).padStart(2,'0')+':'+min2+':'+sec2+' '+ampm2;
+  var uploaded={};
+  var keys=PHOTO_KEYS.concat('selfie');
+  var pending=keys.length;
+  var done=false;
+
+  function onUploadDone(key, url) {
+    uploaded[key] = url || '';
+    pending--;
+    if(pending===0 && !done){ done=true; finalSubmit(uploaded,ts); }
+  }
+
+  keys.forEach(function(key){
+    var item = key==='selfie' ? {dataUrl:state.selfie, gps:state.gps} : state.photos[key];
+    if(!item || !item.dataUrl){ onUploadDone(key,''); return; }
+    var g     = item.gps || state.gps || {lat:'N/A',lng:'N/A'};
+    var label = key==='selfie' ? 'Surveyor_Selfie' : PHOTO_LABELS[PHOTO_KEYS.indexOf(key)];
+    // IIFE to capture key per iteration
+    (function(capturedKey, capturedLabel, capturedG){
+      google.script.run
+        .withSuccessHandler(function(r){ onUploadDone(capturedKey, r.ok ? r.url : ''); })
+        .withFailureHandler(function(e){ console.error('Upload failed '+capturedKey, e); onUploadDone(capturedKey,''); })
+        .uploadPhoto(state.token, {
+          base64:     item.dataUrl,
+          mimeType:   'image/jpeg',
+          pppId:      state.family.id,
+          surveyTag:  state.surveyTag || "Original",
+          memberName: state.family.name,
+          photoLabel: capturedLabel,
+          zcrimName:  state.zcrim.name,
+          lat:        capturedG.lat,
+          lng:        capturedG.lng,
+          timestamp:  ts,
+          fallback:   item.fallback || false
+        });
+    })(key, label, g);
+  });
+}
+function finalSubmit(uploaded,ts){
+  document.getElementById('btn-submit').innerHTML='<span class="spinner"></span> Saving…';
+
+  // Snapshot current family data before state gets overwritten
+  var familySnap       = state.family;
+  var familyRowSnap    = state.familyRowIndex;
+  var assetsSnap       = collectAssets();
+  var membersSnap      = collectMembers();
+  var gpsSnap          = state.gps || {lat:'N/A',lng:'N/A'};
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(!res.ok){
+        if(res.relogin){handleSessionError(res);return;}
+        toast('Error: '+res.msg,'red');
+        resetSubmitBtn();
+        return;
+      }
+      toast('✅ Family saved! Loading next…','green');
+      // Mark as surveyed this session (duplicate detection)
+      if(!state.surveyedIds) state.surveyedIds = {};
+      if(familySnap) state.surveyedIds[familySnap.id] = true;
+      // Reset state
+      state.family         = null;
+      state.familyRowIndex = null;
+      state.selfie         = null;
+      state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+      loadNextFamily();
+    })
+    .withFailureHandler(function(e){
+      toast('Save error: '+e.message,'red');
+      resetSubmitBtn();
+    })
+    .submitSurvey(state.token, {
+      zcrimName:      state.zcrim.name,
+      family:         familySnap,
+      selfieUrl:      uploaded['selfie']      || '',
+      assets:         assetsSnap,
+      members:        membersSnap,
+      photoUrls: {
+        front:          uploaded['front']         || '',
+        kitchen:        uploaded['kitchen']       || '',
+        familyPhoto:    uploaded['familyPhoto']   || '',
+        surroundings:   uploaded['surroundings']  || '',
+        surveyorFamily: uploaded['surveyorFamily']|| ''
+      },
+      gps:            gpsSnap,
+      timestamp:      ts,
+      familyRowIndex: familyRowSnap
+    });
+}
+function resetSubmitBtn(){document.getElementById('btn-submit').innerHTML='✅ Submit Verification';document.getElementById('btn-submit').disabled=false;}
+function resetForm(){
+  ['a-houseRent','a-rentAmt','a-houseSize','a-houseCondition','a-electricity','a-splitFamily','a-propertyId','a-taxPayer','a-twoWheeler','a-fourWheeler','a-otherLand','a-agriLand','a-shopBusiness','a-cattle']
+    .forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('rent-field').style.display='none';
+  document.getElementById('selfie-box').innerHTML='<div style="font-size:32px">🤳</div><div style="color:var(--org);font-weight:600;font-size:13px">Capture Surveyor Photo</div><div style="color:var(--mut);font-size:11px">Front camera · Required</div>';
+  document.getElementById('selfie-box').onclick=function(){openCamera('selfie');};
+  state.selfie=null;resetSubmitBtn();
+}
+
+// ── SESSION ERROR ─────────────────────────────
+function handleSessionError(res){clearInterval(state.sessionTimerInterval);toast('🔒 '+(res.msg||'Session expired.'),'red');setTimeout(function(){doLogout(true);},2000);}
+
+// ── HELPERS ───────────────────────────────────
+function showScreen(id){['screen-login','screen-village','screen-survey','camera-wrap'].forEach(function(s){document.getElementById(s).style.display='none';});document.getElementById(id).style.display='block';}
+function show(id,v){document.getElementById(id).style.display=v?'block':'none';}
+function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function showErr(id,m){var e=document.getElementById(id);if(e)e.textContent=m;}
+function toast(msg,type){
+  var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
+  t.style.borderColor=type==='green'?'#22c55e':type==='red'?'#ef4444':type==='org'?'#f59e0b':'#334155';
+  t.style.color=type==='green'?'#22c55e':type==='red'?'#ef4444':type==='org'?'#f59e0b':'#f1f5f9';
+  setTimeout(function(){t.style.display='none';},3500);
+}
+</script>
+</body>
+</html>
