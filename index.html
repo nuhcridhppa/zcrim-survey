@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 <meta charset="UTF-8">
@@ -1049,6 +1048,9 @@ function loadNextFamily(){
   var skipBtn = document.getElementById('btn-skip');
   if(skipBtn){ skipBtn.disabled=true; skipBtn.style.opacity='0.4'; }
 
+  // Clear any previous error messages
+  showErr('submit-err', '');
+
   // Safety timeout — never get stuck on loading overlay
   var loadDone = false;
   var loadTimeout = setTimeout(function(){
@@ -1630,7 +1632,7 @@ function finalSubmit(uploaded,ts){
       loadNextFamily();
     })
     .withFailureHandler(function(e){
-      toast('Save error: '+e.message,'red');
+      showErr('submit-err', 'Submission failed. Please check your connection and try again.');
       resetSubmitBtn();
     })
     .submitSurvey(state.token, {
@@ -1651,7 +1653,7 @@ function finalSubmit(uploaded,ts){
       familyRowIndex: familyRowSnap
     });
 }
-function resetSubmitBtn(){document.getElementById('btn-submit').innerHTML='✅ Submit Verification';document.getElementById('btn-submit').disabled=false;}
+function resetSubmitBtn(){document.getElementById('btn-submit').innerHTML='✅ Submit Verification';document.getElementById('btn-submit').disabled=false;showErr('submit-err','');}
 function resetForm(){
   ['a-houseRent','a-rentAmt','a-houseSize','a-houseCondition','a-electricity','a-splitFamily','a-propertyId','a-taxPayer','a-twoWheeler','a-fourWheeler','a-otherLand','a-agriLand','a-shopBusiness','a-cattle']
     .forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
