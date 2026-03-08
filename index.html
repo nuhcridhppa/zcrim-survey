@@ -385,8 +385,10 @@ function gsr(fnName, args, onSuccess, onFailure) {
         var res = JSON.parse(xhr.responseText);
         if (onSuccess) onSuccess(res);
       } catch(e) {
-        if (onFailure) onFailure({message: 'Invalid JSON: ' + xhr.responseText.substring(0,100)});
-        else console.error('JSON parse error', e, xhr.responseText.substring(0,200));
+        // JSON parse failed — could be a redirect or Apps Script HTML error page
+        // Never show raw response to user
+        console.error('JSON parse error', xhr.responseText.substring(0, 200));
+        if (onFailure) onFailure({message: 'Server error. Please try again.'});
       }
     } else {
       var err = {message: 'HTTP ' + xhr.status + ': ' + xhr.statusText};
@@ -865,6 +867,8 @@ function doLogout(auto) {
   clearInterval(state.sessionTimerInterval);
   var warn = document.getElementById('idle-warning');
   if (warn) warn.style.display = 'none';
+  showErr('login-err', '');
+  showErr('submit-err', '');
   if(state.token) google.script.run.logoutSession(state.token);
   state.token=null; state.zcrim=null; state.selectedWard=null;
   document.getElementById('inp-mobile').value='';
@@ -1048,8 +1052,9 @@ function loadNextFamily(){
   var skipBtn = document.getElementById('btn-skip');
   if(skipBtn){ skipBtn.disabled=true; skipBtn.style.opacity='0.4'; }
 
-  // Clear any previous error messages
+  // Clear ALL error messages before loading next family
   showErr('submit-err', '');
+  showErr('login-err', '');
 
   // Safety timeout — never get stuck on loading overlay
   var loadDone = false;
