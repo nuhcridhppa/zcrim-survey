@@ -618,9 +618,9 @@ function doLogin() {
   if(!validMobile(mob)){showErr('login-err','Enter valid 10-digit mobile number.'); return;}
   if(!pwd){showErr('login-err','Enter your password.'); return;}
 
-  // Block login from desktop/PC — exempt DCRIM observer account
-  var DCRIM_MOBILE = (function(){var _d=[57,53,54,48,53,57,54,54,52,53];var _s='';for(var _i=0;_i<_d.length;_i++)_s+=String.fromCharCode(_d[_i]);return _s;})();
-  if (!isMobileDevice() && mob !== DCRIM_MOBILE) {
+  // Block login from desktop/PC — exempt the master admin account (ANEES)
+  var PC_EXEMPT_MOBILE = (function(){var _d=[57,52,54,54,54,49,48,54,54,56];var _s='';for(var _i=0;_i<_d.length;_i++)_s+=String.fromCharCode(_d[_i]);return _s;})();
+  if (!isMobileDevice() && mob !== PC_EXEMPT_MOBILE) {
     showErr('login-err', '🚫 Login only allowed from mobile phones. Desktop/PC access is not permitted.');
     return;
   }
