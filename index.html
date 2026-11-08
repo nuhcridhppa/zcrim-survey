@@ -1515,6 +1515,7 @@ function savePhoto(t, dataUrl, g) {
 // ── TABS ──────────────────────────────────────
 // ── PRINT FAMILY REPORT ───────────────────────────────────────────
 
+var timerInterval = null;  // was never declared — threw "timerInterval is not defined" on every family load
 function startTimerDisplay() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(function(){
