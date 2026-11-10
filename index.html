@@ -1089,6 +1089,9 @@ function setupFamily(d){
   state.isResurvey      = d.isResurvey;
   state.surveyTag       = d.surveyTag;
   state.surveyStartTime = d.start; // ⏱ start timer
+  // One timestamp per survey, shared by all its photo uploads and the SurveyData row —
+  // PhotoLog and SurveyData rows for a survey carry the same timestamp (as before uploads moved earlier)
+  state.surveyStamp     = d.stamp || fmtTs(new Date(d.start));
 
   resetTabLocks();
   renderFamilyInfo();
@@ -1520,7 +1523,7 @@ function startUpload(k){
         zcrimName:  state.zcrim.name,
         lat:        g.lat,
         lng:        g.lng,
-        timestamp:  item.ts || fmtTs(),
+        timestamp:  state.surveyStamp,
         fallback:   false
       });
   }
@@ -1619,7 +1622,7 @@ function submitForm(){
     if (failed.length) toast('⚠️ Optional photo not uploaded: '+failed.map(photoLabel).join(', '), 'org');
     var uploaded = {};
     keys.forEach(function(k){ if (state.uploads[k] && state.uploads[k].status === 'done') uploaded[k] = state.uploads[k].url; });
-    finalSubmit(uploaded, fmtTs());
+    finalSubmit(uploaded, state.surveyStamp);
   };
   state.submitWaiting();
 }
@@ -1696,7 +1699,7 @@ function writeDraft(){
   Object.keys(state.uploads).forEach(function(k){ if (state.uploads[k].status === 'done') urls[k] = state.uploads[k].url; });
   var d = {
     v:1, zcrim:zcrimKey(), savedAt:Date.now(), ward:state.selectedWard,
-    family:state.family, rowIndex:state.familyRowIndex, isResurvey:state.isResurvey, surveyTag:state.surveyTag, start:state.surveyStartTime,
+    family:state.family, rowIndex:state.familyRowIndex, isResurvey:state.isResurvey, surveyTag:state.surveyTag, start:state.surveyStartTime, stamp:state.surveyStamp,
     tabs:tabUnlocked, members:members, assets:collectAssets(), urls:urls,
     selfie: state.selfie ? {dataUrl:state.selfie, gps:(state.selfieMeta||{}).gps, ts:(state.selfieMeta||{}).ts} : null,
     photos: state.photos
@@ -1725,7 +1728,7 @@ function offerDraftRestore(){
 }
 function restoreDraft(d){
   enterSurveyScreen(d.ward);
-  setupFamily({family:d.family, rowIndex:d.rowIndex, isResurvey:d.isResurvey, surveyTag:d.surveyTag, start:d.start, memberCount:d.members.length});
+  setupFamily({family:d.family, rowIndex:d.rowIndex, isResurvey:d.isResurvey, surveyTag:d.surveyTag, start:d.start, stamp:d.stamp, memberCount:d.members.length});
   d.members.forEach(function(m,i){ ['name','age','income','declInc','occ','rem'].forEach(function(f,j){ setVal('m'+i+'-'+f, m[j]); }); });
   Object.keys(d.assets || {}).forEach(function(k){ setVal('a-'+k, d.assets[k]); });
   toggleRent();
