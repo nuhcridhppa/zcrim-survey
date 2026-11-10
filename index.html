@@ -94,6 +94,25 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 /* ── SESSION BAR ── */
 .session-bar{background:#1e3a5f;border:1px solid #3b82f644;border-radius:8px;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px}
 
+/* ── SHARED UTILITIES (used by the screens built in JS) ── */
+.muted{color:var(--mut)}
+.loading{text-align:center;padding:30px;color:var(--mut)}
+.row{display:flex;justify-content:space-between;align-items:center}
+.stat{flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px;text-align:center}
+.stat b{display:block;font-size:18px}
+.stat span{font-size:10px;color:var(--mut)}
+.bar{background:#334155;border-radius:4px;height:4px;overflow:hidden}
+.bar>div{height:100%;border-radius:4px;background:var(--acc)}
+.alert-red{background:#7f1d1d;border:2px solid var(--red);border-radius:10px;padding:12px 16px;color:#fca5a5}
+.pill-red{background:#7f1d1d;color:#fca5a5;border:1px solid var(--red);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal>div{background:var(--card);border:2px solid var(--red);border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center}
+.btn-line{background:transparent;border:1px solid var(--bdr);border-radius:8px;color:var(--mut);cursor:pointer}
+.zgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;padding:8px 4px;border-radius:6px}
+.zgrid>div+div{text-align:center;font-size:13px;font-weight:700}
+.zgrid.head>div{font-size:10px;color:var(--mut);font-weight:700;padding:0}
+.zgrid:nth-child(odd):not(.head){background:rgba(255,255,255,.03)}
+
 /* ── RESPONSIVE ── */
 @media(min-width:600px){
   .card{padding:22px}
@@ -161,7 +180,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
     <div class="session-bar">
       <span>👤 <span id="sess-name">—</span></span>
       <span id="sess-timer" style="color:var(--org)">⏱ 30:00</span>
-      <button onclick="doLogout()" style="background:none;border:1px solid var(--bdr);border-radius:6px;padding:3px 10px;color:var(--mut);font-size:11px;cursor:pointer">Logout</button>
+      <button onclick="doLogout()" class="btn-line" style="padding:3px 10px;font-size:11px">Logout</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button onclick="showTab('village-tab')" id="tab-villages-btn" style="flex:1;padding:9px;border:1px solid var(--acc);border-radius:8px;background:var(--acc);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🏘️ Villages</button>
@@ -173,7 +192,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
     <div id="village-list"></div>
     </div>
     <div id="leaderboard-tab" style="display:none">
-      <div id="leaderboard-list"><div style="text-align:center;padding:30px;color:var(--mut)"><span class="spinner"></span> Loading…</div></div>
+      <div id="leaderboard-list"><div class="loading"><span class="spinner"></span> Loading…</div></div>
     </div>
   </div>
 </div>
@@ -191,14 +210,14 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
       <div style="font-size:11px;color:var(--mut);letter-spacing:1px;text-transform:uppercase">CRID NUH · Observer</div>
       <div style="font-size:20px;font-weight:900;margin-top:2px">📊 Survey Progress</div>
     </div>
-    <button onclick="doLogout()" style="padding:8px 14px;background:transparent;border:1px solid var(--bdr);border-radius:8px;color:var(--mut);font-size:12px;cursor:pointer">Logout</button>
+    <button onclick="doLogout()" class="btn-line" style="padding:8px 14px;font-size:12px">Logout</button>
   </div>
 
   <!-- Summary Cards -->
   <div id="dcrim-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px"></div>
 
   <!-- Overall Progress Bar -->
-  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+  <div class="card">
     <div style="display:flex;justify-content:space-between;margin-bottom:8px">
       <span style="font-weight:700;font-size:13px">Overall Completion</span>
       <span id="dcrim-pct" style="font-weight:900;color:var(--grn);font-size:15px">0%</span>
@@ -210,20 +229,20 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   </div>
 
   <!-- Daily Trend -->
-  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+  <div class="card">
     <div style="font-weight:700;font-size:13px;margin-bottom:12px">📈 Daily Surveys (Last 14 Days)</div>
     <div id="dcrim-trend" style="display:flex;align-items:flex-end;gap:4px;height:60px"></div>
     <div id="dcrim-trend-labels" style="display:flex;gap:4px;margin-top:4px"></div>
   </div>
 
   <!-- Block-wise -->
-  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+  <div class="card">
     <div style="font-weight:700;font-size:13px;margin-bottom:12px">🏘️ Block-wise Progress</div>
     <div id="dcrim-blocks"></div>
   </div>
 
   <!-- ZCRIM-wise -->
-  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:80px">
+  <div class="card" style="margin-bottom:80px">
     <div style="font-weight:700;font-size:13px;margin-bottom:12px">👤 ZCRIM-wise Breakdown</div>
     <div id="dcrim-board"></div>
   </div>
@@ -343,6 +362,16 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   </div>
 </div>
 
+<!-- ═══ VILLAGE COMPLETE ═══ -->
+<div id="screen-done" style="display:none;min-height:80vh;align-items:center;justify-content:center;text-align:center;padding:20px">
+  <div style="padding-top:25vh">
+    <div style="font-size:56px">🎉</div>
+    <div style="font-size:20px;font-weight:700;color:var(--grn);margin-top:12px">All Families Verified!</div>
+    <div style="color:var(--mut);margin-top:8px">Great work, <span id="done-name"></span>!</div>
+    <button onclick="switchVillage()" class="btn btn-blue" style="margin:20px auto 0;width:auto;padding:12px 24px">← Switch Village</button>
+  </div>
+</div>
+
 <!-- ═══ CAMERA ═══ -->
 <div id="camera-wrap" style="display:none">
   <video id="cam-video" autoplay playsinline muted
@@ -376,10 +405,17 @@ var APPS_SCRIPT_URL = (function(){var _k=42,_d=[66,94,94,90,89,16,5,5,89,73,88,6
 function gsr(fnName, args, onSuccess, onFailure) {
   var isLarge = fnName === 'uploadPhoto' || fnName === 'submitSurvey';
   var xhr = new XMLHttpRequest();
+  // A dropped connection fires both onreadystatechange and onerror — report it only once
+  var settled = false;
+  function fail(msg){ if(settled) return; settled = true; if (onFailure) onFailure({message: msg}); }
+  xhr.timeout = isLarge ? 90000 : 30000;
+  xhr.ontimeout = function(){ fail('Request timed out. Check internet connection.'); };
 
   xhr.onreadystatechange = function() {
-    if (xhr.readyState !== 4) return;
-    if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
+    if (xhr.readyState !== 4 || settled) return;
+    if (xhr.status === 0) return; // network error / timeout — handled by onerror / ontimeout
+    if (xhr.status >= 200 && xhr.status < 300) {
+      settled = true;
       try {
         var res = JSON.parse(xhr.responseText);
         if (onSuccess) onSuccess(res);
@@ -390,16 +426,11 @@ function gsr(fnName, args, onSuccess, onFailure) {
         if (onFailure) onFailure({message: 'Server error. Please try again.'});
       }
     } else {
-      var err = {message: 'HTTP ' + xhr.status + ': ' + xhr.statusText};
-      if (onFailure) onFailure(err);
-      else console.error(fnName, err);
+      fail('HTTP ' + xhr.status + ': ' + xhr.statusText);
     }
   };
 
-  xhr.onerror = function() {
-    var err = {message: 'Network error. Check internet connection.'};
-    if (onFailure) onFailure(err);
-  };
+  xhr.onerror = function() { fail('Network error. Check internet connection.'); };
 
   if (isLarge) {
     // POST for photos/large data
@@ -490,9 +521,10 @@ function validMobile(m) { return /^[6-9]\d{9}$/.test(String(m||'').trim()); }
 var state = {
   zcrim:null, token:null, sessionExpiry:null,
   family:null, familyRowIndex:null,
-  gps:null, memberCount:6,
+  gps:null, memberCount:2,
   photos:{front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null},
-  selfie:null, cameraTarget:null, cameraStream:null,
+  selfie:null, selfieMeta:null, uploads:{}, submitWaiting:null,
+  cameraTarget:null, cameraStream:null,
   selectedWard:null, allWards:[],
   sessionTimerInterval:null
 };
@@ -508,6 +540,16 @@ var INCOME_RANGES = ['0 - 5,000','5,000 - 10,000','10,000 - 25,000','25,000 - 50
   '50,000 - 75,000','75,000 - 1,00,000','1,00,000 - 1,40,000','1,40,000 - 1,80,000',
   '1,80,000 - 3,00,000','3,00,000 - 5,00,000','5,00,000 - 6,00,000','6,00,000 - 7,00,000',
   '7,00,000 - 8,00,000','8,00,000 - 9,00,000','9,00,000 - 10,00,000','Above 10,00,000'];
+
+function photoLabel(k){ return k==='selfie' ? 'Surveyor Selfie' : (PHOTO_LABELS[PHOTO_KEYS.indexOf(k)] || k); }
+function emptyPhotos(){ return {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null}; }
+// dd/mm/yyyy hh:mm:ss AM — the format the backend sheets already use
+function fmtTs(n){
+  n = n || new Date();
+  var h=n.getHours(), ap=h>=12?'PM':'AM'; h=h%12; if(h===0)h=12;
+  function p2(x){ return String(x).padStart(2,'0'); }
+  return p2(n.getDate())+'/'+p2(n.getMonth()+1)+'/'+n.getFullYear()+' '+p2(h)+':'+p2(n.getMinutes())+':'+p2(n.getSeconds())+' '+ap;
+}
 
 // ── GPS ──────────────────────────────────────
 function getGPS(cb) {
@@ -587,9 +629,7 @@ function togglePwd() {
 }
 
 // ── LOGIN ─────────────────────────────────────
-// ── DEVICE FINGERPRINT ───────────────────────────────────────────
-// Builds a stable hash from hardware/browser properties
-// Cannot be spoofed easily without developer tools knowledge
+// Desktop check: a phone must pass 2 of 3 signals (touch, mobile user agent, narrow screen)
 function isMobileDevice() {
   var ua  = navigator.userAgent.toLowerCase();
   var plt = (navigator.platform || '').toLowerCase();
@@ -641,19 +681,19 @@ function doLogin() {
           token:res.token, zcrimName:res.zcrim.name, mobile:res.zcrim.mobile,
           lat:c.lat, lng:c.lng,
           deviceInfo:navigator.platform+' | '+screen.width+'x'+screen.height,
-          userAgent:navigator.userAgent, timestamp:(function(){var n=new Date(),d=String(n.getDate()).padStart(2,'0'),m=String(n.getMonth()+1).padStart(2,'0'),h=n.getHours(),mi=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0'),ap=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;return d+'/'+m+'/'+n.getFullYear()+' '+String(h).padStart(2,'0')+':'+mi+':'+s+' '+ap;})()
+          userAgent:navigator.userAgent, timestamp:fmtTs()
         });
       });
       startSessionTimer();
       state.isDcrim = res.zcrim && res.zcrim.dcrim ? true : false;
       if (state.isDcrim) { loadDcrimProgress(); return; }
       loadVillagePicker();
+      offerDraftRestore();
     })
     .withFailureHandler(function(e){btn.innerHTML='Login →';btn.disabled=false;showErr('login-err', esc(e.message));})
     .loginZcrim(mob, pwd, navigator.platform + " | " + screen.width + "x" + screen.height);
 }
 
-// ── SESSION TIMER + SERVER HEARTBEAT ─────────
 // ── IDLE TIMEOUT — 15 minutes of no activity ─────────────────────
 var IDLE_LIMIT_SEC  = 15 * 60;  // 15 minutes
 var IDLE_WARN_SEC   = 60;       // warn 1 minute before logout
@@ -673,8 +713,26 @@ function resetIdleTimer() {
   document.addEventListener(ev, resetIdleTimer, { passive:true });
 });
 
+function showIdleWarning(secs) {
+  var warn = document.getElementById('idle-warning');
+  if (!warn) {
+    warn = document.createElement('div');
+    warn.id = 'idle-warning';
+    warn.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#92400e;color:#fef3c7;' +
+      'padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:9999;text-align:center;' +
+      'box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:320px;width:90%';
+    warn.innerHTML = '💤 Still there? Logging out in <b id="idle-secs"></b> due to inactivity.<br>' +
+      '<button onclick="resetIdleTimer()" style="margin-top:8px;padding:6px 16px;background:#fef3c7;color:#92400e;' +
+      'border:none;border-radius:6px;font-weight:800;font-size:12px;cursor:pointer">Yes, keep me logged in</button>';
+    document.body.appendChild(warn);
+  }
+  warn.style.display = 'block';
+  document.getElementById('idle-secs').textContent = secs + 's';   // only the number changes, so the button stays tappable
+}
+
 // ── SESSION TIMER + IDLE CHECKER ─────────────────────────────────
 var heartbeatTick = 0;
+var HEARTBEAT_SEC = 300;
 function startSessionTimer() {
   clearInterval(state.sessionTimerInterval);
   heartbeatTick  = 0;
@@ -698,37 +756,7 @@ function startSessionTimer() {
         return;
       }
 
-      if (idleLeft <= IDLE_WARN_SEC && !idleWarned) {
-        // Show idle warning banner
-        idleWarned = true;
-        var warn = document.getElementById('idle-warning');
-        if (!warn) {
-          warn = document.createElement('div');
-          warn.id = 'idle-warning';
-          warn.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
-            'background:#92400e;color:#fef3c7;padding:12px 20px;border-radius:12px;' +
-            'font-size:13px;font-weight:700;z-index:9999;text-align:center;' +
-            'box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:320px;width:90%';
-          document.body.appendChild(warn);
-        }
-        warn.style.display = 'block';
-        warn.innerHTML = '💤 Still there? You will be logged out in ' + IDLE_WARN_SEC +
-          ' seconds due to inactivity.<br>' +
-          '<button onclick="resetIdleTimer()" style="margin-top:8px;padding:6px 16px;' +
-          'background:#fef3c7;color:#92400e;border:none;border-radius:6px;' +
-          'font-weight:800;font-size:12px;cursor:pointer">Yes, keep me logged in</button>';
-      }
-
-      // Update idle countdown in warning banner
-      if (idleWarned && idleLeft <= IDLE_WARN_SEC) {
-        var warn = document.getElementById('idle-warning');
-        if (warn && warn.style.display !== 'none') {
-          warn.innerHTML = '💤 Still there? Logging out in <b>' + idleLeft + 's</b> due to inactivity.<br>' +
-            '<button onclick="resetIdleTimer()" style="margin-top:8px;padding:6px 16px;' +
-            'background:#fef3c7;color:#92400e;border:none;border-radius:6px;' +
-            'font-weight:800;font-size:12px;cursor:pointer">Yes, keep me logged in</button>';
-        }
-      }
+      if (idleLeft <= IDLE_WARN_SEC) { idleWarned = true; showIdleWarning(idleLeft); }
     }
     // ────────────────────────────────────────────────────────────
 
@@ -748,9 +776,10 @@ function startSessionTimer() {
     }
     if (left === 300) toast('⚠️ Session expires in 5 minutes!', 'org');
 
-    // Server heartbeat every 60s — detect duplicate login from another device
+    // Server heartbeat every 5 min — detect duplicate login from another device.
+    // (Every upload and submit also carries the token, so the server rejects a dead session there too.)
     heartbeatTick++;
-    if (heartbeatTick % 60 === 0 && state.token) {
+    if (heartbeatTick % HEARTBEAT_SEC === 0 && state.token) {
       google.script.run
         .withSuccessHandler(function(res) {
           // Log out only when the server says the session really ended (relogin:true).
@@ -790,79 +819,51 @@ function loadDcrimProgress() {
 
 function renderDcrimProgress(d) {
   var s = d.summary;
-
-  // Summary cards
   var cards = [
-    { icon:'\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66', label:'Total Families', val:s.total,      color:'var(--acc)' },
-    { icon:'\u2705',                                                                        label:'Surveyed',       val:s.done,       color:'var(--grn)' },
-    { icon:'\u23F3',                                                                        label:'Pending',        val:s.pending,    color:'#f59e0b'    },
-    { icon:'\uD83D\uDCC5',                                                                 label:'Today',          val:s.todayCount, color:'#a78bfa'    }
+    ['👨‍👩‍👧‍👦', 'Total Families', s.total,      'var(--acc)'],
+    ['✅',       'Surveyed',       s.done,       'var(--grn)'],
+    ['⏳',       'Pending',        s.pending,    'var(--org)'],
+    ['📅',       'Today',          s.todayCount, '#a78bfa']
   ];
   document.getElementById('dcrim-summary').innerHTML = cards.map(function(c){
-    return '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:14px;text-align:center">' +
-      '<div style="font-size:24px">' + c.icon + '</div>' +
-      '<div style="font-size:22px;font-weight:900;color:' + c.color + '">' + esc(String(c.val)) + '</div>' +
-      '<div style="font-size:11px;color:var(--mut);margin-top:2px">' + c.label + '</div>' +
-    '</div>';
+    return '<div class="card" style="margin:0;text-align:center"><div style="font-size:24px">' + c[0] + '</div>' +
+      '<div style="font-size:22px;font-weight:900;color:' + c[3] + '">' + esc(c[2]) + '</div>' +
+      '<div class="muted" style="font-size:11px;margin-top:2px">' + c[1] + '</div></div>';
   }).join('');
 
-  // Progress bar
   document.getElementById('dcrim-pct').textContent  = s.pct + '%';
   document.getElementById('dcrim-bar').style.width  = s.pct + '%';
-  document.getElementById('dcrim-updated').textContent = 'Updated: ' + esc(d.updated);
+  document.getElementById('dcrim-updated').textContent = 'Updated: ' + d.updated;
 
-  // Daily trend bars
+  // Daily trend bars (today in green)
   var maxT = Math.max.apply(null, d.trend.map(function(t){ return t.count; })) || 1;
   document.getElementById('dcrim-trend').innerHTML = d.trend.map(function(t, i){
-    var h = Math.max(4, Math.round(t.count / maxT * 56));
-    var isToday = i === d.trend.length - 1;
+    var today = i === d.trend.length - 1;
     return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">' +
-      '<div style="font-size:9px;color:var(--mut)">' + (t.count || '') + '</div>' +
-      '<div style="width:100%;height:' + h + 'px;border-radius:3px 3px 0 0;background:' +
-        (isToday ? 'var(--grn)' : 'var(--acc)') + ';opacity:' + (isToday ? '1' : '0.6') + '"></div>' +
-    '</div>';
+      '<div class="muted" style="font-size:9px">' + (t.count || '') + '</div>' +
+      '<div style="width:100%;height:' + Math.max(4, Math.round(t.count / maxT * 56)) + 'px;border-radius:3px 3px 0 0;background:' +
+        (today ? 'var(--grn)' : 'var(--acc)') + ';opacity:' + (today ? 1 : 0.6) + '"></div></div>';
   }).join('');
   document.getElementById('dcrim-trend-labels').innerHTML = d.trend.map(function(t){
-    return '<div style="flex:1;font-size:8px;color:var(--mut);text-align:center">' + t.date + '</div>';
+    return '<div class="muted" style="flex:1;font-size:8px;text-align:center">' + esc(t.date) + '</div>';
   }).join('');
 
-  // Block-wise progress bars
   document.getElementById('dcrim-blocks').innerHTML = d.blocks.map(function(b){
     var pct = b.total > 0 ? Math.round(b.done / b.total * 100) : 0;
-    return '<div style="margin-bottom:12px">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
-        '<span style="font-size:12px;font-weight:600">' + esc(b.block) + '</span>' +
-        '<span style="font-size:11px;color:var(--mut)">' + b.done + '/' + b.total +
-          ' <span style="color:var(--grn);font-weight:700">' + pct + '%</span></span>' +
-      '</div>' +
-      '<div style="background:#1e293b;border-radius:99px;height:7px;overflow:hidden">' +
-        '<div style="height:100%;border-radius:99px;background:var(--acc);width:' + pct + '%"></div>' +
-      '</div>' +
-    '</div>';
+    return '<div style="margin-bottom:12px"><div class="row" style="margin-bottom:4px">' +
+      '<span style="font-size:12px;font-weight:600">' + esc(b.block) + '</span>' +
+      '<span class="muted" style="font-size:11px">' + b.done + '/' + b.total + ' <b style="color:var(--grn)">' + pct + '%</b></span></div>' +
+      '<div class="bar" style="height:7px"><div style="width:' + pct + '%"></div></div></div>';
   }).join('');
 
-  // ZCRIM-wise table
   document.getElementById('dcrim-board').innerHTML =
-    '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;margin-bottom:6px;padding:0 4px">' +
-      '<div style="font-size:10px;color:var(--mut);font-weight:700">ZCRIM</div>' +
-      '<div style="font-size:10px;color:var(--mut);font-weight:700;text-align:center">Total</div>' +
-      '<div style="font-size:10px;color:var(--grn);font-weight:700;text-align:center">Done</div>' +
-      '<div style="font-size:10px;color:#f59e0b;font-weight:700;text-align:center">Pending</div>' +
-      '<div style="font-size:10px;color:var(--mut);font-weight:700;text-align:center">%</div>' +
-    '</div>' +
-    d.board.map(function(z, i){
-      var bg  = i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent';
-      var clr = z.pct >= 75 ? 'var(--grn)' : z.pct >= 40 ? '#f59e0b' : 'var(--red)';
-      return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;padding:8px 4px;border-radius:6px;background:' + bg + '">' +
-        '<div>' +
-          '<div style="font-size:12px;font-weight:700">' + esc(z.name) + '</div>' +
-          '<div style="font-size:10px;color:var(--mut)">' + esc(z.block) + '</div>' +
-        '</div>' +
-        '<div style="font-size:13px;font-weight:700;text-align:center">'                                          + z.total   + '</div>' +
-        '<div style="font-size:13px;font-weight:700;text-align:center;color:var(--grn)">'                         + z.done    + '</div>' +
-        '<div style="font-size:13px;font-weight:700;text-align:center;color:#f59e0b">'                            + z.pending + '</div>' +
-        '<div style="font-size:13px;font-weight:700;text-align:center;color:' + clr + '">' + z.pct + '%</div>' +
-      '</div>';
+    '<div class="zgrid head"><div>ZCRIM</div><div>Total</div><div style="color:var(--grn)">Done</div><div style="color:var(--org)">Pending</div><div>%</div></div>' +
+    d.board.map(function(z){
+      var clr = z.pct >= 75 ? 'var(--grn)' : z.pct >= 40 ? 'var(--org)' : 'var(--red)';
+      return '<div class="zgrid"><div><div style="font-size:12px;font-weight:700">' + esc(z.name) + '</div>' +
+        '<div class="muted" style="font-size:10px">' + esc(z.block) + '</div></div>' +
+        '<div>' + z.total + '</div><div style="color:var(--grn)">' + z.done + '</div>' +
+        '<div style="color:var(--org)">' + z.pending + '</div><div style="color:' + clr + '">' + z.pct + '%</div></div>';
     }).join('');
 }
 
@@ -895,57 +896,50 @@ function loadVillagePicker() {
     .getWardsForZcrim(state.token);
 }
 function renderVillageStats(wards, totalResurvey){
-  var tf=wards.reduce(function(s,w){return s+w.total;},0);
-  var df=wards.reduce(function(s,w){return s+w.done;},0);
-  var pf=wards.reduce(function(s,w){return s+w.pending;},0);
-  var rf=totalResurvey||wards.reduce(function(s,w){return s+(w.resurvey||0);},0);
+  function sum(f){ return wards.reduce(function(s,w){ return s+(w[f]||0); },0); }
+  var df=sum('done'), pf=sum('pending'), rf=totalResurvey||sum('resurvey');
 
-  // Show/hide top resurvey alert
+  // Re-survey alert at the top of the village screen
   var existing = document.getElementById('village-resurvey-alert');
   if (existing) existing.remove();
   if (rf > 0) {
     var alert = document.createElement('div');
-    alert.id = 'village-resurvey-alert';
-    alert.style.cssText = 'background:#7f1d1d;border:2px solid #ef4444;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px';
+    alert.id = 'village-resurvey-alert'; alert.className = 'alert-red';
+    alert.style.cssText = 'margin-bottom:14px;display:flex;align-items:center;gap:12px';
     alert.innerHTML = '<div style="font-size:28px">🔁</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fca5a5">'+rf+' RE-SURVEY'+(rf>1?'S':'')+' PENDING</div>'
-      + '<div style="font-size:12px;color:#fca5a5;margin-top:2px">Admin has flagged families for re-survey. These will appear first in your queue.</div></div>';
+      + '<div><div style="font-size:14px;font-weight:800">'+rf+' RE-SURVEY'+(rf>1?'S':'')+' PENDING</div>'
+      + '<div style="font-size:12px;margin-top:2px">Admin has flagged families for re-survey. These will appear first in your queue.</div></div>';
     var villageScreen = document.getElementById('screen-village').querySelector('div');
     if (villageScreen) villageScreen.insertBefore(alert, villageScreen.firstChild);
   }
-
-  document.getElementById('village-stats-bar').innerHTML=
-    '<div style="flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700">'+wards.length+'</div><div style="font-size:10px;color:var(--mut)">VILLAGES</div></div>'+
-    (rf>0?'<div style="flex:1;background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:#fca5a5">'+rf+'</div><div style="font-size:10px;color:#fca5a5">RE-SURVEY</div></div>':'')+
-    '<div style="flex:1;background:var(--card);border:1px solid #f59e0b44;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--org)">'+pf+'</div><div style="font-size:10px;color:var(--mut)">PENDING</div></div>'+
-    '<div style="flex:1;background:var(--card);border:1px solid #22c55e44;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--grn)">'+df+'</div><div style="font-size:10px;color:var(--mut)">DONE</div></div>';
+  function stat(n, label, style){ return '<div class="stat"'+(style?' style="'+style+'"':'')+'><b>'+n+'</b><span>'+label+'</span></div>'; }
+  document.getElementById('village-stats-bar').innerHTML =
+    stat(wards.length, 'VILLAGES') +
+    (rf>0 ? stat(rf, 'RE-SURVEY', 'background:#7f1d1d;border-color:var(--red);color:#fca5a5') : '') +
+    stat('<span style="color:var(--org);font-size:18px">'+pf+'</span>', 'PENDING', 'border-color:#f59e0b44') +
+    stat('<span style="color:var(--grn);font-size:18px">'+df+'</span>', 'DONE', 'border-color:#22c55e44');
 }
 function renderVillageList(wards){
   var list=document.getElementById('village-list');
-  if(!wards||!wards.length){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">No villages found.</div>';return;}
+  if(!wards||!wards.length){list.innerHTML='<div class="loading">No villages found.</div>';return;}
   list.innerHTML=wards.map(function(w){
-    var pct=w.total>0?Math.round(w.done/w.total*100):0, done=w.pending===0;
-    var bar=done?'#22c55e':'#3b82f6', bc=done?'#22c55e44':'var(--bdr)';
-    return '<div onclick="selectVillage(\''+w.ward.replace(/'/g,"\\'")+'\')\" style="background:var(--card);border:1px solid '+bc+';border-radius:10px;padding:14px;cursor:pointer;margin-bottom:8px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-        '<div style="font-weight:700">'+w.ward+'</div>'+
-        '<div style="display:flex;gap:6px;align-items:center">'+
-        (w.resurvey>0?'<span style="background:#7f1d1d;color:#fca5a5;border:1px solid #ef4444;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700">'+w.resurvey+' re-survey</span>':'')+
-        (done?'<span class="badge badge-grn">Complete</span>':'<span style="font-size:12px;color:var(--mut)">'+w.done+'/'+w.total+'</span>')+
-        '</div>'+
-      '</div>'+
-      '<div style="background:#334155;border-radius:4px;height:4px"><div style="background:'+bar+';width:'+pct+'%;height:100%;border-radius:4px"></div></div>'+
-      '<div style="display:flex;justify-content:space-between;margin-top:6px">'+
-        '<span style="font-size:11px;color:var(--mut)">'+w.pending+' pending · '+w.done+' done</span>'+
-        '<span style="font-size:11px;color:'+bar+'">'+pct+'%</span>'+
-      '</div></div>';
+    var pct=w.total>0?Math.round(w.done/w.total*100):0, done=w.pending===0, col=done?'var(--grn)':'var(--acc)';
+    return '<div class="card" data-ward="'+esc(w.ward)+'" onclick="selectVillage(this.dataset.ward)" style="padding:14px;cursor:pointer;margin-bottom:8px'+(done?';border-color:#22c55e44':'')+'">'+
+      '<div class="row" style="margin-bottom:8px"><b>'+esc(w.ward)+'</b><div style="display:flex;gap:6px;align-items:center">'+
+        (w.resurvey>0?'<span class="pill-red">'+w.resurvey+' re-survey</span>':'')+
+        (done?'<span class="badge badge-grn">Complete</span>':'<span class="muted" style="font-size:12px">'+w.done+'/'+w.total+'</span>')+
+      '</div></div>'+
+      '<div class="bar"><div style="background:'+col+';width:'+pct+'%"></div></div>'+
+      '<div class="row" style="margin-top:6px;font-size:11px"><span class="muted">'+w.pending+' pending · '+w.done+' done</span>'+
+        '<span style="color:'+col+'">'+pct+'%</span></div></div>';
   }).join('');
 }
 function filterVillages(){
   var q=document.getElementById('village-search').value.toLowerCase();
   renderVillageList(state.allWards.filter(function(w){return w.ward.toLowerCase().indexOf(q)>=0;}));
 }
-function selectVillage(ward){
+function selectVillage(ward){ enterSurveyScreen(ward); loadNextFamily(); }
+function enterSurveyScreen(ward){
   state.selectedWard=ward;
   document.getElementById('active-village-name').textContent=ward;
   document.getElementById('hdr-name').textContent='👤 '+state.zcrim.name;
@@ -955,7 +949,7 @@ function selectVillage(ward){
   var g=state.gps&&state.gps.lat!=='N/A'?'📍 '+state.gps.lat+', '+state.gps.lng:'📍 GPS unavailable';
   document.getElementById('hdr-gps').textContent=g;
   document.getElementById('cam-gps-label').textContent=g;
-  showScreen('screen-survey'); loadNextFamily();
+  showScreen('screen-survey');
 }
 function showTab(tabId){
   document.getElementById('village-tab').style.display     = tabId==='village-tab'     ? 'block':'none';
@@ -968,30 +962,24 @@ function showTab(tabId){
 }
 
 function loadLeaderboard(){
+  var el = document.getElementById('leaderboard-list');
   google.script.run
     .withSuccessHandler(function(res){
-      if(!res.ok){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px;text-align:center">'+esc(res.msg)+'</div>'; return; }
-      var html='<div style="font-size:11px;color:var(--mut);margin-bottom:10px;text-align:center">Updated live from Google Sheets</div>';
+      if(!res.ok){ el.innerHTML='<div class="loading" style="color:var(--red)">'+esc(res.msg)+'</div>'; return; }
       var medals=['🥇','🥈','🥉'];
-      res.board.forEach(function(z,i){
-        var pct = z.total>0 ? Math.round(z.done/z.total*100) : 0;
-        var col = pct===100?'var(--grn)':pct>50?'var(--acc)':'var(--org)';
-        html += '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:8px">'+
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-            '<div style="font-weight:700;font-size:14px">'+(medals[i]||'#'+(i+1))+' '+esc(z.name)+'</div>'+
-            '<div style="font-size:12px;color:'+col+';font-weight:700">'+pct+'%</div>'+
-          '</div>'+
-          '<div style="background:#334155;border-radius:4px;height:6px;margin-bottom:6px">'+
-            '<div style="background:'+col+';width:'+pct+'%;height:100%;border-radius:4px;transition:width .4s"></div>'+
-          '</div>'+
-          '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)">'+
-            '<span>Block: '+esc(z.block)+'</span>'+
-            '<span>✅ '+z.done+' / '+z.total+' &nbsp; ⏳ '+z.pending+'</span>'+
-          '</div></div>';
-      });
-      document.getElementById('leaderboard-list').innerHTML = html;
+      el.innerHTML = '<div class="muted" style="font-size:11px;margin-bottom:10px;text-align:center">Updated live from Google Sheets</div>' +
+        res.board.map(function(z,i){
+          var pct = z.total>0 ? Math.round(z.done/z.total*100) : 0;
+          var col = pct===100?'var(--grn)':pct>50?'var(--acc)':'var(--org)';
+          return '<div class="card" style="padding:14px;margin-bottom:8px">'+
+            '<div class="row" style="margin-bottom:8px"><b>'+(medals[i]||'#'+(i+1))+' '+esc(z.name)+'</b>'+
+              '<b style="font-size:12px;color:'+col+'">'+pct+'%</b></div>'+
+            '<div class="bar" style="height:6px;margin-bottom:6px"><div style="background:'+col+';width:'+pct+'%"></div></div>'+
+            '<div class="row muted" style="font-size:11px"><span>Block: '+esc(z.block)+'</span>'+
+              '<span>✅ '+z.done+' / '+z.total+' &nbsp; ⏳ '+z.pending+'</span></div></div>';
+        }).join('');
     })
-    .withFailureHandler(function(e){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px">Error: '+esc(e.message)+'</div>'; })
+    .withFailureHandler(function(e){ el.innerHTML='<div class="loading" style="color:var(--red)">Error: '+esc(e.message)+'</div>'; })
     .getLeaderboard(state.token);
 }
 
@@ -1013,10 +1001,8 @@ function skipFamily(){
   var nmSnap  = state.family.name;
 
   // Clear state immediately
-  state.family         = null;
-  state.familyRowIndex = null;
-  state.selfie         = null;
-  state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+  clearDraft();
+  clearSurveyState();
 
   showLoadingOverlay('Marking absent...');
 
@@ -1078,42 +1064,54 @@ function loadNextFamily(){
       hideLoadingOverlay();
       if(!res.ok){
         if(res.relogin){handleSessionError(res);return;}
-        document.getElementById('screen-survey').innerHTML=
-          '<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px">'+
-          '<div><div style="font-size:56px">🎉</div><div style="font-size:20px;font-weight:700;color:#22c55e;margin-top:12px">All Families Verified!</div>'+
-          '<div style="color:#94a3b8;margin-top:8px">Great work, '+state.zcrim.name+'!</div>'+
-          '<button onclick="switchVillage()" class="btn btn-blue" style="margin-top:20px;width:auto;padding:12px 24px">← Switch Village</button></div></div>';
+        // Separate screen — the survey screen's DOM must stay intact for the next village
+        document.getElementById('done-name').textContent = state.zcrim.name;
+        showScreen('screen-done');
         return;
       }
-      // Update state with new family
-      state.family         = res.family;
-      state.familyRowIndex = res.rowIndex;
-      state.isResurvey     = res.isResurvey || false;
-      state.surveyTag      = res.isResurvey ? ("Resurvey-" + new Date().toISOString().slice(0,10)) : "Original";
-      state.selfie         = null;
-      state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
-      state.surveyStartTime = Date.now(); // ⏱ start timer
-
-      // Reset all tabs and go back to tab 0
-      resetTabLocks();
-      renderFamilyInfo();
-      renderMembersTab();
-      renderPhotosGrid();
-      resetForm();
-      switchTab(0);
-      startTimerDisplay(); // ⏱ start countdown display
-      window.scrollTo(0, 0);
-      // Enable skip button now that family is loaded
-      var skipBtn = document.getElementById('btn-skip');
-      if(skipBtn){ skipBtn.disabled=false; skipBtn.style.opacity='1'; }
-
-      // Update progress counter
-      google.script.run
-        .withSuccessHandler(function(r){ if(r.ok) document.getElementById('hdr-remaining').textContent = r.remaining+' remaining'; })
-        .getFamiliesForZcrim(state.token, state.selectedWard);
+      setupFamily({
+        family: res.family, rowIndex: res.rowIndex, isResurvey: res.isResurvey || false,
+        surveyTag: res.isResurvey ? ("Resurvey-" + new Date().toISOString().slice(0,10)) : "Original",
+        start: Date.now()
+      });
+      prefillHead();
+      saveDraft();
     })
     .withFailureHandler(function(e){ hideLoadingOverlay(); toast('Error: '+e.message,'red'); })
     .getNextFamily(state.token, state.selectedWard);
+}
+
+// Fresh, empty form for one family (used for a newly loaded family and for a restored draft)
+function setupFamily(d){
+  clearSurveyState();
+  state.family          = d.family;
+  state.familyRowIndex  = d.rowIndex;
+  state.isResurvey      = d.isResurvey;
+  state.surveyTag       = d.surveyTag;
+  state.surveyStartTime = d.start; // ⏱ start timer
+
+  resetTabLocks();
+  renderFamilyInfo();
+  renderMembersTab(d.memberCount);
+  renderPhotosGrid();
+  resetForm();
+  switchTab(0);
+  startTimerDisplay();
+  window.scrollTo(0, 0);
+  var skipBtn = document.getElementById('btn-skip');
+  if(skipBtn){ skipBtn.disabled=false; skipBtn.style.opacity='1'; }
+
+  // Update progress counter
+  google.script.run
+    .withSuccessHandler(function(r){ if(r.ok) document.getElementById('hdr-remaining').textContent = r.remaining+' remaining'; })
+    .getFamiliesForZcrim(state.token, state.selectedWard);
+}
+function clearSurveyState(){
+  state.family = null; state.familyRowIndex = null;
+  state.selfie = null; state.selfieMeta = null;
+  state.photos = emptyPhotos();
+  state.uploads = {};          // in-flight uploads for the old family are ignored when they return
+  state.submitWaiting = null;
 }
 
 function showLoadingOverlay(msg) {
@@ -1139,9 +1137,10 @@ function renderFamilyInfo(){
   if (state.isResurvey) {
     var banner = document.createElement('div');
     banner.id = 'resurvey-banner';
-    banner.style.cssText = 'background:#7f1d1d;border:2px solid #ef4444;border-radius:10px;padding:12px 16px;margin:0 0 14px;text-align:center';
-    banner.innerHTML = '<div style="font-size:16px;font-weight:900;color:#fca5a5;letter-spacing:1px">RE-SURVEY REQUIRED</div>'
-      + '<div style="font-size:12px;color:#fca5a5;margin-top:4px">This family has been flagged by admin. Please re-photograph and re-submit all fields carefully.</div>';
+    banner.className = 'alert-red';
+    banner.style.cssText = 'margin:0 0 14px;text-align:center';
+    banner.innerHTML = '<div style="font-size:16px;font-weight:900;letter-spacing:1px">RE-SURVEY REQUIRED</div>'
+      + '<div style="font-size:12px;margin-top:4px">This family has been flagged by admin. Please re-photograph and re-submit all fields carefully.</div>';
     var tab0 = document.getElementById('tab0');
     if (tab0) tab0.insertBefore(banner, tab0.firstChild);
   }
@@ -1163,7 +1162,13 @@ function renderFamilyInfo(){
 }
 
 // ── MEMBERS ───────────────────────────────────
-function renderMembersTab(){state.memberCount=6;document.getElementById('members-list').innerHTML='';for(var i=0;i<6;i++)appendMemberCard(i);}
+function renderMembersTab(n){n=Math.max(2,n||0);state.memberCount=n;document.getElementById('members-list').innerHTML='';for(var i=0;i<n;i++)appendMemberCard(i);}
+// Head of family is already in the PPP record — fill member 1 so the surveyor only confirms it
+function prefillHead(){
+  var f=state.family; if(!f) return;
+  setVal('m0-name', f.name); setVal('m0-age', f.age); setVal('m0-rem', 'Head of family');
+}
+function setVal(id,v){var e=document.getElementById(id);if(e&&v!==undefined&&v!==null)e.value=v;}
 function addMember(){appendMemberCard(state.memberCount);state.memberCount++;}
 function appendMemberCard(i){
   var div=document.createElement('div');div.className='member-card';div.id='mc-'+i;
@@ -1196,7 +1201,7 @@ function renderPhotosGrid(){
     el.addEventListener('dragover',  function(e){ e.preventDefault(); e.stopPropagation(); });
     el.addEventListener('drop',      function(e){ e.preventDefault(); e.stopPropagation(); toast('Use camera button — drag & drop not allowed','red'); });
   });
-  state.photos={front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+  state.photos=emptyPhotos();
   // 5 photos: 2+2+1 layout
   var html2 = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
   PHOTO_KEYS.forEach(function(k,i){
@@ -1222,6 +1227,10 @@ function updatePhotosStatus(){
   var optDone  = PHOTO_OPTIONAL.filter(function(k){ return state.photos[k]; }).length;
   var msg = mandDone+'/'+PHOTO_MANDATORY.length+' mandatory';
   if (optDone > 0) msg += ' &middot; '+optDone+'/'+PHOTO_OPTIONAL.length+' optional';
+  var up = photoKeysTaken().map(function(k){ return (state.uploads[k]||{}).status; });
+  var nUp = up.filter(function(x){ return x==='uploading'; }).length, nFail = up.filter(function(x){ return x==='failed'; }).length;
+  if (nUp)   msg += '<br><span style="font-size:11px;color:var(--acc)">⏫ '+nUp+' uploading in background</span>';
+  if (nFail) msg += '<br><span style="font-size:11px;color:var(--red)">⚠️ '+nFail+' upload failed — will retry on Submit</span>';
   document.getElementById('photos-status').innerHTML =
     '<div style="display:flex;justify-content:space-between;align-items:center">'
     + '<div style="color:'+(ok?'#22c55e':'#94a3b8')+'">'+msg+'</div>'
@@ -1233,8 +1242,7 @@ function updatePhotosStatus(){
 // ── CAMERA ────────────────────────────────────
 function openCamera(t){
   state.cameraTarget=t;
-  var labels={selfie:'Surveyor Selfie',front:PHOTO_LABELS[0],kitchen:PHOTO_LABELS[1],familyPhoto:PHOTO_LABELS[2],surroundings:PHOTO_LABELS[3]};
-  document.getElementById('cam-label').textContent=labels[t]||t;
+  document.getElementById('cam-label').textContent=photoLabel(t);
   document.getElementById('cam-error').style.display='none';
   document.getElementById('cam-video').style.display='block';
   document.getElementById('btn-capture').style.display='block';
@@ -1298,68 +1306,27 @@ function openCamera(t){
 }
 
 function showCameraError(target, msg) {
-  var boxId = target==='selfie' ? 'selfie-box' : 'pb-'+target;
-  var box   = document.getElementById(boxId);
+  var box = document.getElementById(target==='selfie' ? 'selfie-box' : 'pb-'+target);
   if (!box) return;
-
-  // Detect device type for specific instructions
-  var isIphone  = /iphone|ipad/i.test(navigator.userAgent);
-  var isAndroid = /android/i.test(navigator.userAgent);
-
-  var steps = '';
-  if (isIphone) {
-    steps =
-      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
-      '<b style="color:#f59e0b">📍 Allow Location:</b><br>' +
-      '1. Open iPhone <b>Settings</b><br>' +
-      '2. Scroll to <b>Safari</b><br>' +
-      '3. Tap <b>Location</b> → Select <b>Allow</b><br><br>' +
-      '<b style="color:#f59e0b">📷 Allow Camera:</b><br>' +
-      '1. Open iPhone <b>Settings</b><br>' +
-      '2. Scroll to <b>Safari</b><br>' +
-      '3. Tap <b>Camera</b> → Select <b>Allow</b><br><br>' +
-      '<b style="color:#22c55e">Then close and reopen this page.</b>' +
-      '</div>';
-  } else if (isAndroid) {
-    steps =
-      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
-      '<b style="color:#f59e0b">📍 Allow Location:</b><br>' +
-      '1. Tap the <b>🔒 lock icon</b> in Chrome address bar<br>' +
-      '2. Tap <b>Permissions</b><br>' +
-      '3. Set <b>Location</b> → <b>Allow</b><br><br>' +
-      '<b style="color:#f59e0b">📷 Allow Camera:</b><br>' +
-      '1. Tap the <b>🔒 lock icon</b> in Chrome address bar<br>' +
-      '2. Tap <b>Permissions</b><br>' +
-      '3. Set <b>Camera</b> → <b>Allow</b><br><br>' +
-      '<b style="color:#22c55e">Then tap the photo box again.</b>' +
-      '</div>';
-  } else {
-    steps =
-      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
-      '<b style="color:#f59e0b">📍 Allow Location + 📷 Camera:</b><br>' +
-      '1. Tap the <b>lock/info icon</b> in your browser address bar<br>' +
-      '2. Set <b>Camera</b> and <b>Location</b> to <b>Allow</b><br>' +
-      '3. Refresh the page and try again.<br>' +
-      '</div>';
-  }
-
+  var ua = navigator.userAgent;
+  var how = /iphone|ipad/i.test(ua)
+    ? ['Open iPhone <b>Settings</b> → <b>Safari</b>', 'Set <b>Location</b> and <b>Camera</b> to <b>Allow</b>', 'Close and reopen this page']
+    : /android/i.test(ua)
+    ? ['Tap the <b>🔒 lock icon</b> in the Chrome address bar', 'Tap <b>Permissions</b>', 'Set <b>Location</b> and <b>Camera</b> to <b>Allow</b>', 'Tap the photo box again']
+    : ['Tap the <b>lock/info icon</b> in the address bar', 'Set <b>Camera</b> and <b>Location</b> to <b>Allow</b>', 'Refresh the page and try again'];
   box.style.borderColor = 'var(--red)';
   box.innerHTML =
     '<div style="padding:14px;text-align:center">' +
     '<div style="font-size:32px;margin-bottom:6px">🚫</div>' +
     '<div style="color:var(--red);font-weight:800;font-size:13px;margin-bottom:4px">Camera / Location Blocked</div>' +
-    '<div style="color:var(--mut);font-size:11px">You must allow Camera and Location to continue.</div>' +
-    steps +
-    '<button onclick="openCamera(\"' + target + '\")" ' +
-      'style="margin-top:14px;width:100%;padding:10px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">' +
-      '🔄 Try Again' +
-    '</button>' +
+    '<div class="muted" style="font-size:11px">You must allow Camera and Location to continue.</div>' +
+    '<ol style="text-align:left;margin:10px 0 0 18px;font-size:11px;line-height:1.8">' +
+      how.map(function(h){ return '<li>'+h+'</li>'; }).join('') + '</ol>' +
+    '<button class="btn btn-blue" onclick="event.stopPropagation();openCamera(\'' + target + '\')" style="margin:14px 0 0;padding:10px;font-size:13px">🔄 Try Again</button>' +
     '</div>';
   box.onclick = null;
   toast('🚫 Allow Camera and Location to take photos', 'red');
 }
-
-// File upload removed — camera only, no fallback upload allowed
 
 function closeCamera(){
   if(state.cameraStream){state.cameraStream.getTracks().forEach(function(t){t.stop();});state.cameraStream=null;}
@@ -1437,33 +1404,39 @@ function checkPhotoQuality(canvas) {
 }
 
 function showQualityWarning(msg, onRetake, onKeep) {
-  // Show overlay warning on camera screen
   var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML =
-    '<div style="background:#1e293b;border:2px solid #ef4444;border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center">'+
-    '<div style="font-size:48px;margin-bottom:12px">⚠️</div>'+
-    '<div style="font-size:17px;font-weight:800;color:#ef4444;margin-bottom:8px">Photo Quality Warning</div>'+
-    '<div style="font-size:14px;color:#94a3b8;margin-bottom:20px">'+msg+'</div>'+
-    '<button id="qw-retake" style="width:100%;padding:14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px">📸 Retake Photo</button>'+
-    '<button id="qw-keep" style="width:100%;padding:12px;background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:10px;font-size:14px;cursor:pointer">Use Anyway</button>'+
-    '</div>';
+  overlay.className = 'modal';
+  overlay.innerHTML = '<div><div style="font-size:48px;margin-bottom:12px">⚠️</div>'+
+    '<div style="font-size:17px;font-weight:800;color:var(--red);margin-bottom:8px">Photo Quality Warning</div>'+
+    '<div class="muted" style="font-size:14px;margin-bottom:20px">'+msg+'</div>'+
+    '<button id="qw-retake" class="btn btn-blue">📸 Retake Photo</button>'+
+    '<button id="qw-keep" class="btn btn-line" style="font-size:14px;padding:12px;width:100%">Use Anyway</button></div>';
   document.body.appendChild(overlay);
-  overlay.querySelector('#qw-retake').onclick = function(){ document.body.removeChild(overlay); onRetake(); };
-  overlay.querySelector('#qw-keep').onclick   = function(){ document.body.removeChild(overlay); onKeep(); };
+  overlay.querySelector('#qw-retake').onclick = function(){ overlay.remove(); onRetake(); };
+  overlay.querySelector('#qw-keep').onclick   = function(){ overlay.remove(); onKeep(); };
+}
+
+// Photo size: longest side 1280 px, JPEG squeezed to ~100 KB (clear enough to verify, half the data)
+var PHOTO_MAX_PX = 1280, PHOTO_MAX_BYTES = 100000;
+function encodePhoto(canvas){
+  var q = 0.72, dataUrl = canvas.toDataURL('image/jpeg', q);
+  while (dataUrl.length * 0.75 > PHOTO_MAX_BYTES && q > 0.35) { q -= 0.07; dataUrl = canvas.toDataURL('image/jpeg', q); }
+  return dataUrl;
 }
 
 function capturePhoto(){
   var v      = document.getElementById('cam-video');
+  var vw = v.videoWidth || 1280, vh = v.videoHeight || 720;
+  var scale = Math.min(1, PHOTO_MAX_PX / Math.max(vw, vh));
   var canvas = document.createElement('canvas');
-  canvas.width  = v.videoWidth  || 1280;
-  canvas.height = v.videoHeight || 720;
+  canvas.width  = Math.round(vw * scale);
+  canvas.height = Math.round(vh * scale);
   var ctx = canvas.getContext('2d');
-  ctx.drawImage(v, 0, 0);
+  ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
 
   var t = state.cameraTarget;
   var g = state.gps || {lat:'N/A', lng:'N/A'};
-  var label = t==='selfie' ? 'Surveyor Selfie' : PHOTO_LABELS[PHOTO_KEYS.indexOf(t)] || t;
+  var label = photoLabel(t);
 
   // Quality check BEFORE gps stamp
   var quality = checkPhotoQuality(canvas);
@@ -1478,8 +1451,7 @@ function capturePhoto(){
       function(){
         // User chose to keep — continue with GPS stamp and save
         burnGpsStamp(savedCanvas, g, label, state.family);
-        var q = 0.78, dataUrl = savedCanvas.toDataURL('image/jpeg', q);
-        while(dataUrl.length*0.75>199000&&q>0.15){q-=0.1;dataUrl=savedCanvas.toDataURL('image/jpeg',q);}
+        var dataUrl = encodePhoto(savedCanvas);
         closeCamera();
         savePhoto(t, dataUrl, g);
       }
@@ -1489,32 +1461,91 @@ function capturePhoto(){
 
   // Quality OK — proceed normally
   burnGpsStamp(canvas, g, label, state.family);
-  var q = 0.78, dataUrl = canvas.toDataURL('image/jpeg', q);
-  while(dataUrl.length * 0.75 > 199000 && q > 0.15){ q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q); }
+  var dataUrl = encodePhoto(canvas);
 
   closeCamera();
   savePhoto(t, dataUrl, g);
 }
 
 function savePhoto(t, dataUrl, g) {
-  if(t === 'selfie'){
-    state.selfie = dataUrl;
-    var sb = document.getElementById('selfie-box');
-    sb.innerHTML = '<img src="'+dataUrl+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"/>'+
-      '<div class="overlay">✓ GPS stamped · '+( g.lat!=='N/A' ? g.lat+','+g.lng : 'No GPS' )+'</div>';
-    sb.onclick = function(){ openCamera('selfie'); };
-  } else {
-    state.photos[t] = {dataUrl:dataUrl, gps:g};
-    var box = document.getElementById('pb-'+t);
-    box.innerHTML = '<img src="'+dataUrl+'"/>'+
-      '<div class="overlay">📍 GPS stamped · Tap retake</div>';
-    box.onclick = function(){ openCamera(t); };
-    updatePhotosStatus();
-  }
+  var item = {dataUrl:dataUrl, gps:g, ts:fmtTs()};
+  if (t === 'selfie') { state.selfie = dataUrl; state.selfieMeta = {gps:g, ts:item.ts}; }
+  else state.photos[t] = item;
+  showPhoto(t);
+  startUpload(t);   // upload right away, while the surveyor fills the other tabs
+  saveDraft();
+}
+function photoItem(k){
+  if (k === 'selfie') return state.selfie ? {dataUrl:state.selfie, gps:(state.selfieMeta||{}).gps, ts:(state.selfieMeta||{}).ts} : null;
+  return state.photos[k];
+}
+function showPhoto(t){
+  var item = photoItem(t); if (!item) return;
+  var box = document.getElementById(t==='selfie' ? 'selfie-box' : 'pb-'+t);
+  box.innerHTML = '<img src="'+item.dataUrl+'"'+(t==='selfie'?' style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"':'')+'/><div class="overlay"></div>';
+  box.onclick = function(){ openCamera(t); };
+  renderUploadBadge(t);
+  if (t !== 'selfie') updatePhotosStatus();
 }
 
-// ── TABS ──────────────────────────────────────
-// ── PRINT FAMILY REPORT ───────────────────────────────────────────
+// ── PHOTO UPLOAD (background, with retry) ─────
+var UPLOAD_RETRIES = 2;   // 1 try + 2 retries
+var uploadSeq = 0;
+function startUpload(k){
+  var item = photoItem(k); if (!item || !item.dataUrl) return;
+  var u = {seq:++uploadSeq, status:'uploading', url:'', tries:0};
+  state.uploads[k] = u;   // a retake replaces this, and the old upload's result is ignored
+  renderUploadBadge(k);
+  attempt();
+
+  function current(){ return state.uploads[k] === u; }
+  function attempt(){
+    u.tries++;
+    var g = item.gps || state.gps || {lat:'N/A', lng:'N/A'};
+    google.script.run
+      .withSuccessHandler(function(r){
+        if (!current()) return;
+        if (r && r.ok && r.url) { u.status='done'; u.url=r.url; renderUploadBadge(k); saveDraft(); uploadSettled(); }
+        else if (r && r.relogin) { u.status='failed'; renderUploadBadge(k); handleSessionError(r); }
+        else retryOrFail();
+      })
+      .withFailureHandler(function(){ if (current()) retryOrFail(); })
+      .uploadPhoto(state.token, {
+        base64:     item.dataUrl,
+        mimeType:   'image/jpeg',
+        pppId:      state.family.id,
+        surveyTag:  state.surveyTag || "Original",
+        memberName: state.family.name,
+        photoLabel: k==='selfie' ? 'Surveyor_Selfie' : photoLabel(k),
+        zcrimName:  state.zcrim.name,
+        lat:        g.lat,
+        lng:        g.lng,
+        timestamp:  item.ts || fmtTs(),
+        fallback:   false
+      });
+  }
+  function retryOrFail(){
+    if (u.tries <= UPLOAD_RETRIES) { setTimeout(function(){ if (current()) attempt(); }, 2500 * u.tries); return; }
+    u.status = 'failed'; renderUploadBadge(k); uploadSettled();
+  }
+}
+function renderUploadBadge(k){
+  var box = document.getElementById(k==='selfie' ? 'selfie-box' : 'pb-'+k);
+  var ov = box && box.querySelector('.overlay'); if (!ov) return;
+  var u = state.uploads[k] || {};
+  ov.style.background = u.status==='failed' ? 'rgba(185,28,28,.85)' : 'rgba(0,0,0,.7)';
+  ov.textContent = u.status==='done'      ? '✅ Uploaded · Tap to retake'
+                 : u.status==='failed'    ? '⚠️ Upload failed · retried on Submit'
+                 : u.status==='uploading' ? '⏫ Uploading…'
+                 : '📍 GPS stamped · Tap to retake';
+  if (k !== 'selfie' && document.getElementById('photos-status')) updatePhotosStatus();
+}
+function photoKeysTaken(){ return PHOTO_KEYS.concat('selfie').filter(function(k){ return photoItem(k); }); }
+function uploadSettled(){
+  if (state.submitWaiting) state.submitWaiting();
+}
+
+// ── SURVEY TIMER + TABS ───────────────────
 
 var timerInterval = null;  // was never declared — threw "timerInterval is not defined" on every family load
 function startTimerDisplay() {
@@ -1557,61 +1588,40 @@ function resetTabLocks(){tabUnlocked=[true,false,false,false];for(var i=0;i<4;i+
 
 // ── SUBMIT ────────────────────────────────────
 function submitForm(){
+  if (state.submitWaiting) return;   // already submitting
   var missingMandatory = PHOTO_MANDATORY.filter(function(k){ return !state.photos[k]; });
   if(!state.selfie) missingMandatory.push('selfie');
   if(missingMandatory.length > 0){
-    var missingLabels = missingMandatory.map(function(k){
-      if(k==='selfie') return 'Surveyor Selfie';
-      return PHOTO_LABELS[PHOTO_KEYS.indexOf(k)];
-    });
-    showErr('submit-err','Missing mandatory photos: '+missingLabels.join(', ')); return;
+    showErr('submit-err','Missing mandatory photos: '+missingMandatory.map(photoLabel).join(', ')); return;
   }
   showErr('submit-err','');
   var btn=document.getElementById('btn-submit');
-  btn.innerHTML='<span class="spinner"></span> Uploading…';btn.disabled=true;
-  var now2=new Date();
-  var dd2=String(now2.getDate()).padStart(2,'0');
-  var mo2=String(now2.getMonth()+1).padStart(2,'0');
-  var yyyy2=now2.getFullYear();
-  var h2=now2.getHours(), min2=String(now2.getMinutes()).padStart(2,'0'), sec2=String(now2.getSeconds()).padStart(2,'0');
-  var ampm2=h2>=12?'PM':'AM'; h2=h2%12; if(h2===0)h2=12;
-  var ts=dd2+'/'+mo2+'/'+yyyy2+' '+String(h2).padStart(2,'0')+':'+min2+':'+sec2+' '+ampm2;
-  var uploaded={};
-  var keys=PHOTO_KEYS.concat('selfie');
-  var pending=keys.length;
-  var done=false;
+  btn.disabled=true;
 
-  function onUploadDone(key, url) {
-    uploaded[key] = url || '';
-    pending--;
-    if(pending===0 && !done){ done=true; finalSubmit(uploaded,ts); }
-  }
+  // Re-try any photo whose background upload failed
+  var keys = photoKeysTaken();
+  keys.forEach(function(k){ var u = state.uploads[k]; if (!u || u.status === 'failed') startUpload(k); });
 
-  keys.forEach(function(key){
-    var item = key==='selfie' ? {dataUrl:state.selfie, gps:state.gps} : state.photos[key];
-    if(!item || !item.dataUrl){ onUploadDone(key,''); return; }
-    var g     = item.gps || state.gps || {lat:'N/A',lng:'N/A'};
-    var label = key==='selfie' ? 'Surveyor_Selfie' : PHOTO_LABELS[PHOTO_KEYS.indexOf(key)];
-    // IIFE to capture key per iteration
-    (function(capturedKey, capturedLabel, capturedG){
-      google.script.run
-        .withSuccessHandler(function(r){ onUploadDone(capturedKey, r.ok ? r.url : ''); })
-        .withFailureHandler(function(e){ console.error('Upload failed '+capturedKey, e); onUploadDone(capturedKey,''); })
-        .uploadPhoto(state.token, {
-          base64:     item.dataUrl,
-          mimeType:   'image/jpeg',
-          pppId:      state.family.id,
-          surveyTag:  state.surveyTag || "Original",
-          memberName: state.family.name,
-          photoLabel: capturedLabel,
-          zcrimName:  state.zcrim.name,
-          lat:        capturedG.lat,
-          lng:        capturedG.lng,
-          timestamp:  ts,
-          fallback:   false
-        });
-    })(key, label, g);
-  });
+  state.submitWaiting = function(){
+    var pending = keys.filter(function(k){ return state.uploads[k] && state.uploads[k].status === 'uploading'; });
+    if (pending.length) {
+      btn.innerHTML='<span class="spinner"></span> Uploading photos… '+(keys.length-pending.length)+'/'+keys.length;
+      return;
+    }
+    state.submitWaiting = null;
+    var failed = keys.filter(function(k){ return !state.uploads[k] || state.uploads[k].status !== 'done'; });
+    var failedRequired = failed.filter(function(k){ return k === 'selfie' || PHOTO_MANDATORY.indexOf(k) > -1; });
+    if (failedRequired.length) {
+      resetSubmitBtn();
+      showErr('submit-err', '⚠️ Upload failed: '+failedRequired.map(photoLabel).join(', ')+'. Move to better signal and tap Submit again — nothing is lost.');
+      return;
+    }
+    if (failed.length) toast('⚠️ Optional photo not uploaded: '+failed.map(photoLabel).join(', '), 'org');
+    var uploaded = {};
+    keys.forEach(function(k){ if (state.uploads[k] && state.uploads[k].status === 'done') uploaded[k] = state.uploads[k].url; });
+    finalSubmit(uploaded, fmtTs());
+  };
+  state.submitWaiting();
 }
 function finalSubmit(uploaded,ts){
   document.getElementById('btn-submit').innerHTML='<span class="spinner"></span> Saving…';
@@ -1635,15 +1645,12 @@ function finalSubmit(uploaded,ts){
       // Mark as surveyed this session (duplicate detection)
       if(!state.surveyedIds) state.surveyedIds = {};
       if(familySnap) state.surveyedIds[familySnap.id] = true;
-      // Reset state
-      state.family         = null;
-      state.familyRowIndex = null;
-      state.selfie         = null;
-      state.photos         = {front:null,kitchen:null,familyPhoto:null,surroundings:null,surveyorFamily:null};
+      clearDraft();
+      clearSurveyState();
       loadNextFamily();
     })
     .withFailureHandler(function(e){
-      showErr('submit-err', 'Submission failed. Please check your connection and try again.');
+      showErr('submit-err', 'Submission failed. Please check your connection and try again. Your entries are saved on this phone.');
       resetSubmitBtn();
     })
     .submitSurvey(state.token, {
@@ -1671,14 +1678,78 @@ function resetForm(){
   document.getElementById('rent-field').style.display='none';
   document.getElementById('selfie-box').innerHTML='<div style="font-size:32px">🤳</div><div style="color:var(--org);font-weight:600;font-size:13px">Capture Surveyor Photo</div><div style="color:var(--mut);font-size:11px">Front camera · Required</div>';
   document.getElementById('selfie-box').onclick=function(){openCamera('selfie');};
-  state.selfie=null;resetSubmitBtn();
+  state.selfie=null;state.selfieMeta=null;resetSubmitBtn();
 }
+
+// ── DRAFT (kept on the phone until the survey is submitted or skipped) ──
+var DRAFT_KEY = 'zcrimDraft', DRAFT_MAX_AGE = 48*3600*1000, draftTimer = null;
+function zcrimKey(){ return state.zcrim ? String(state.zcrim.mobile || state.zcrim.name) : ''; }
+function saveDraft(){
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(writeDraft, 600);   // debounce — typing saves at most ~twice a second
+}
+function writeDraft(){
+  if (!state.family || !state.zcrim) return;
+  var members = [];
+  for (var i=0;i<state.memberCount;i++) members.push(['name','age','income','declInc','occ','rem'].map(function(f){ return val('m'+i+'-'+f); }));
+  var urls = {};
+  Object.keys(state.uploads).forEach(function(k){ if (state.uploads[k].status === 'done') urls[k] = state.uploads[k].url; });
+  var d = {
+    v:1, zcrim:zcrimKey(), savedAt:Date.now(), ward:state.selectedWard,
+    family:state.family, rowIndex:state.familyRowIndex, isResurvey:state.isResurvey, surveyTag:state.surveyTag, start:state.surveyStartTime,
+    tabs:tabUnlocked, members:members, assets:collectAssets(), urls:urls,
+    selfie: state.selfie ? {dataUrl:state.selfie, gps:(state.selfieMeta||{}).gps, ts:(state.selfieMeta||{}).ts} : null,
+    photos: state.photos
+  };
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); }
+  catch (e) {
+    // Phone storage full — keep the typed answers; drop photos that are not uploaded yet
+    try { d.photos = {}; d.selfie = null; localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch (e2) {}
+  }
+}
+function loadDraft(){
+  try { var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) { return null; }
+  if (!d || d.v !== 1 || !d.family) return null;
+  if (Date.now() - d.savedAt > DRAFT_MAX_AGE) { clearDraft(); return null; }
+  return d;
+}
+function clearDraft(){ clearTimeout(draftTimer); try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+
+function offerDraftRestore(){
+  var d = loadDraft();
+  if (!d || d.zcrim !== zcrimKey()) return;
+  var t = new Date(d.savedAt);
+  var msg = 'You have an unfinished survey:\n\n' + d.family.name + ' (' + d.family.id + ')\nVillage: ' + d.ward +
+            '\nSaved at ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2,'0') + '\n\nContinue this survey?';
+  if (confirm(msg)) restoreDraft(d); else clearDraft();
+}
+function restoreDraft(d){
+  enterSurveyScreen(d.ward);
+  setupFamily({family:d.family, rowIndex:d.rowIndex, isResurvey:d.isResurvey, surveyTag:d.surveyTag, start:d.start, memberCount:d.members.length});
+  d.members.forEach(function(m,i){ ['name','age','income','declInc','occ','rem'].forEach(function(f,j){ setVal('m'+i+'-'+f, m[j]); }); });
+  Object.keys(d.assets || {}).forEach(function(k){ setVal('a-'+k, d.assets[k]); });
+  toggleRent();
+  if (d.selfie) { state.selfie = d.selfie.dataUrl; state.selfieMeta = {gps:d.selfie.gps, ts:d.selfie.ts}; }
+  PHOTO_KEYS.forEach(function(k){ if (d.photos && d.photos[k]) state.photos[k] = d.photos[k]; });
+  photoKeysTaken().forEach(function(k){
+    if (d.urls && d.urls[k]) state.uploads[k] = {status:'done', url:d.urls[k]};
+    showPhoto(k);
+    if (!state.uploads[k]) startUpload(k);   // was not uploaded before the app closed
+  });
+  if (d.tabs) d.tabs.forEach(function(u,i){ tabUnlocked[i] = u; var b=document.getElementById('tab-btn-'+i); if(b&&u&&i>0) b.className='tab done'; });
+  writeDraft();
+  toast('↩️ Survey restored — continue where you left off', 'green');
+}
+// Save as the surveyor types
+['input','change'].forEach(function(ev){
+  document.getElementById('screen-survey').addEventListener(ev, function(){ if (state.family) saveDraft(); });
+});
 
 // ── SESSION ERROR ─────────────────────────────
 function handleSessionError(res){clearInterval(state.sessionTimerInterval);toast('🔒 '+(res.msg||'Session expired.'),'red');setTimeout(function(){doLogout(true);},2000);}
 
 // ── HELPERS ───────────────────────────────────
-function showScreen(id){['screen-login','screen-village','screen-survey','screen-dcrim','camera-wrap'].forEach(function(s){document.getElementById(s).style.display='none';});document.getElementById(id).style.display='block';}
+function showScreen(id){['screen-login','screen-village','screen-survey','screen-dcrim','screen-done','camera-wrap'].forEach(function(s){document.getElementById(s).style.display='none';});document.getElementById(id).style.display='block';}
 function show(id,v){document.getElementById(id).style.display=v?'block':'none';}
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
 function showErr(id,m){var e=document.getElementById(id);if(e)e.textContent=m;}
