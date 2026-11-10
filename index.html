@@ -94,6 +94,25 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 /* ── SESSION BAR ── */
 .session-bar{background:#1e3a5f;border:1px solid #3b82f644;border-radius:8px;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px}
 
+/* ── SHARED UTILITIES (used by the screens built in JS) ── */
+.muted{color:var(--mut)}
+.loading{text-align:center;padding:30px;color:var(--mut)}
+.row{display:flex;justify-content:space-between;align-items:center}
+.stat{flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px;text-align:center}
+.stat b{display:block;font-size:18px}
+.stat span{font-size:10px;color:var(--mut)}
+.bar{background:#334155;border-radius:4px;height:4px;overflow:hidden}
+.bar>div{height:100%;border-radius:4px;background:var(--acc)}
+.alert-red{background:#7f1d1d;border:2px solid var(--red);border-radius:10px;padding:12px 16px;color:#fca5a5}
+.pill-red{background:#7f1d1d;color:#fca5a5;border:1px solid var(--red);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal>div{background:var(--card);border:2px solid var(--red);border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center}
+.btn-line{background:transparent;border:1px solid var(--bdr);border-radius:8px;color:var(--mut);cursor:pointer}
+.zgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;padding:8px 4px;border-radius:6px}
+.zgrid>div+div{text-align:center;font-size:13px;font-weight:700}
+.zgrid.head>div{font-size:10px;color:var(--mut);font-weight:700;padding:0}
+.zgrid:nth-child(odd):not(.head){background:rgba(255,255,255,.03)}
+
 /* ── RESPONSIVE ── */
 @media(min-width:600px){
   .card{padding:22px}
@@ -161,7 +180,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
     <div class="session-bar">
       <span>👤 <span id="sess-name">—</span></span>
       <span id="sess-timer" style="color:var(--org)">⏱ 30:00</span>
-      <button onclick="doLogout()" style="background:none;border:1px solid var(--bdr);border-radius:6px;padding:3px 10px;color:var(--mut);font-size:11px;cursor:pointer">Logout</button>
+      <button onclick="doLogout()" class="btn-line" style="padding:3px 10px;font-size:11px">Logout</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button onclick="showTab('village-tab')" id="tab-villages-btn" style="flex:1;padding:9px;border:1px solid var(--acc);border-radius:8px;background:var(--acc);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🏘️ Villages</button>
@@ -173,7 +192,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
     <div id="village-list"></div>
     </div>
     <div id="leaderboard-tab" style="display:none">
-      <div id="leaderboard-list"><div style="text-align:center;padding:30px;color:var(--mut)"><span class="spinner"></span> Loading…</div></div>
+      <div id="leaderboard-list"><div class="loading"><span class="spinner"></span> Loading…</div></div>
     </div>
   </div>
 </div>
@@ -191,14 +210,14 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
       <div style="font-size:11px;color:var(--mut);letter-spacing:1px;text-transform:uppercase">CRID NUH · Observer</div>
       <div style="font-size:20px;font-weight:900;margin-top:2px">📊 Survey Progress</div>
     </div>
-    <button onclick="doLogout()" style="padding:8px 14px;background:transparent;border:1px solid var(--bdr);border-radius:8px;color:var(--mut);font-size:12px;cursor:pointer">Logout</button>
+    <button onclick="doLogout()" class="btn-line" style="padding:8px 14px;font-size:12px">Logout</button>
   </div>
 
   <!-- Summary Cards -->
   <div id="dcrim-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px"></div>
 
   <!-- Overall Progress Bar -->
-  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+  <div class="card">
     <div style="display:flex;justify-content:space-between;margin-bottom:8px">
       <span style="font-weight:700;font-size:13px">Overall Completion</span>
       <span id="dcrim-pct" style="font-weight:900;color:var(--grn);font-size:15px">0%</span>
@@ -210,20 +229,20 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   </div>
 
   <!-- Daily Trend -->
-  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+  <div class="card">
     <div style="font-weight:700;font-size:13px;margin-bottom:12px">📈 Daily Surveys (Last 14 Days)</div>
     <div id="dcrim-trend" style="display:flex;align-items:flex-end;gap:4px;height:60px"></div>
     <div id="dcrim-trend-labels" style="display:flex;gap:4px;margin-top:4px"></div>
   </div>
 
   <!-- Block-wise -->
-  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+  <div class="card">
     <div style="font-weight:700;font-size:13px;margin-bottom:12px">🏘️ Block-wise Progress</div>
     <div id="dcrim-blocks"></div>
   </div>
 
   <!-- ZCRIM-wise -->
-  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:80px">
+  <div class="card" style="margin-bottom:80px">
     <div style="font-weight:700;font-size:13px;margin-bottom:12px">👤 ZCRIM-wise Breakdown</div>
     <div id="dcrim-board"></div>
   </div>
@@ -610,9 +629,7 @@ function togglePwd() {
 }
 
 // ── LOGIN ─────────────────────────────────────
-// ── DEVICE FINGERPRINT ───────────────────────────────────────────
-// Builds a stable hash from hardware/browser properties
-// Cannot be spoofed easily without developer tools knowledge
+// Desktop check: a phone must pass 2 of 3 signals (touch, mobile user agent, narrow screen)
 function isMobileDevice() {
   var ua  = navigator.userAgent.toLowerCase();
   var plt = (navigator.platform || '').toLowerCase();
@@ -677,7 +694,6 @@ function doLogin() {
     .loginZcrim(mob, pwd, navigator.platform + " | " + screen.width + "x" + screen.height);
 }
 
-// ── SESSION TIMER + SERVER HEARTBEAT ─────────
 // ── IDLE TIMEOUT — 15 minutes of no activity ─────────────────────
 var IDLE_LIMIT_SEC  = 15 * 60;  // 15 minutes
 var IDLE_WARN_SEC   = 60;       // warn 1 minute before logout
@@ -696,6 +712,23 @@ function resetIdleTimer() {
 ['touchstart','touchmove','click','keydown','scroll','mousemove'].forEach(function(ev){
   document.addEventListener(ev, resetIdleTimer, { passive:true });
 });
+
+function showIdleWarning(secs) {
+  var warn = document.getElementById('idle-warning');
+  if (!warn) {
+    warn = document.createElement('div');
+    warn.id = 'idle-warning';
+    warn.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#92400e;color:#fef3c7;' +
+      'padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:9999;text-align:center;' +
+      'box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:320px;width:90%';
+    warn.innerHTML = '💤 Still there? Logging out in <b id="idle-secs"></b> due to inactivity.<br>' +
+      '<button onclick="resetIdleTimer()" style="margin-top:8px;padding:6px 16px;background:#fef3c7;color:#92400e;' +
+      'border:none;border-radius:6px;font-weight:800;font-size:12px;cursor:pointer">Yes, keep me logged in</button>';
+    document.body.appendChild(warn);
+  }
+  warn.style.display = 'block';
+  document.getElementById('idle-secs').textContent = secs + 's';   // only the number changes, so the button stays tappable
+}
 
 // ── SESSION TIMER + IDLE CHECKER ─────────────────────────────────
 var heartbeatTick = 0;
@@ -723,37 +756,7 @@ function startSessionTimer() {
         return;
       }
 
-      if (idleLeft <= IDLE_WARN_SEC && !idleWarned) {
-        // Show idle warning banner
-        idleWarned = true;
-        var warn = document.getElementById('idle-warning');
-        if (!warn) {
-          warn = document.createElement('div');
-          warn.id = 'idle-warning';
-          warn.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
-            'background:#92400e;color:#fef3c7;padding:12px 20px;border-radius:12px;' +
-            'font-size:13px;font-weight:700;z-index:9999;text-align:center;' +
-            'box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:320px;width:90%';
-          document.body.appendChild(warn);
-        }
-        warn.style.display = 'block';
-        warn.innerHTML = '💤 Still there? You will be logged out in ' + IDLE_WARN_SEC +
-          ' seconds due to inactivity.<br>' +
-          '<button onclick="resetIdleTimer()" style="margin-top:8px;padding:6px 16px;' +
-          'background:#fef3c7;color:#92400e;border:none;border-radius:6px;' +
-          'font-weight:800;font-size:12px;cursor:pointer">Yes, keep me logged in</button>';
-      }
-
-      // Update idle countdown in warning banner
-      if (idleWarned && idleLeft <= IDLE_WARN_SEC) {
-        var warn = document.getElementById('idle-warning');
-        if (warn && warn.style.display !== 'none') {
-          warn.innerHTML = '💤 Still there? Logging out in <b>' + idleLeft + 's</b> due to inactivity.<br>' +
-            '<button onclick="resetIdleTimer()" style="margin-top:8px;padding:6px 16px;' +
-            'background:#fef3c7;color:#92400e;border:none;border-radius:6px;' +
-            'font-weight:800;font-size:12px;cursor:pointer">Yes, keep me logged in</button>';
-        }
-      }
+      if (idleLeft <= IDLE_WARN_SEC) { idleWarned = true; showIdleWarning(idleLeft); }
     }
     // ────────────────────────────────────────────────────────────
 
@@ -816,79 +819,51 @@ function loadDcrimProgress() {
 
 function renderDcrimProgress(d) {
   var s = d.summary;
-
-  // Summary cards
   var cards = [
-    { icon:'\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66', label:'Total Families', val:s.total,      color:'var(--acc)' },
-    { icon:'\u2705',                                                                        label:'Surveyed',       val:s.done,       color:'var(--grn)' },
-    { icon:'\u23F3',                                                                        label:'Pending',        val:s.pending,    color:'#f59e0b'    },
-    { icon:'\uD83D\uDCC5',                                                                 label:'Today',          val:s.todayCount, color:'#a78bfa'    }
+    ['👨‍👩‍👧‍👦', 'Total Families', s.total,      'var(--acc)'],
+    ['✅',       'Surveyed',       s.done,       'var(--grn)'],
+    ['⏳',       'Pending',        s.pending,    'var(--org)'],
+    ['📅',       'Today',          s.todayCount, '#a78bfa']
   ];
   document.getElementById('dcrim-summary').innerHTML = cards.map(function(c){
-    return '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:14px;text-align:center">' +
-      '<div style="font-size:24px">' + c.icon + '</div>' +
-      '<div style="font-size:22px;font-weight:900;color:' + c.color + '">' + esc(String(c.val)) + '</div>' +
-      '<div style="font-size:11px;color:var(--mut);margin-top:2px">' + c.label + '</div>' +
-    '</div>';
+    return '<div class="card" style="margin:0;text-align:center"><div style="font-size:24px">' + c[0] + '</div>' +
+      '<div style="font-size:22px;font-weight:900;color:' + c[3] + '">' + esc(c[2]) + '</div>' +
+      '<div class="muted" style="font-size:11px;margin-top:2px">' + c[1] + '</div></div>';
   }).join('');
 
-  // Progress bar
   document.getElementById('dcrim-pct').textContent  = s.pct + '%';
   document.getElementById('dcrim-bar').style.width  = s.pct + '%';
-  document.getElementById('dcrim-updated').textContent = 'Updated: ' + esc(d.updated);
+  document.getElementById('dcrim-updated').textContent = 'Updated: ' + d.updated;
 
-  // Daily trend bars
+  // Daily trend bars (today in green)
   var maxT = Math.max.apply(null, d.trend.map(function(t){ return t.count; })) || 1;
   document.getElementById('dcrim-trend').innerHTML = d.trend.map(function(t, i){
-    var h = Math.max(4, Math.round(t.count / maxT * 56));
-    var isToday = i === d.trend.length - 1;
+    var today = i === d.trend.length - 1;
     return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">' +
-      '<div style="font-size:9px;color:var(--mut)">' + (t.count || '') + '</div>' +
-      '<div style="width:100%;height:' + h + 'px;border-radius:3px 3px 0 0;background:' +
-        (isToday ? 'var(--grn)' : 'var(--acc)') + ';opacity:' + (isToday ? '1' : '0.6') + '"></div>' +
-    '</div>';
+      '<div class="muted" style="font-size:9px">' + (t.count || '') + '</div>' +
+      '<div style="width:100%;height:' + Math.max(4, Math.round(t.count / maxT * 56)) + 'px;border-radius:3px 3px 0 0;background:' +
+        (today ? 'var(--grn)' : 'var(--acc)') + ';opacity:' + (today ? 1 : 0.6) + '"></div></div>';
   }).join('');
   document.getElementById('dcrim-trend-labels').innerHTML = d.trend.map(function(t){
-    return '<div style="flex:1;font-size:8px;color:var(--mut);text-align:center">' + t.date + '</div>';
+    return '<div class="muted" style="flex:1;font-size:8px;text-align:center">' + esc(t.date) + '</div>';
   }).join('');
 
-  // Block-wise progress bars
   document.getElementById('dcrim-blocks').innerHTML = d.blocks.map(function(b){
     var pct = b.total > 0 ? Math.round(b.done / b.total * 100) : 0;
-    return '<div style="margin-bottom:12px">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
-        '<span style="font-size:12px;font-weight:600">' + esc(b.block) + '</span>' +
-        '<span style="font-size:11px;color:var(--mut)">' + b.done + '/' + b.total +
-          ' <span style="color:var(--grn);font-weight:700">' + pct + '%</span></span>' +
-      '</div>' +
-      '<div style="background:#1e293b;border-radius:99px;height:7px;overflow:hidden">' +
-        '<div style="height:100%;border-radius:99px;background:var(--acc);width:' + pct + '%"></div>' +
-      '</div>' +
-    '</div>';
+    return '<div style="margin-bottom:12px"><div class="row" style="margin-bottom:4px">' +
+      '<span style="font-size:12px;font-weight:600">' + esc(b.block) + '</span>' +
+      '<span class="muted" style="font-size:11px">' + b.done + '/' + b.total + ' <b style="color:var(--grn)">' + pct + '%</b></span></div>' +
+      '<div class="bar" style="height:7px"><div style="width:' + pct + '%"></div></div></div>';
   }).join('');
 
-  // ZCRIM-wise table
   document.getElementById('dcrim-board').innerHTML =
-    '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;margin-bottom:6px;padding:0 4px">' +
-      '<div style="font-size:10px;color:var(--mut);font-weight:700">ZCRIM</div>' +
-      '<div style="font-size:10px;color:var(--mut);font-weight:700;text-align:center">Total</div>' +
-      '<div style="font-size:10px;color:var(--grn);font-weight:700;text-align:center">Done</div>' +
-      '<div style="font-size:10px;color:#f59e0b;font-weight:700;text-align:center">Pending</div>' +
-      '<div style="font-size:10px;color:var(--mut);font-weight:700;text-align:center">%</div>' +
-    '</div>' +
-    d.board.map(function(z, i){
-      var bg  = i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent';
-      var clr = z.pct >= 75 ? 'var(--grn)' : z.pct >= 40 ? '#f59e0b' : 'var(--red)';
-      return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;padding:8px 4px;border-radius:6px;background:' + bg + '">' +
-        '<div>' +
-          '<div style="font-size:12px;font-weight:700">' + esc(z.name) + '</div>' +
-          '<div style="font-size:10px;color:var(--mut)">' + esc(z.block) + '</div>' +
-        '</div>' +
-        '<div style="font-size:13px;font-weight:700;text-align:center">'                                          + z.total   + '</div>' +
-        '<div style="font-size:13px;font-weight:700;text-align:center;color:var(--grn)">'                         + z.done    + '</div>' +
-        '<div style="font-size:13px;font-weight:700;text-align:center;color:#f59e0b">'                            + z.pending + '</div>' +
-        '<div style="font-size:13px;font-weight:700;text-align:center;color:' + clr + '">' + z.pct + '%</div>' +
-      '</div>';
+    '<div class="zgrid head"><div>ZCRIM</div><div>Total</div><div style="color:var(--grn)">Done</div><div style="color:var(--org)">Pending</div><div>%</div></div>' +
+    d.board.map(function(z){
+      var clr = z.pct >= 75 ? 'var(--grn)' : z.pct >= 40 ? 'var(--org)' : 'var(--red)';
+      return '<div class="zgrid"><div><div style="font-size:12px;font-weight:700">' + esc(z.name) + '</div>' +
+        '<div class="muted" style="font-size:10px">' + esc(z.block) + '</div></div>' +
+        '<div>' + z.total + '</div><div style="color:var(--grn)">' + z.done + '</div>' +
+        '<div style="color:var(--org)">' + z.pending + '</div><div style="color:' + clr + '">' + z.pct + '%</div></div>';
     }).join('');
 }
 
@@ -921,50 +896,42 @@ function loadVillagePicker() {
     .getWardsForZcrim(state.token);
 }
 function renderVillageStats(wards, totalResurvey){
-  var tf=wards.reduce(function(s,w){return s+w.total;},0);
-  var df=wards.reduce(function(s,w){return s+w.done;},0);
-  var pf=wards.reduce(function(s,w){return s+w.pending;},0);
-  var rf=totalResurvey||wards.reduce(function(s,w){return s+(w.resurvey||0);},0);
+  function sum(f){ return wards.reduce(function(s,w){ return s+(w[f]||0); },0); }
+  var df=sum('done'), pf=sum('pending'), rf=totalResurvey||sum('resurvey');
 
-  // Show/hide top resurvey alert
+  // Re-survey alert at the top of the village screen
   var existing = document.getElementById('village-resurvey-alert');
   if (existing) existing.remove();
   if (rf > 0) {
     var alert = document.createElement('div');
-    alert.id = 'village-resurvey-alert';
-    alert.style.cssText = 'background:#7f1d1d;border:2px solid #ef4444;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px';
+    alert.id = 'village-resurvey-alert'; alert.className = 'alert-red';
+    alert.style.cssText = 'margin-bottom:14px;display:flex;align-items:center;gap:12px';
     alert.innerHTML = '<div style="font-size:28px">🔁</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fca5a5">'+rf+' RE-SURVEY'+(rf>1?'S':'')+' PENDING</div>'
-      + '<div style="font-size:12px;color:#fca5a5;margin-top:2px">Admin has flagged families for re-survey. These will appear first in your queue.</div></div>';
+      + '<div><div style="font-size:14px;font-weight:800">'+rf+' RE-SURVEY'+(rf>1?'S':'')+' PENDING</div>'
+      + '<div style="font-size:12px;margin-top:2px">Admin has flagged families for re-survey. These will appear first in your queue.</div></div>';
     var villageScreen = document.getElementById('screen-village').querySelector('div');
     if (villageScreen) villageScreen.insertBefore(alert, villageScreen.firstChild);
   }
-
-  document.getElementById('village-stats-bar').innerHTML=
-    '<div style="flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700">'+wards.length+'</div><div style="font-size:10px;color:var(--mut)">VILLAGES</div></div>'+
-    (rf>0?'<div style="flex:1;background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:#fca5a5">'+rf+'</div><div style="font-size:10px;color:#fca5a5">RE-SURVEY</div></div>':'')+
-    '<div style="flex:1;background:var(--card);border:1px solid #f59e0b44;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--org)">'+pf+'</div><div style="font-size:10px;color:var(--mut)">PENDING</div></div>'+
-    '<div style="flex:1;background:var(--card);border:1px solid #22c55e44;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--grn)">'+df+'</div><div style="font-size:10px;color:var(--mut)">DONE</div></div>';
+  function stat(n, label, style){ return '<div class="stat"'+(style?' style="'+style+'"':'')+'><b>'+n+'</b><span>'+label+'</span></div>'; }
+  document.getElementById('village-stats-bar').innerHTML =
+    stat(wards.length, 'VILLAGES') +
+    (rf>0 ? stat(rf, 'RE-SURVEY', 'background:#7f1d1d;border-color:var(--red);color:#fca5a5') : '') +
+    stat('<span style="color:var(--org);font-size:18px">'+pf+'</span>', 'PENDING', 'border-color:#f59e0b44') +
+    stat('<span style="color:var(--grn);font-size:18px">'+df+'</span>', 'DONE', 'border-color:#22c55e44');
 }
 function renderVillageList(wards){
   var list=document.getElementById('village-list');
-  if(!wards||!wards.length){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">No villages found.</div>';return;}
+  if(!wards||!wards.length){list.innerHTML='<div class="loading">No villages found.</div>';return;}
   list.innerHTML=wards.map(function(w){
-    var pct=w.total>0?Math.round(w.done/w.total*100):0, done=w.pending===0;
-    var bar=done?'#22c55e':'#3b82f6', bc=done?'#22c55e44':'var(--bdr)';
-    return '<div onclick="selectVillage(\''+w.ward.replace(/'/g,"\\'")+'\')\" style="background:var(--card);border:1px solid '+bc+';border-radius:10px;padding:14px;cursor:pointer;margin-bottom:8px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-        '<div style="font-weight:700">'+w.ward+'</div>'+
-        '<div style="display:flex;gap:6px;align-items:center">'+
-        (w.resurvey>0?'<span style="background:#7f1d1d;color:#fca5a5;border:1px solid #ef4444;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700">'+w.resurvey+' re-survey</span>':'')+
-        (done?'<span class="badge badge-grn">Complete</span>':'<span style="font-size:12px;color:var(--mut)">'+w.done+'/'+w.total+'</span>')+
-        '</div>'+
-      '</div>'+
-      '<div style="background:#334155;border-radius:4px;height:4px"><div style="background:'+bar+';width:'+pct+'%;height:100%;border-radius:4px"></div></div>'+
-      '<div style="display:flex;justify-content:space-between;margin-top:6px">'+
-        '<span style="font-size:11px;color:var(--mut)">'+w.pending+' pending · '+w.done+' done</span>'+
-        '<span style="font-size:11px;color:'+bar+'">'+pct+'%</span>'+
-      '</div></div>';
+    var pct=w.total>0?Math.round(w.done/w.total*100):0, done=w.pending===0, col=done?'var(--grn)':'var(--acc)';
+    return '<div class="card" data-ward="'+esc(w.ward)+'" onclick="selectVillage(this.dataset.ward)" style="padding:14px;cursor:pointer;margin-bottom:8px'+(done?';border-color:#22c55e44':'')+'">'+
+      '<div class="row" style="margin-bottom:8px"><b>'+esc(w.ward)+'</b><div style="display:flex;gap:6px;align-items:center">'+
+        (w.resurvey>0?'<span class="pill-red">'+w.resurvey+' re-survey</span>':'')+
+        (done?'<span class="badge badge-grn">Complete</span>':'<span class="muted" style="font-size:12px">'+w.done+'/'+w.total+'</span>')+
+      '</div></div>'+
+      '<div class="bar"><div style="background:'+col+';width:'+pct+'%"></div></div>'+
+      '<div class="row" style="margin-top:6px;font-size:11px"><span class="muted">'+w.pending+' pending · '+w.done+' done</span>'+
+        '<span style="color:'+col+'">'+pct+'%</span></div></div>';
   }).join('');
 }
 function filterVillages(){
@@ -995,30 +962,24 @@ function showTab(tabId){
 }
 
 function loadLeaderboard(){
+  var el = document.getElementById('leaderboard-list');
   google.script.run
     .withSuccessHandler(function(res){
-      if(!res.ok){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px;text-align:center">'+esc(res.msg)+'</div>'; return; }
-      var html='<div style="font-size:11px;color:var(--mut);margin-bottom:10px;text-align:center">Updated live from Google Sheets</div>';
+      if(!res.ok){ el.innerHTML='<div class="loading" style="color:var(--red)">'+esc(res.msg)+'</div>'; return; }
       var medals=['🥇','🥈','🥉'];
-      res.board.forEach(function(z,i){
-        var pct = z.total>0 ? Math.round(z.done/z.total*100) : 0;
-        var col = pct===100?'var(--grn)':pct>50?'var(--acc)':'var(--org)';
-        html += '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:8px">'+
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-            '<div style="font-weight:700;font-size:14px">'+(medals[i]||'#'+(i+1))+' '+esc(z.name)+'</div>'+
-            '<div style="font-size:12px;color:'+col+';font-weight:700">'+pct+'%</div>'+
-          '</div>'+
-          '<div style="background:#334155;border-radius:4px;height:6px;margin-bottom:6px">'+
-            '<div style="background:'+col+';width:'+pct+'%;height:100%;border-radius:4px;transition:width .4s"></div>'+
-          '</div>'+
-          '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)">'+
-            '<span>Block: '+esc(z.block)+'</span>'+
-            '<span>✅ '+z.done+' / '+z.total+' &nbsp; ⏳ '+z.pending+'</span>'+
-          '</div></div>';
-      });
-      document.getElementById('leaderboard-list').innerHTML = html;
+      el.innerHTML = '<div class="muted" style="font-size:11px;margin-bottom:10px;text-align:center">Updated live from Google Sheets</div>' +
+        res.board.map(function(z,i){
+          var pct = z.total>0 ? Math.round(z.done/z.total*100) : 0;
+          var col = pct===100?'var(--grn)':pct>50?'var(--acc)':'var(--org)';
+          return '<div class="card" style="padding:14px;margin-bottom:8px">'+
+            '<div class="row" style="margin-bottom:8px"><b>'+(medals[i]||'#'+(i+1))+' '+esc(z.name)+'</b>'+
+              '<b style="font-size:12px;color:'+col+'">'+pct+'%</b></div>'+
+            '<div class="bar" style="height:6px;margin-bottom:6px"><div style="background:'+col+';width:'+pct+'%"></div></div>'+
+            '<div class="row muted" style="font-size:11px"><span>Block: '+esc(z.block)+'</span>'+
+              '<span>✅ '+z.done+' / '+z.total+' &nbsp; ⏳ '+z.pending+'</span></div></div>';
+        }).join('');
     })
-    .withFailureHandler(function(e){ document.getElementById('leaderboard-list').innerHTML='<div style="color:var(--red);padding:20px">Error: '+esc(e.message)+'</div>'; })
+    .withFailureHandler(function(e){ el.innerHTML='<div class="loading" style="color:var(--red)">Error: '+esc(e.message)+'</div>'; })
     .getLeaderboard(state.token);
 }
 
@@ -1176,9 +1137,10 @@ function renderFamilyInfo(){
   if (state.isResurvey) {
     var banner = document.createElement('div');
     banner.id = 'resurvey-banner';
-    banner.style.cssText = 'background:#7f1d1d;border:2px solid #ef4444;border-radius:10px;padding:12px 16px;margin:0 0 14px;text-align:center';
-    banner.innerHTML = '<div style="font-size:16px;font-weight:900;color:#fca5a5;letter-spacing:1px">RE-SURVEY REQUIRED</div>'
-      + '<div style="font-size:12px;color:#fca5a5;margin-top:4px">This family has been flagged by admin. Please re-photograph and re-submit all fields carefully.</div>';
+    banner.className = 'alert-red';
+    banner.style.cssText = 'margin:0 0 14px;text-align:center';
+    banner.innerHTML = '<div style="font-size:16px;font-weight:900;letter-spacing:1px">RE-SURVEY REQUIRED</div>'
+      + '<div style="font-size:12px;margin-top:4px">This family has been flagged by admin. Please re-photograph and re-submit all fields carefully.</div>';
     var tab0 = document.getElementById('tab0');
     if (tab0) tab0.insertBefore(banner, tab0.firstChild);
   }
@@ -1344,68 +1306,27 @@ function openCamera(t){
 }
 
 function showCameraError(target, msg) {
-  var boxId = target==='selfie' ? 'selfie-box' : 'pb-'+target;
-  var box   = document.getElementById(boxId);
+  var box = document.getElementById(target==='selfie' ? 'selfie-box' : 'pb-'+target);
   if (!box) return;
-
-  // Detect device type for specific instructions
-  var isIphone  = /iphone|ipad/i.test(navigator.userAgent);
-  var isAndroid = /android/i.test(navigator.userAgent);
-
-  var steps = '';
-  if (isIphone) {
-    steps =
-      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
-      '<b style="color:#f59e0b">📍 Allow Location:</b><br>' +
-      '1. Open iPhone <b>Settings</b><br>' +
-      '2. Scroll to <b>Safari</b><br>' +
-      '3. Tap <b>Location</b> → Select <b>Allow</b><br><br>' +
-      '<b style="color:#f59e0b">📷 Allow Camera:</b><br>' +
-      '1. Open iPhone <b>Settings</b><br>' +
-      '2. Scroll to <b>Safari</b><br>' +
-      '3. Tap <b>Camera</b> → Select <b>Allow</b><br><br>' +
-      '<b style="color:#22c55e">Then close and reopen this page.</b>' +
-      '</div>';
-  } else if (isAndroid) {
-    steps =
-      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
-      '<b style="color:#f59e0b">📍 Allow Location:</b><br>' +
-      '1. Tap the <b>🔒 lock icon</b> in Chrome address bar<br>' +
-      '2. Tap <b>Permissions</b><br>' +
-      '3. Set <b>Location</b> → <b>Allow</b><br><br>' +
-      '<b style="color:#f59e0b">📷 Allow Camera:</b><br>' +
-      '1. Tap the <b>🔒 lock icon</b> in Chrome address bar<br>' +
-      '2. Tap <b>Permissions</b><br>' +
-      '3. Set <b>Camera</b> → <b>Allow</b><br><br>' +
-      '<b style="color:#22c55e">Then tap the photo box again.</b>' +
-      '</div>';
-  } else {
-    steps =
-      '<div style="text-align:left;margin-top:10px;font-size:11px;line-height:1.8;color:var(--txt)">' +
-      '<b style="color:#f59e0b">📍 Allow Location + 📷 Camera:</b><br>' +
-      '1. Tap the <b>lock/info icon</b> in your browser address bar<br>' +
-      '2. Set <b>Camera</b> and <b>Location</b> to <b>Allow</b><br>' +
-      '3. Refresh the page and try again.<br>' +
-      '</div>';
-  }
-
+  var ua = navigator.userAgent;
+  var how = /iphone|ipad/i.test(ua)
+    ? ['Open iPhone <b>Settings</b> → <b>Safari</b>', 'Set <b>Location</b> and <b>Camera</b> to <b>Allow</b>', 'Close and reopen this page']
+    : /android/i.test(ua)
+    ? ['Tap the <b>🔒 lock icon</b> in the Chrome address bar', 'Tap <b>Permissions</b>', 'Set <b>Location</b> and <b>Camera</b> to <b>Allow</b>', 'Tap the photo box again']
+    : ['Tap the <b>lock/info icon</b> in the address bar', 'Set <b>Camera</b> and <b>Location</b> to <b>Allow</b>', 'Refresh the page and try again'];
   box.style.borderColor = 'var(--red)';
   box.innerHTML =
     '<div style="padding:14px;text-align:center">' +
     '<div style="font-size:32px;margin-bottom:6px">🚫</div>' +
     '<div style="color:var(--red);font-weight:800;font-size:13px;margin-bottom:4px">Camera / Location Blocked</div>' +
-    '<div style="color:var(--mut);font-size:11px">You must allow Camera and Location to continue.</div>' +
-    steps +
-    '<button onclick="openCamera(\"' + target + '\")" ' +
-      'style="margin-top:14px;width:100%;padding:10px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">' +
-      '🔄 Try Again' +
-    '</button>' +
+    '<div class="muted" style="font-size:11px">You must allow Camera and Location to continue.</div>' +
+    '<ol style="text-align:left;margin:10px 0 0 18px;font-size:11px;line-height:1.8">' +
+      how.map(function(h){ return '<li>'+h+'</li>'; }).join('') + '</ol>' +
+    '<button class="btn btn-blue" onclick="event.stopPropagation();openCamera(\'' + target + '\')" style="margin:14px 0 0;padding:10px;font-size:13px">🔄 Try Again</button>' +
     '</div>';
   box.onclick = null;
   toast('🚫 Allow Camera and Location to take photos', 'red');
 }
-
-// File upload removed — camera only, no fallback upload allowed
 
 function closeCamera(){
   if(state.cameraStream){state.cameraStream.getTracks().forEach(function(t){t.stop();});state.cameraStream=null;}
@@ -1483,20 +1404,16 @@ function checkPhotoQuality(canvas) {
 }
 
 function showQualityWarning(msg, onRetake, onKeep) {
-  // Show overlay warning on camera screen
   var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML =
-    '<div style="background:#1e293b;border:2px solid #ef4444;border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center">'+
-    '<div style="font-size:48px;margin-bottom:12px">⚠️</div>'+
-    '<div style="font-size:17px;font-weight:800;color:#ef4444;margin-bottom:8px">Photo Quality Warning</div>'+
-    '<div style="font-size:14px;color:#94a3b8;margin-bottom:20px">'+msg+'</div>'+
-    '<button id="qw-retake" style="width:100%;padding:14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px">📸 Retake Photo</button>'+
-    '<button id="qw-keep" style="width:100%;padding:12px;background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:10px;font-size:14px;cursor:pointer">Use Anyway</button>'+
-    '</div>';
+  overlay.className = 'modal';
+  overlay.innerHTML = '<div><div style="font-size:48px;margin-bottom:12px">⚠️</div>'+
+    '<div style="font-size:17px;font-weight:800;color:var(--red);margin-bottom:8px">Photo Quality Warning</div>'+
+    '<div class="muted" style="font-size:14px;margin-bottom:20px">'+msg+'</div>'+
+    '<button id="qw-retake" class="btn btn-blue">📸 Retake Photo</button>'+
+    '<button id="qw-keep" class="btn btn-line" style="font-size:14px;padding:12px;width:100%">Use Anyway</button></div>';
   document.body.appendChild(overlay);
-  overlay.querySelector('#qw-retake').onclick = function(){ document.body.removeChild(overlay); onRetake(); };
-  overlay.querySelector('#qw-keep').onclick   = function(){ document.body.removeChild(overlay); onKeep(); };
+  overlay.querySelector('#qw-retake').onclick = function(){ overlay.remove(); onRetake(); };
+  overlay.querySelector('#qw-keep').onclick   = function(){ overlay.remove(); onKeep(); };
 }
 
 // Photo size: longest side 1280 px, JPEG squeezed to ~100 KB (clear enough to verify, half the data)
@@ -1628,8 +1545,7 @@ function uploadSettled(){
   if (state.submitWaiting) state.submitWaiting();
 }
 
-// ── TABS ──────────────────────────────────────
-// ── PRINT FAMILY REPORT ───────────────────────────────────────────
+// ── SURVEY TIMER + TABS ───────────────────
 
 var timerInterval = null;  // was never declared — threw "timerInterval is not defined" on every family load
 function startTimerDisplay() {
