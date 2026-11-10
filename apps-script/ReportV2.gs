@@ -19,8 +19,13 @@ function showFamilyReportV2() {
 
 // ── Sheet helpers ───────────────────────────────────────────────
 
+// Web requests have no "active" spreadsheet — open it by ID (SHEET_ID lives in Code.gs)
+function rv2Book_() {
+  return typeof SHEET_ID !== 'undefined' ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActive();
+}
+
 function rv2Table_(name) {
-  var sh = SpreadsheetApp.getActive().getSheetByName(name);
+  var sh = rv2Book_().getSheetByName(name);
   if (!sh || sh.getLastRow() < 2) return { h: {}, rows: [] };
   var v = sh.getDataRange().getValues();
   var h = {};
@@ -145,10 +150,15 @@ function rv2Report(rowNumber) {
       lng: String(rv2Get_(pl, p, 'GPS_Lng'))
     };
   });
-  // Fallback: a real Drive link in the SurveyData column
+  // Fallback: the Drive link in the SurveyData column. Photo cells hold =HYPERLINK("url","Front"),
+  // so the value is just "Front" — read the formula to get the link.
+  var formulas = null;
   Object.keys(RV2_URL_COLS).forEach(function (k) {
     if (photos[k]) return;
-    var u = s[RV2_URL_COLS[k]] || '';
+    var col = sd.h[RV2_URL_COLS[k]];
+    if (col === undefined) return;
+    if (!formulas) formulas = rv2Book_().getSheetByName('SurveyData').getRange(rowNumber, 1, 1, sd.rows[0].length).getFormulas()[0];
+    var u = (formulas[col] || '') + ' ' + (s[RV2_URL_COLS[k]] || '');
     var m = u.match(/\/d\/([\w-]{20,})/);
     if (m) photos[k] = { url: u, fileId: m[1], lat: '', lng: '' };
   });

@@ -113,6 +113,78 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 .zgrid.head>div{font-size:10px;color:var(--mut);font-weight:700;padding:0}
 .zgrid:nth-child(odd):not(.head){background:rgba(255,255,255,.03)}
 
+/* ── OFFICER PORTAL ── */
+.op-tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:4px}
+.op-tabs button{flex:1;padding:9px 4px;border:0;border-radius:9px;background:none;color:var(--mut);font-weight:700;font-size:12.5px;cursor:pointer}
+.op-tabs button.on{background:var(--acc);color:#fff}
+.crumb{font-size:12px;color:var(--mut);margin-bottom:10px}
+.crumb a{color:var(--acc);cursor:pointer}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chips button{padding:5px 12px;border-radius:99px;border:1px solid var(--bdr);background:none;color:var(--mut);font-size:12px;cursor:pointer}
+.chips button.on{background:var(--txt);color:var(--bg);border-color:var(--txt)}
+.fam{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:11px 14px;margin-bottom:7px}
+.fam.click{cursor:pointer}.fam.click:hover{border-color:var(--acc)}
+.st{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.st-done{background:#22c55e22;color:var(--grn)}.st-pending{background:#f59e0b22;color:var(--org)}
+.st-absent{background:#94a3b822;color:var(--mut)}.st-resurvey{background:#ef444422;color:var(--red)}
+
+/* ── FAMILY REPORT (light, Apple style) ── */
+#report-view{position:fixed;inset:0;z-index:600;overflow:auto;background:#F5F5F7;color:#1D1D1F;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;font-size:12.5px;line-height:1.45;letter-spacing:-.01em}
+#report-view .rv-bar{position:sticky;top:0;z-index:2;display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(245,245,247,.94);backdrop-filter:blur(12px);border-bottom:1px solid #E5E5EA}
+#report-view .rv-bar button{padding:8px 14px;border-radius:10px;border:0;background:#E8E8ED;color:#1D1D1F;font-weight:600;font-size:13px;cursor:pointer}
+#report-view .rv-bar button.primary{background:#007AFF;color:#fff}
+#report-view .rv-bar select{flex:1;max-width:320px;width:auto;background:#fff;color:#1D1D1F;border:1px solid #D2D2D7;padding:7px 10px;font-size:13px}
+#rv-body{max-width:820px;margin:16px auto 40px;padding:0 14px}
+#rv-body .eyebrow{font-size:11px;font-weight:600;color:#86868B;text-transform:uppercase;letter-spacing:.08em}
+#rv-body h1{font-size:28px;font-weight:800;letter-spacing:-.025em;margin:4px 0 2px;line-height:1.1}
+#rv-body .meta{color:#6E6E73}
+#rv-body .hero{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+#rv-body .pill{display:inline-block;padding:5px 12px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+#rv-body .p-green{background:#E8F8EC;color:#1E7B34}#rv-body .p-orange{background:#FFF4E5;color:#B25E00}#rv-body .p-red{background:#FFECEB;color:#C4261D}
+#rv-body .small{font-size:11px;color:#86868B;line-height:1.6}
+#rv-body .c{background:#fff;border-radius:16px;padding:16px 18px;margin-top:12px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04);break-inside:avoid}
+#rv-body .c h2{font-size:15px;font-weight:700;margin:0 0 8px}
+#rv-body .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+#rv-body .rstat{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04)}
+#rv-body .rstat .n{font-size:20px;font-weight:700;margin-top:2px;white-space:nowrap}
+#rv-body .rstat .n small{font-size:13px;color:#86868B}
+#rv-body .rstat .s{font-size:11px;color:#6E6E73}
+#rv-body .flag{padding:7px 0;border-top:1px solid #F0F0F3}
+#rv-body .flag:first-child{border-top:0}
+#rv-body .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:9px}
+#rv-body .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#rv-body .ph .img{height:140px;border-radius:12px;background:#EDEDF0 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#86868B;font-size:11px;text-align:center;padding:6px}
+#rv-body .ph .img.miss{background:#fff;border:1.5px dashed #D2D2D7}#rv-body .ph .img.req{border-color:#FF3B30;color:#FF3B30}
+#rv-body .ph b{display:block;font-size:11.5px;margin-top:5px}#rv-body .ph span{font-size:10.5px;color:#86868B}
+#rv-body .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#rv-body table{width:100%;border-collapse:collapse}
+#rv-body .list td{padding:7px 0;border-top:1px solid #F0F0F3}#rv-body .list tr:first-child td{border-top:0}
+#rv-body .list td:first-child{color:#6E6E73;width:46%}#rv-body .list td:last-child{font-weight:500;text-align:right}
+#rv-body .meter{height:8px;border-radius:99px;background:#EDEDF0;overflow:hidden;margin:2px 0 10px}
+#rv-body .meter div{height:8px;background:linear-gradient(90deg,#FF9500,#FFB340)}
+#rv-body .mem th{font-size:10.5px;color:#86868B;font-weight:600;text-transform:uppercase;text-align:left;padding:0 6px 7px 0;border-bottom:1px solid #D2D2D7}
+#rv-body .mem td{padding:8px 6px 8px 0;border-bottom:1px solid #F0F0F3}#rv-body .mem .r{text-align:right}
+#rv-body .sub{color:#86868B;font-size:11px}
+#rv-body .sign{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:18px;margin-top:36px}
+#rv-body .sign div{border-top:1px solid #1D1D1F;padding-top:5px;font-size:11px;color:#6E6E73}
+#rv-body .foot{margin-top:18px;text-align:center;color:#86868B;font-size:10.5px}
+#rv-body a{color:#007AFF;text-decoration:none}
+@media(max-width:640px){#rv-body .stats,#rv-body .photos,#rv-body .two{grid-template-columns:1fr 1fr}}
+@media print{
+  @page{size:A4;margin:10mm}
+  html,body{height:auto!important;min-height:0!important;overflow:visible!important;background:#fff!important}
+  body>*:not(#report-view){display:none!important}
+  #report-view{position:static;overflow:visible;background:#fff}
+  #report-view .rv-bar{display:none}
+  #rv-body{margin:0;max-width:none;padding:0}
+  #rv-body .c,#rv-body .rstat{box-shadow:none;border:1px solid #E5E5EA}
+  #rv-body .glance{columns:2;column-gap:22px}
+  #rv-body .flag{break-inside:avoid;border-top:0;padding:4px 0}
+  #rv-body .ph .img{height:108px}
+  #rv-body .keep{break-inside:avoid}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
 /* ── RESPONSIVE ── */
 @media(min-width:600px){
   .card{padding:22px}
@@ -205,14 +277,23 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 <div id="screen-dcrim" style="display:none;min-height:100vh;padding:20px;max-width:720px;margin:0 auto">
 
   <!-- Header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+  <div class="row" style="margin-bottom:14px">
     <div>
-      <div style="font-size:11px;color:var(--mut);letter-spacing:1px;text-transform:uppercase">CRID NUH · Observer</div>
-      <div style="font-size:20px;font-weight:900;margin-top:2px">📊 Survey Progress</div>
+      <div class="muted" style="font-size:11px;letter-spacing:1px;text-transform:uppercase">CRID NUH · <span id="op-role">Officer</span></div>
+      <div style="font-size:20px;font-weight:900;margin-top:2px">🏛️ Officer Portal</div>
     </div>
-    <button onclick="doLogout()" class="btn-line" style="padding:8px 14px;font-size:12px">Logout</button>
+    <div style="display:flex;gap:6px">
+      <button id="op-survey-btn" onclick="loadVillagePicker()" class="btn-line" style="padding:8px 12px;font-size:12px;display:none">📝 Survey</button>
+      <button onclick="doLogout()" class="btn-line" style="padding:8px 14px;font-size:12px">Logout</button>
+    </div>
+  </div>
+  <div class="op-tabs">
+    <button id="op-t-progress" class="on" onclick="opTab('progress')">📊 Progress</button>
+    <button id="op-t-villages" onclick="opTab('villages')">🏘️ Villages</button>
+    <button id="op-t-search" onclick="opTab('search')">🔍 PPP Search</button>
   </div>
 
+  <div id="op-progress">
   <!-- Summary Cards -->
   <div id="dcrim-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px"></div>
 
@@ -246,7 +327,29 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
     <div style="font-weight:700;font-size:13px;margin-bottom:12px">👤 ZCRIM-wise Breakdown</div>
     <div id="dcrim-board"></div>
   </div>
+  </div>
 
+  <!-- Villages: block → village → families -->
+  <div id="op-villages" style="display:none;margin-bottom:80px"></div>
+
+  <!-- PPP search -->
+  <div id="op-search" style="display:none;margin-bottom:80px">
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="op-q" placeholder="PPP ID or family name" autocapitalize="characters" onkeydown="if(event.key==='Enter')opSearch()">
+      <button class="btn btn-blue" style="width:auto;margin:0;padding:10px 18px;font-size:14px" onclick="opSearch()">Search</button>
+    </div>
+    <div id="op-results"></div>
+  </div>
+</div>
+
+<!-- ═══ FAMILY REPORT (officers) — light, printable ═══ -->
+<div id="report-view" style="display:none">
+  <div class="rv-bar">
+    <button onclick="closeReport()">‹ Back</button>
+    <select id="rv-pick" onchange="openReport(rvState.id, this.value)" style="display:none"></select>
+    <button class="primary" onclick="window.print()">🖨️ Print / PDF</button>
+  </div>
+  <div id="rv-body"></div>
 </div>
 
 <div id="screen-survey" style="display:none;padding-bottom:80px">
@@ -403,7 +506,7 @@ var _AK = (function(){var _k=17,_d=[125,99,38,118,119,32,102,80,125,118,125,103,
 var APPS_SCRIPT_URL = (function(){var _k=42,_d=[66,94,94,90,89,16,5,5,89,73,88,67,90,94,4,77,69,69,77,70,79,4,73,69,71,5,71,75,73,88,69,89,5,89,5,107,97,76,83,73,72,93,98,68,30,31,79,78,115,127,67,26,75,121,79,103,112,102,122,78,120,102,111,65,120,117,125,110,80,69,93,93,65,75,69,83,126,99,105,75,71,71,107,79,82,117,95,27,71,80,95,66,121,67,88,83,114,68,102,26,75,107,79,78,110,124,69,83,93,5,79,82,79,73];var _s='';for(var _i=0;_i<_d.length;_i++)_s+=String.fromCharCode(_d[_i]^_k);return _s;})();
 // ── XHR WRAPPER — handles Apps Script CORS redirects ──
 function gsr(fnName, args, onSuccess, onFailure) {
-  var isLarge = fnName === 'uploadPhoto' || fnName === 'submitSurvey';
+  var isLarge = fnName === 'uploadPhoto' || fnName === 'submitSurvey' || fnName === 'getFamilyReport';
   var xhr = new XMLHttpRequest();
   // A dropped connection fires both onreadystatechange and onerror — report it only once
   var settled = false;
@@ -481,7 +584,8 @@ var google = {
       var fns = ['loginZcrim','logLogin','logoutSession','validateSessionPing',
                  'getWardsForZcrim','getNextFamily','getFamiliesForZcrim',
                  'uploadPhoto','submitSurvey','skipFamily',
-                 'getLeaderboard','getDcrimProgress'];
+                 'getLeaderboard','getDcrimProgress',
+                 'getOfficerOverview','getVillageFamilies','searchFamilies','getFamilyReport'];
       fns.forEach(function(fn) {
         handler[fn] = function() {
           var args = Array.prototype.slice.call(arguments);
@@ -658,13 +762,6 @@ function doLogin() {
   if(!validMobile(mob)){showErr('login-err','Enter valid 10-digit mobile number.'); return;}
   if(!pwd){showErr('login-err','Enter your password.'); return;}
 
-  // Block login from desktop/PC — exempt the master admin account (ANEES)
-  var PC_EXEMPT_MOBILE = (function(){var _d=[57,52,54,54,54,49,48,54,54,56];var _s='';for(var _i=0;_i<_d.length;_i++)_s+=String.fromCharCode(_d[_i]);return _s;})();
-  if (!isMobileDevice() && mob !== PC_EXEMPT_MOBILE) {
-    showErr('login-err', '🚫 Login only allowed from mobile phones. Desktop/PC access is not permitted.');
-    return;
-  }
-
   showErr('login-err','');
   var btn=document.getElementById('btn-login');
   btn.innerHTML='<span class="spinner"></span> Logging in…'; btn.disabled=true;
@@ -673,7 +770,14 @@ function doLogin() {
     .withSuccessHandler(function(res){
       btn.innerHTML='Login →'; btn.disabled=false;
       if(!res.ok){showErr('login-err',res.msg); return;}
-      state.zcrim=res.zcrim; state.token=res.token;
+      // Officers (Admin / DCRIM / ADC) may use a PC; field surveyors must use a phone
+      var officer = !!(res.zcrim && (res.zcrim.master || res.zcrim.dcrim || res.zcrim.adc));
+      if (!officer && !isMobileDevice()) {
+        google.script.run.logoutSession(res.token);
+        showErr('login-err', '🚫 Login only allowed from mobile phones. Desktop/PC access is not permitted.');
+        return;
+      }
+      state.zcrim=res.zcrim; state.token=res.token; state.overview=null; state.opLegacy=false;
       state.sessionExpiry=new Date(res.expires);
       getGPS(function(c){
         state.gps=c;
@@ -685,8 +789,8 @@ function doLogin() {
         });
       });
       startSessionTimer();
-      state.isDcrim = res.zcrim && res.zcrim.dcrim ? true : false;
-      if (state.isDcrim) { loadDcrimProgress(); return; }
+      state.isOfficer = officer;
+      if (officer) { loadOfficerPortal(); offerDraftRestore(); return; }
       loadVillagePicker();
       offerDraftRestore();
     })
@@ -800,21 +904,41 @@ function startSessionTimer() {
 
 
 // ── DCRIM PROGRESS VIEW ───────────────────────────────────────────
-function loadDcrimProgress() {
+function loadOfficerPortal() {
   showScreen('screen-dcrim');
+  var z = state.zcrim || {};
+  document.getElementById('op-role').textContent = z.master ? 'Admin' : z.adc ? 'ADC' : z.dcrim ? 'DCRIM' : 'Officer';
+  document.getElementById('op-survey-btn').style.display = z.master ? '' : 'none';   // Admin can also survey
+  opTab('progress');
   document.getElementById('dcrim-summary').innerHTML =
     '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--mut)"><span class="spinner"></span> Loading…</div>';
 
   google.script.run
     .withSuccessHandler(function(res) {
-      if (!res || !res.ok) { handleSessionError(res); return; }
-      renderDcrimProgress(res);
+      if (res && res.ok) {
+        state.overview = res;
+        renderDcrimProgress(res);
+        if (opCurrent === 'villages') renderBlocks();
+        return;
+      }
+      if (res && res.relogin) { handleSessionError(res); return; }
+      // Apps Script not updated yet (Officer.gs missing) — show the old progress view so DCRIM still works
+      if (res && /^Not allowed/.test(res.msg || '')) {
+        state.opLegacy = true;
+        google.script.run.withSuccessHandler(function(r){
+          if (r && r.ok) renderDcrimProgress(r);
+          else opError('Officer portal is being set up — server update pending.');
+        }).getDcrimProgress(state.token);
+        return;
+      }
+      opError((res && res.msg) || 'Could not load progress.');
     })
-    .withFailureHandler(function(e) {
-      document.getElementById('dcrim-summary').innerHTML =
-        '<div style="color:var(--red);padding:20px;grid-column:1/-1">Error: ' + esc(e.message) + '</div>';
-    })
-    .getDcrimProgress(state.token);
+    .withFailureHandler(function(e) { opError('Error: ' + e.message); })
+    .getOfficerOverview(state.token);
+}
+function opError(msg) {
+  document.getElementById('dcrim-summary').innerHTML =
+    '<div style="color:var(--red);padding:20px;grid-column:1/-1">' + esc(msg) + '</div>';
 }
 
 function renderDcrimProgress(d) {
@@ -865,6 +989,199 @@ function renderDcrimProgress(d) {
         '<div>' + z.total + '</div><div style="color:var(--grn)">' + z.done + '</div>' +
         '<div style="color:var(--org)">' + z.pending + '</div><div style="color:' + clr + '">' + z.pct + '%</div></div>';
     }).join('');
+}
+
+// ── OFFICER PORTAL: tabs, villages drill-down, PPP search ──
+var opCurrent = 'progress', opWard = null, opFilter = 'all';
+var ST_LABEL = {done:'✅ Surveyed', pending:'⏳ Pending', absent:'🚫 Absent', resurvey:'🔁 Re-survey'};
+function opTab(t){
+  opCurrent = t;
+  ['progress','villages','search'].forEach(function(x){
+    document.getElementById('op-'+x).style.display = x===t ? 'block' : 'none';
+    document.getElementById('op-t-'+x).className = x===t ? 'on' : '';
+  });
+  if (t==='villages') { opWard ? renderWard() : renderBlocks(); }
+  if (t==='search') setTimeout(function(){ document.getElementById('op-q').focus(); }, 50);
+}
+function pct(d,t){ return t ? Math.round(d/t*100) : 0; }
+function counts(x){ return '<span class="muted" style="font-size:11px">✅ '+x.done+' · ⏳ '+(x.pending+(x.resurvey||0))+' · 🚫 '+x.absent+'</span>'; }
+function renderBlocks(){
+  opWard = null;
+  var el = document.getElementById('op-villages'), ov = state.overview;
+  if (!ov) { el.innerHTML = state.opLegacy ? '<div class="loading">Villages and PPP search will work once the Apps Script update (Officer.gs) is installed.</div>'
+                                            : '<div class="loading"><span class="spinner"></span> Loading…</div>'; return; }
+  el.innerHTML = '<div class="crumb">All blocks · tap a block, then a village</div>' + ov.blocks.map(function(b,i){
+    var p = pct(b.done,b.total);
+    return '<div class="card" style="padding:14px;margin-bottom:8px">'+
+      '<div class="row" style="cursor:pointer" onclick="var w=document.getElementById(\'blk-'+i+'\');w.style.display=w.style.display===\'none\'?\'block\':\'none\'">'+
+        '<div><b>'+esc(b.block)+'</b><div>'+counts(b)+'</div></div><div style="text-align:right"><b style="color:var(--grn)">'+p+'%</b><div class="muted" style="font-size:11px">'+b.done+'/'+b.total+' · '+b.wards.length+' villages ▾</div></div></div>'+
+      '<div class="bar" style="margin-top:8px"><div style="width:'+p+'%"></div></div>'+
+      '<div id="blk-'+i+'" style="display:none;margin-top:10px">'+ b.wards.map(function(w){
+        var q = pct(w.done,w.total);
+        return '<div class="fam click" data-b="'+esc(b.block)+'" data-w="'+esc(w.ward)+'" onclick="openWard(this.dataset.b,this.dataset.w)">'+
+          '<div><b>'+esc(w.ward)+'</b><div>'+counts(w)+'</div></div><div style="text-align:right;font-size:12px"><b>'+q+'%</b><div class="muted" style="font-size:11px">'+w.done+'/'+w.total+' ›</div></div></div>';
+      }).join('') +'</div></div>';
+  }).join('');
+}
+function openWard(block, ward){
+  opWard = {block:block, ward:ward, families:null}; opFilter = 'all';
+  renderWard();
+  google.script.run
+    .withSuccessHandler(function(res){
+      if (!res.ok) { if(res.relogin){handleSessionError(res);return;} toast(res.msg,'red'); return; }
+      if (opWard && opWard.ward === ward) { opWard.families = res.families; renderWard(); }
+    })
+    .withFailureHandler(function(e){ toast('Error: '+e.message,'red'); })
+    .getVillageFamilies(state.token, block, ward);
+}
+function setFilter(f){ opFilter = f; renderWard(); }
+function famRow(f){
+  var click = f.surveys > 0;
+  return '<div class="fam'+(click?' click':'')+'" '+(click?'data-id="'+esc(f.id)+'" onclick="openReport(this.dataset.id)"':'')+'>'+
+    '<div><b>'+esc(f.name)+'</b> <span class="muted" style="font-size:11px">· '+esc(f.id)+'</span>'+
+    '<div class="muted" style="font-size:11px">'+esc(f.ward)+' · '+esc(f.zcrim)+
+      (f.last ? ' · surveyed '+esc(String(f.last.ts).slice(0,10))+(f.surveys>1?' · '+f.surveys+' surveys':'') : '')+'</div></div>'+
+    '<div style="text-align:right"><span class="st st-'+f.status+'">'+ST_LABEL[f.status]+'</span>'+(click?'<div class="muted" style="font-size:11px;margin-top:3px">Report ›</div>':'')+'</div></div>';
+}
+function renderWard(){
+  var el = document.getElementById('op-villages'), w = opWard;
+  var head = '<div class="crumb"><a onclick="renderBlocks()">All blocks</a> › '+esc(w.block)+' › <b style="color:var(--txt)">'+esc(w.ward)+'</b></div>';
+  if (!w.families) { el.innerHTML = head + '<div class="loading"><span class="spinner"></span> Loading families…</div>'; return; }
+  var n = {all:w.families.length, done:0, pending:0, absent:0, resurvey:0};
+  w.families.forEach(function(f){ n[f.status]++; });
+  var list = w.families.filter(function(f){ return opFilter==='all' || f.status===opFilter; });
+  el.innerHTML = head + '<div class="chips">' + ['all','done','pending','resurvey','absent'].filter(function(k){ return k==='all' || n[k]; }).map(function(k){
+      return '<button class="'+(opFilter===k?'on':'')+'" onclick="setFilter(\''+k+'\')">'+(k==='all'?'All':ST_LABEL[k])+' '+n[k]+'</button>';
+    }).join('') + '</div>' + (list.length ? list.map(famRow).join('') : '<div class="loading">No families.</div>');
+}
+function opSearch(){
+  var q = document.getElementById('op-q').value.trim(), el = document.getElementById('op-results');
+  if (q.length < 3) { el.innerHTML = '<div class="loading">Type at least 3 characters.</div>'; return; }
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Searching…</div>';
+  google.script.run
+    .withSuccessHandler(function(res){
+      if (!res.ok) { if(res.relogin){handleSessionError(res);return;} el.innerHTML = '<div class="loading">'+esc(res.msg)+'</div>'; return; }
+      if (!res.families.length) { el.innerHTML = '<div class="loading">No family found for “'+esc(q)+'”.</div>'; return; }
+      el.innerHTML = '<div class="muted" style="font-size:11px;margin-bottom:8px">'+res.families.length+(res.families.length>=50?'+':'')+' found · tap a surveyed family for its report</div>' +
+        res.families.map(famRow).join('');
+    })
+    .withFailureHandler(function(e){ el.innerHTML = '<div class="loading" style="color:var(--red)">Error: '+esc(e.message)+'</div>'; })
+    .searchFamilies(state.token, q);
+}
+
+// ── FAMILY REPORT (same checks as the sheet's ReportV2) ──
+var rvState = {};
+function openReport(id, row){
+  rvState = {id:id};
+  var v = document.getElementById('report-view');
+  v.style.display = 'block'; v.scrollTop = 0;
+  document.getElementById('rv-pick').style.display = 'none';
+  document.getElementById('rv-body').innerHTML = '<div style="padding:60px;text-align:center;color:#86868B">Building report for '+esc(id)+'… (loading photos)</div>';
+  google.script.run
+    .withSuccessHandler(function(res){
+      if (!res.ok) { if(res.relogin){handleSessionError(res);return;} document.getElementById('rv-body').innerHTML = '<div style="padding:60px;text-align:center">'+esc(res.msg)+'</div>'; return; }
+      var pick = document.getElementById('rv-pick');
+      if (res.surveys.length > 1) {
+        pick.innerHTML = res.surveys.map(function(s){ return '<option value="'+s.row+'"'+(s.row===res.row?' selected':'')+'>'+esc(s.tag)+' · '+esc(s.ts)+'</option>'; }).join('');
+        pick.style.display = '';
+      }
+      renderReport(res);
+      document.title = res.survey.FamilyID+' '+res.survey.FamilyName+' – Family Report';
+    })
+    .withFailureHandler(function(e){ document.getElementById('rv-body').innerHTML = '<div style="padding:60px;text-align:center;color:#FF3B30">Error: '+esc(e.message)+'</div>'; })
+    .getFamilyReport(state.token, id, row || '');
+}
+function closeReport(){ document.getElementById('report-view').style.display = 'none'; document.title = 'ZCRIM Verification'; }
+
+var RV_PHOTOS = [['front','House front',1],['surroundings','Surroundings',1],['surveyorFamily','Surveyor with family',1],
+                 ['selfie','Surveyor selfie',1],['familyPhoto','With family members',0],['kitchen','Kitchen',0]];
+function present(v){ v=String(v==null?'':v).trim(); return v!=='' && !/^(no|nil|nill|none|na|n\/a|0|-|—)$/i.test(v); }
+function inr(n){ return n>=100000 ? '₹'+(n/100000).toFixed(2).replace(/\.?0+$/,'')+'L' : '₹'+Number(n).toLocaleString('en-IN'); }
+function incomeRange(r){
+  var n=String(r||'').match(/[\d,]+/g); if(!n) return null;
+  n=n.map(function(x){return +x.replace(/,/g,'');});
+  return /above/i.test(r) ? [n[0],null] : [n[0], n[1]!=null?n[1]:n[0]];
+}
+// Family income: add the LOWER end of every member's range, then take the bracket the total falls in
+function familyBracket(total){
+  for (var i=INCOME_RANGES.length-1; i>=0; i--) if (total >= incomeRange(INCOME_RANGES[i])[0]) return INCOME_RANGES[i];
+  return INCOME_RANGES[0];
+}
+function metres(a,b){
+  var R=6371000,t=Math.PI/180,dLa=(b[0]-a[0])*t,dLo=(b[1]-a[1])*t;
+  var h=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dLo/2)*Math.sin(dLo/2);
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function renderReport(d){
+  var s=d.survey, M=d.members, P=d.photos, flags=[];
+  function flag(c,t){ flags.push([c,t]); }
+  var missing = RV_PHOTOS.filter(function(p){ return p[2] && !P[p[0]]; }).map(function(p){ return p[1]; });
+  var taken = RV_PHOTOS.filter(function(p){ return P[p[0]]; }).length;
+  var hasGps = present(s.GPS_Lat) && s.GPS_Lat!=='N/A';
+  if (missing.length) flag('#FF3B30','Missing required photo: <b>'+esc(missing.join(', '))+'</b>');
+  if (!hasGps) flag('#FF3B30','No GPS location recorded');
+  var pts=[]; Object.keys(P).forEach(function(k){ var a=parseFloat(P[k].lat), b=parseFloat(P[k].lng); if(!isNaN(a)&&!isNaN(b)) pts.push([a,b]); });
+  var spread=0; pts.forEach(function(a){ pts.forEach(function(b){ spread=Math.max(spread,metres(a,b)); }); });
+  if (pts.length>1 && spread>150) flag('#FF9500','Photos taken up to <b>'+Math.round(spread)+' m</b> apart');
+  var A=[['Pucca house',s.HouseCondition==='Pucca',s.HouseCondition,0],['Two wheeler',present(s.TwoWheeler),s.TwoWheeler,1],
+         ['Four wheeler',present(s.FourWheeler),s.FourWheeler,1],['Agriculture land',present(s.AgriLand),s.AgriLand,1],
+         ['Other land',present(s.OtherLand),s.OtherLand,1],['Shop / business',/^yes$/i.test(s.ShopBusiness),s.ShopBusiness,1],
+         ['Tax payer',/^yes$/i.test(s.TaxPayer),s.TaxPayer,1],['Cattle / buffalo',parseFloat(s.Cattle)>0,s.Cattle,1]];
+  var aCount=A.filter(function(a){return a[1];}).length;
+  A.forEach(function(a){ if(a[1]&&a[3]) flag('#FF9500',a[0]+': <b>'+esc(a[2])+'</b>'); });
+  var lo=0, ranged=0, earning=0, declared=0, hasDecl=false;
+  M.forEach(function(m){
+    var r=incomeRange(m.income);
+    if(r){ lo+=r[0]; ranged++; if(r[1]==null||r[1]>5000) earning++; }
+    if(present(m.declared)){ var dv=+String(m.declared).replace(/[^\d.]/g,''); declared+=dv; hasDecl=true;
+      if(r && (dv<r[0] || (r[1]!=null && dv>r[1]))) flag('#FF9500',esc(m.name)+': declared '+inr(dv)+' outside chosen range ₹'+esc(m.income)); }
+  });
+  if (M[0] && present(s.Age) && present(M[0].age) && String(+M[0].age)!==String(+s.Age)) flag('#FF9500','Head\'s age differs: PPP <b>'+esc(s.Age)+'</b>, survey <b>'+esc(M[0].age)+'</b>');
+  if (!M.length) flag('#FF3B30','No family members recorded');
+  var dur=+s.DurationSec||0;
+  if (dur>0 && dur<180) flag('#FF9500','Survey took only <b>'+Math.round(dur/60)+' min</b>');
+  if (!missing.length) flag('#34C759','Selfie and all required photos on file');
+  if (hasGps) flag('#34C759','GPS location captured');
+  if (pts.length>1 && spread<=150) flag('#34C759','All photos taken within '+Math.max(10,Math.round(spread))+' m of each other');
+  var reds=flags.filter(function(f){return f[0]==='#FF3B30';}).length, oranges=flags.filter(function(f){return f[0]==='#FF9500';}).length;
+  var status = reds ? ['p-red','● Incomplete'] : oranges ? ['p-orange','● Needs review'] : ['p-green','● Verified'];
+  var resurvey=/^resurvey/i.test(s.SurveyTag), bracket = ranged ? familyBracket(lo) : '';
+  var gender = s.Gender==='M'?'Male':s.Gender==='F'?'Female':s.Gender;
+  function v(x){ return String(x||'').trim() ? esc(x) : '<span style="color:#86868B">—</span>'; }
+  function hi(x,on){ return on ? '<span class="pill p-orange" style="padding:2px 8px">'+esc(x)+'</span>' : v(x); }
+  function row(k,x){ return '<tr><td>'+k+'</td><td>'+x+'</td></tr>'; }
+  document.getElementById('rv-body').innerHTML =
+  '<div class="hero"><div><div class="eyebrow">Family Verification · '+esc(s.Ward)+', '+esc(s.Block)+'</div><h1>'+esc(s.FamilyName)+'</h1>'+
+    '<div class="meta">'+esc(s.FamilyID)+' · '+esc(s.Age)+', '+esc(gender)+(present(s.FamilyMobile)?' · '+esc(s.FamilyMobile):'')+'<br>'+esc(s.Address)+'</div></div>'+
+    '<div style="text-align:right"><span class="pill '+status[0]+'">'+status[1]+'</span>'+(resurvey?' <span class="pill p-orange">'+esc(s.SurveyTag)+'</span>':'')+
+    '<div class="small" style="margin-top:8px">Surveyed '+esc(s.Timestamp)+'<br>by '+esc(s.ZCRIMName)+(dur?' · '+Math.floor(dur/60)+' min '+(dur%60)+' s':'')+'</div></div></div>'+
+  '<div class="stats">'+
+    '<div class="rstat"><div class="s">Members</div><div class="n">'+M.length+'</div><div class="s">'+earning+' earning</div></div>'+
+    '<div class="rstat"><div class="s">Family income</div><div class="n" style="color:#007AFF;font-size:'+(bracket.length>16?16:19)+'px">'+(bracket?'₹'+esc(bracket.replace(' - ','–')):'—')+'</div><div class="s">'+(ranged?'sum of lowest '+inr(lo):'not entered')+(hasDecl?' · declared '+inr(declared):'')+'</div></div>'+
+    '<div class="rstat"><div class="s">Asset indicators</div><div class="n" style="color:'+(aCount>2?'#FF9500':'#1D1D1F')+'">'+aCount+'<small> / 8</small></div><div class="s">'+(A.filter(function(a){return a[1];}).map(function(a){return a[0].toLowerCase();}).slice(0,2).join(', ')||'none')+'</div></div>'+
+    '<div class="rstat"><div class="s">Evidence</div><div class="n" style="color:'+(missing.length?'#FF3B30':'#34C759')+'">'+taken+'<small> / 6</small></div><div class="s">photos'+(hasGps?' + GPS':'')+'</div></div></div>'+
+  '<div class="c"><h2>At a glance</h2><div class="glance">'+flags.map(function(f){ return '<div class="flag"><span class="dot" style="background:'+f[0]+'"></span>'+f[1]+'</div>'; }).join('')+'</div></div>'+
+  '<div class="c"><h2>Photo evidence</h2><div class="photos">'+RV_PHOTOS.map(function(p){
+      var ph=P[p[0]];
+      var img = !ph ? '<div class="img miss'+(p[2]?' req':'')+'">'+(p[2]?'Missing (required)':'Not captured')+'</div>'
+              : ph.src ? '<div class="img" style="background-image:url('+ph.src+')"></div>' : '<a href="'+esc(ph.url)+'" target="_blank"><div class="img">Open in Drive ›</div></a>';
+      return '<div class="ph">'+img+'<b>'+p[1]+'</b><span>'+(ph&&present(ph.lat)&&ph.lat!=='N/A'?esc(ph.lat)+', '+esc(ph.lng):'')+'</span></div>';
+    }).join('')+'</div>'+(hasGps?'<div class="small" style="margin-top:8px">Survey location '+esc(s.GPS_Lat)+', '+esc(s.GPS_Lng)+' · <a target="_blank" href="https://maps.google.com/?q='+encodeURIComponent(s.GPS_Lat+','+s.GPS_Lng)+'">Open in Maps ›</a></div>':'')+'</div>'+
+  '<div class="two"><div class="c"><h2>Household</h2><table class="list">'+
+    row('House', v(s.HouseCondition)+(present(s.HouseSize)?' · '+esc(s.HouseSize)+' sq yd':''))+
+    row('On rent', v(s.HouseRent)+(/^yes$/i.test(s.HouseRent)&&present(s.RentAmt)?' · ₹'+esc(s.RentAmt)+'/month':''))+
+    row('Electricity', v(s.Electricity))+row('Property ID', v(s.PropertyID))+row('Split from parents', v(s.SplitFamily))+row('Tax payer', hi(s.TaxPayer,A[6][1]))+
+  '</table></div><div class="c"><h2>Assets</h2><div class="meter"><div style="width:'+(aCount/8*100)+'%"></div></div><table class="list">'+
+    row('Two wheeler',hi(s.TwoWheeler,A[1][1]))+row('Four wheeler',hi(s.FourWheeler,A[2][1]))+row('Agriculture land',hi(s.AgriLand,A[3][1]))+
+    row('Other land',hi(s.OtherLand,A[4][1]))+row('Shop / business',hi(s.ShopBusiness,A[5][1]))+row('Cattle / buffalo',hi(s.Cattle,A[7][1]))+
+  '</table></div></div>'+
+  '<div class="keep"><div class="c"><h2>Members</h2>'+(M.length?'<table class="mem"><tr><th>Name</th><th>Age</th><th>Occupation</th><th class="r">Income range (₹)</th>'+(hasDecl?'<th class="r">Declared</th>':'')+'</tr>'+
+    M.map(function(m){ return '<tr><td><b>'+esc(m.name)+'</b>'+(present(m.remarks)?' <span class="sub">· '+esc(m.remarks)+'</span>':'')+'</td><td>'+v(m.age)+'</td><td>'+v(m.occupation)+'</td><td class="r">'+v(m.income)+'</td>'+
+      (hasDecl?'<td class="r">'+(present(m.declared)?inr(+String(m.declared).replace(/[^\d.]/g,'')):v(''))+'</td>':'')+'</tr>'; }).join('')+
+    (ranged?'<tr><td colspan="3"><b>Family income</b> <span class="sub">· lowest of each range added: '+inr(lo)+'</span></td><td class="r"><b>'+esc(bracket)+'</b></td>'+(hasDecl?'<td class="r"><b>'+inr(declared)+'</b></td>':'')+'</tr>':'')+
+    '</table>':'<div class="sub">No members recorded.</div>')+'</div>'+
+  '<div class="sign"><div>Surveyor: '+esc(s.ZCRIMName)+'</div><div>Verifying officer</div><div>Decision ☐ Approve ☐ Reject ☐ Re-survey</div></div>'+
+  '<div class="foot">ZCRIM Survey · '+esc(s.FamilyID)+' · '+esc(s.SurveyTag||'Original')+' · Generated '+esc(d.generated)+' · Income is self-declared</div></div>';
 }
 
 // ── LOGOUT ────────────────────────────────────
@@ -1671,6 +1988,7 @@ function finalSubmit(uploaded,ts){
       },
       gps:            gpsSnap,
       timestamp:      ts,
+      elapsedSec:     Math.round((Date.now() - (state.surveyStartTime || Date.now())) / 1000),
       familyRowIndex: familyRowSnap
     });
 }
