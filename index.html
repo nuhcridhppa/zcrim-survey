@@ -1171,14 +1171,15 @@ function appendMemberCard(i){
   div.innerHTML='<div style="font-weight:700;color:var(--acc);margin-bottom:10px">Member '+(i+1)+'</div>'+
     '<div class="row2"><div class="field"><label>Full Name</label><input id="m'+i+'-name" placeholder="Name"/></div>'+
     '<div class="field"><label>Age</label><input id="m'+i+'-age" type="number" placeholder="Age"/></div></div>'+
-    '<div class="field"><label>Income Range</label><select id="m'+i+'-income"><option value="">-- Select --</option>'+opts+'</select></div>'+
+    '<div class="row2"><div class="field"><label>Income Range</label><select id="m'+i+'-income"><option value="">-- Select --</option>'+opts+'</select></div>'+
+    '<div class="field"><label>Declared Income (₹)</label><input id="m'+i+'-declInc" type="number" inputmode="numeric" min="0" placeholder="Exact amount"/></div></div>'+
     '<div class="row2"><div class="field"><label>Occupation</label><input id="m'+i+'-occ" placeholder="e.g. Farmer"/></div>'+
     '<div class="field"><label>Remarks</label><input id="m'+i+'-rem" placeholder="Optional"/></div></div>';
   document.getElementById('members-list').appendChild(div);
 }
 function collectMembers(){
   var arr=[];
-  for(var i=0;i<state.memberCount;i++){var n=val('m'+i+'-name'),inc=val('m'+i+'-income');if(!n&&!inc)continue;arr.push({name:n,age:val('m'+i+'-age'),income:inc,occupation:val('m'+i+'-occ'),remarks:val('m'+i+'-rem')});}
+  for(var i=0;i<state.memberCount;i++){var n=val('m'+i+'-name'),inc=val('m'+i+'-income'),decl=val('m'+i+'-declInc');if(!n&&!inc&&!decl)continue;arr.push({name:n,age:val('m'+i+'-age'),income:inc,declaredIncome:decl,occupation:val('m'+i+'-occ'),remarks:val('m'+i+'-rem')});}
   return arr;
 }
 
