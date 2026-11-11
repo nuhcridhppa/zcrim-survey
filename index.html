@@ -152,8 +152,11 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 #rv-body .flag{padding:7px 0;border-top:1px solid #F0F0F3}
 #rv-body .flag:first-child{border-top:0}
 #rv-body .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:9px}
-#rv-body .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-#rv-body .ph .img{height:140px;border-radius:12px;background:#EDEDF0 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#86868B;font-size:11px;text-align:center;padding:6px}
+#rv-body .photos{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+#rv-body .ph .img{aspect-ratio:4/3;border-radius:12px;background:#EDEDF0;display:flex;align-items:center;justify-content:center;color:#86868B;font-size:11px;text-align:center;padding:6px}
+#rv-body .ph .pimg{display:block;width:100%;height:auto;border-radius:12px;background:#000;cursor:zoom-in}
+#report-view .zoom{position:fixed;inset:0;z-index:5;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+#report-view .zoom img{max-width:100%;max-height:100%;border-radius:8px}
 #rv-body .ph .img.miss{background:#fff;border:1.5px dashed #D2D2D7}#rv-body .ph .img.req{border-color:#FF3B30;color:#FF3B30}
 #rv-body .ph b{display:block;font-size:11.5px;margin-top:5px}#rv-body .ph span{font-size:10.5px;color:#86868B}
 #rv-body .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -169,7 +172,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 #rv-body .sign div{border-top:1px solid #1D1D1F;padding-top:5px;font-size:11px;color:#6E6E73}
 #rv-body .foot{margin-top:18px;text-align:center;color:#86868B;font-size:10.5px}
 #rv-body a{color:#007AFF;text-decoration:none}
-@media(max-width:640px){#rv-body .stats,#rv-body .photos,#rv-body .two{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){#rv-body .stats,#rv-body .two{grid-template-columns:1fr 1fr}#rv-body .photos{grid-template-columns:1fr}}
 @media print{
   @page{size:A4;margin:10mm}
   html,body{height:auto!important;min-height:0!important;overflow:visible!important;background:#fff!important}
@@ -180,7 +183,10 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   #rv-body .c,#rv-body .rstat{box-shadow:none;border:1px solid #E5E5EA}
   #rv-body .glance{columns:2;column-gap:22px}
   #rv-body .flag{break-inside:avoid;border-top:0;padding:4px 0}
-  #rv-body .ph .img{height:108px}
+  #rv-body .ph{break-inside:avoid}
+  #rv-body .ph .img{aspect-ratio:auto;height:60mm}
+  #rv-body .ph .pimg{max-height:72mm;width:auto;max-width:100%;margin:0 auto}
+  #report-view .zoom{display:none!important}
   #rv-body .keep{break-inside:avoid}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -1092,6 +1098,12 @@ function openReport(id, row){
     .withFailureHandler(function(e){ document.getElementById('rv-body').innerHTML = '<div style="padding:60px;text-align:center;color:#FF3B30">Error: '+esc(e.message)+'</div>'; })
     .getFamilyReport(state.token, id, row || '');
 }
+function rvZoom(img){
+  var z=document.createElement('div'); z.className='zoom';
+  z.innerHTML='<img alt="">'; z.firstChild.src=img.src;
+  z.onclick=function(){ z.remove(); };
+  document.getElementById('report-view').appendChild(z);
+}
 function closeReport(){ document.getElementById('report-view').style.display = 'none'; document.title = 'ZCRIM Verification'; }
 
 var RV_PHOTOS = [['front','House front',1],['surroundings','Surroundings',1],['surveyorFamily','Surveyor with family',1],
@@ -1165,7 +1177,7 @@ function renderReport(d){
   '<div class="c"><h2>Photo evidence</h2><div class="photos">'+RV_PHOTOS.map(function(p){
       var ph=P[p[0]];
       var img = !ph ? '<div class="img miss'+(p[2]?' req':'')+'">'+(p[2]?'Missing (required)':'Not captured')+'</div>'
-              : ph.src ? '<div class="img" style="background-image:url('+ph.src+')"></div>' : '<a href="'+esc(ph.url)+'" target="_blank"><div class="img">Open in Drive ›</div></a>';
+              : ph.src ? '<img class="pimg" src="'+ph.src+'" alt="'+p[1]+'" onclick="rvZoom(this)" title="Tap to enlarge">' : '<a href="'+esc(ph.url)+'" target="_blank"><div class="img">Open in Drive ›</div></a>';
       return '<div class="ph">'+img+'<b>'+p[1]+'</b><span>'+(ph&&present(ph.lat)&&ph.lat!=='N/A'?esc(ph.lat)+', '+esc(ph.lng):'')+'</span></div>';
     }).join('')+'</div>'+(hasGps?'<div class="small" style="margin-top:8px">Survey location '+esc(s.GPS_Lat)+', '+esc(s.GPS_Lng)+' · <a target="_blank" href="https://maps.google.com/?q='+encodeURIComponent(s.GPS_Lat+','+s.GPS_Lng)+'">Open in Maps ›</a></div>':'')+'</div>'+
   '<div class="two"><div class="c"><h2>Household</h2><table class="list">'+
