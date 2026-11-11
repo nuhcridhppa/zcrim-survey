@@ -126,6 +126,9 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 .fam.click{cursor:pointer}.fam.click:hover{border-color:var(--acc)}
 .st{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
 .st-done{background:#22c55e22;color:var(--grn)}.st-pending{background:#f59e0b22;color:var(--org)}
+.fam-act{display:flex;gap:5px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
+.fam-act button{padding:4px 9px;border-radius:7px;border:1px solid var(--bdr);background:none;color:var(--txt);font-size:11px;font-weight:600;cursor:pointer}
+.fam-act button:hover{border-color:var(--acc)}
 .st-absent{background:#94a3b822;color:var(--mut)}.st-resurvey{background:#ef444422;color:var(--red)}
 
 /* ── FAMILY REPORT (light, Apple style) ── */
@@ -196,6 +199,21 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
+/* ── RE-VERIFICATION FORM ── */
+#push-form{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
+#push-form .pf-box{background:#fff;color:#1D1D1F;border-radius:16px;padding:20px;width:100%;max-width:460px;max-height:100%;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+#push-form .pf-h{font-size:18px;font-weight:800}
+#push-form .pf-sub{font-size:12px;color:#6E6E73;margin:4px 0 12px}
+#push-form label{color:#6E6E73;margin:10px 0 4px}
+#push-form input,#push-form select,#push-form textarea{width:100%;background:#fff;color:#1D1D1F;border:1px solid #D2D2D7;border-radius:10px;padding:9px 11px;font-size:15px;font-family:inherit;-webkit-appearance:none}
+#push-form textarea{resize:vertical}
+#push-form .pf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#push-form .pf-err{color:#FF3B30;font-size:12px;min-height:16px;margin-top:8px}
+#push-form .pf-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+#push-form .pf-btns button{padding:10px 16px;border-radius:10px;border:0;background:#E8E8ED;color:#1D1D1F;font-weight:600;font-size:14px;cursor:pointer}
+#push-form .pf-btns button.primary{background:#007AFF;color:#fff}
+@media print{#push-form{display:none!important}}
+
 /* ── RESPONSIVE ── */
 @media(min-width:600px){
   .card{padding:22px}
@@ -263,7 +281,10 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
     <div class="session-bar">
       <span>👤 <span id="sess-name">—</span></span>
       <span id="sess-timer" style="color:var(--org)">⏱ 30:00</span>
-      <button onclick="doLogout()" class="btn-line" style="padding:3px 10px;font-size:11px">Logout</button>
+      <span style="display:flex;gap:6px">
+        <button id="vp-portal-btn" onclick="backToPortal()" class="btn-line" style="padding:3px 10px;font-size:11px;display:none">‹ Portal</button>
+        <button onclick="doLogout()" class="btn-line" style="padding:3px 10px;font-size:11px">Logout</button>
+      </span>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button onclick="showTab('village-tab')" id="tab-villages-btn" style="flex:1;padding:9px;border:1px solid var(--acc);border-radius:8px;background:var(--acc);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🏘️ Villages</button>
@@ -294,7 +315,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
       <div style="font-size:20px;font-weight:900;margin-top:2px">🏛️ Officer Portal</div>
     </div>
     <div style="display:flex;gap:6px">
-      <button id="op-survey-btn" onclick="loadVillagePicker()" class="btn-line" style="padding:8px 12px;font-size:12px;display:none">📝 Survey</button>
+      <button id="op-survey-btn" onclick="loadVillagePicker()" class="btn-line" style="padding:8px 12px;font-size:12px;display:none">📝 Survey villages</button>
       <button onclick="doLogout()" class="btn-line" style="padding:8px 14px;font-size:12px">Logout</button>
     </div>
   </div>
@@ -358,7 +379,11 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   <div class="rv-bar">
     <button onclick="closeReport()">‹ Back</button>
     <select id="rv-pick" onchange="openReport(rvState.id, this.value)" style="display:none"></select>
-    <button class="primary" onclick="window.print()">🖨️ Print / PDF</button>
+    <span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <button onclick="officerSurvey(rvState.id)">📝 Survey</button>
+      <button id="rv-push" onclick="openPushForm(rvState.id, rvState.name)" style="display:none">🔁 Send for re-verification</button>
+      <button class="primary" onclick="window.print()">🖨️ Print / PDF</button>
+    </span>
   </div>
   <div id="rv-body"></div>
 </div>
@@ -596,7 +621,8 @@ var google = {
                  'getWardsForZcrim','getNextFamily','getFamiliesForZcrim',
                  'uploadPhoto','submitSurvey','skipFamily',
                  'getLeaderboard','getDcrimProgress',
-                 'getOfficerOverview','getVillageFamilies','searchFamilies','getFamilyReport'];
+                 'getOfficerOverview','getVillageFamilies','searchFamilies','getFamilyReport',
+                 'getFamilyForSurvey','pushReverification'];
       fns.forEach(function(fn) {
         handler[fn] = function() {
           var args = Array.prototype.slice.call(arguments);
@@ -920,7 +946,7 @@ function loadOfficerPortal() {
   showScreen('screen-dcrim');
   var z = state.zcrim || {};
   document.getElementById('op-role').textContent = z.master ? 'Admin' : z.adc ? 'ADC' : z.dcrim ? 'DCRIM' : 'Officer';
-  document.getElementById('op-survey-btn').style.display = z.master ? '' : 'none';   // Admin can also survey
+  document.getElementById('op-survey-btn').style.display = '';   // all officers can survey (any village)
   opTab('progress');
   document.getElementById('dcrim-summary').innerHTML =
     '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--mut)"><span class="spinner"></span> Loading…</div>';
@@ -1053,8 +1079,14 @@ function famRow(f){
     '<div><b>'+esc(f.name)+'</b> <span class="muted" style="font-size:11px">· '+esc(f.id)+'</span>'+
     '<div class="muted" style="font-size:11px">'+esc(f.ward)+' · '+esc(f.zcrim)+
       (f.last ? ' · surveyed '+esc(String(f.last.ts).slice(0,10))+(f.surveys>1?' · '+f.surveys+' surveys':'') : '')+'</div></div>'+
-    '<div style="text-align:right"><span class="st st-'+f.status+'">'+ST_LABEL[f.status]+'</span>'+(click?'<div class="muted" style="font-size:11px;margin-top:3px">Report ›</div>':'')+'</div></div>';
+    '<div style="text-align:right"><span class="st st-'+f.status+'">'+ST_LABEL[f.status]+'</span>'+
+      '<div class="fam-act" data-id="'+esc(f.id)+'" data-name="'+esc(f.name)+'">'+
+        (click?'<button onclick="event.stopPropagation();openReport(this.parentNode.dataset.id)">Report</button>':'')+
+        '<button onclick="event.stopPropagation();officerSurvey(this.parentNode.dataset.id)">📝 Survey</button>'+
+        (canPush() && (f.status==='done'||f.status==='absent') ? '<button onclick="event.stopPropagation();openPushForm(this.parentNode.dataset.id,this.parentNode.dataset.name)">🔁 Re-verify</button>' : '')+
+      '</div></div></div>';
 }
+function canPush(){ var z = state.zcrim || {}; return !!(z.master || z.adc); }
 function renderWard(){
   var el = document.getElementById('op-villages'), w = opWard;
   var head = '<div class="crumb"><a onclick="renderBlocks()">All blocks</a> › '+esc(w.block)+' › <b style="color:var(--txt)">'+esc(w.ward)+'</b></div>';
@@ -1097,6 +1129,8 @@ function openReport(id, row){
         pick.innerHTML = res.surveys.map(function(s){ return '<option value="'+s.row+'"'+(s.row===res.row?' selected':'')+'>'+esc(s.tag)+' · '+esc(s.ts)+'</option>'; }).join('');
         pick.style.display = '';
       }
+      rvState.name = res.survey.FamilyName;
+      document.getElementById('rv-push').style.display = res.canPush ? '' : 'none';
       renderReport(res);
       document.title = res.survey.FamilyID+' '+res.survey.FamilyName+' – Family Report';
     })
@@ -1203,8 +1237,84 @@ function renderReport(d){
       (hasDecl?'<td class="r">'+(present(m.declared)?inr(+String(m.declared).replace(/[^\d.]/g,'')):v(''))+'</td>':'')+'</tr>'; }).join('')+
     (ranged?'<tr><td colspan="3"><b>Family income</b> <span class="sub">· lowest of each range added: '+inr(lo)+'</span></td><td class="r"><b>'+esc(bracket)+'</b></td>'+(hasDecl?'<td class="r"><b>'+inr(declared)+'</b></td>':'')+'</tr>':'')+
     '</table>':'<div class="sub">No members recorded.</div>')+'</div>'+
+  ((d.history||[]).length ? '<div class="c keep"><h2>Re-verification requests</h2><table class="mem"><tr><th>Date</th><th>Sent by</th><th>Grievance</th><th>Complainant / Ref.</th></tr>'+
+    d.history.map(function(h){ return '<tr><td>'+esc(String(h.at).slice(0,10))+'</td><td>'+esc(h.by)+'</td><td><b>'+esc(h.category||'—')+'</b><div class="sub">'+esc(h.reason)+'</div></td><td>'+esc(h.complainant||'—')+(h.reference?'<div class="sub">'+esc(h.reference)+'</div>':'')+'</td></tr>'; }).join('')+
+    '</table></div>' : '')+
   '<div class="sign"><div>Surveyor: '+esc(s.ZCRIMName)+'</div><div>Verifying officer</div><div>Decision ☐ Approve ☐ Reject ☐ Re-survey</div></div>'+
   '<div class="foot">ZCRIM Survey · '+esc(s.FamilyID)+' · '+esc(s.SurveyTag||'Original')+' · Generated '+esc(d.generated)+' · Income is self-declared</div></div>';
+}
+
+// ── OFFICER: survey any family / send for re-verification ──
+function backToPortal(){
+  state.officerSurvey = false;
+  closeReport();
+  loadOfficerPortal();
+  if (opWard) opTab('villages');
+}
+function officerSurvey(id){
+  if (state.family && state.family.id !== id && !confirm('Another survey is open ('+state.family.id+'). Discard it and survey '+id+'?')) return;
+  showLoadingOverlay('Opening '+id+' for survey…');
+  google.script.run
+    .withSuccessHandler(function(res){
+      hideLoadingOverlay();
+      if (!res.ok) { if(res.relogin){handleSessionError(res);return;} toast(res.msg,'red'); return; }
+      closeReport();
+      clearDraft();
+      state.officerSurvey = true;
+      state.resurveyNote  = res.note || null;
+      enterSurveyScreen(res.family.ward);
+      setupFamily({
+        family: res.family, rowIndex: res.rowIndex,
+        isResurvey: res.status === 'resurvey',
+        surveyTag: res.status === 'pending' ? 'Original' : 'Resurvey-' + new Date().toISOString().slice(0,10),
+        start: Date.now()
+      });
+      prefillHead();
+      var skip = document.getElementById('btn-skip'); if (skip) skip.style.display = 'none';   // officers survey the family they chose
+      if (res.status === 'done' || res.status === 'absent') toast('ℹ️ '+res.family.id+' was '+(res.status==='done'?'surveyed':'marked absent')+' before — this will be saved as a re-survey','org');
+      saveDraft();
+    })
+    .withFailureHandler(function(e){ hideLoadingOverlay(); toast('Error: '+e.message,'red'); })
+    .getFamilyForSurvey(state.token, id);
+}
+
+var GRIEVANCES = ['Income wrongly verified','Family members incorrect','Assets / house details incorrect','Wrong family surveyed','Other'];
+function openPushForm(id, name){
+  var old = document.getElementById('push-form'); if (old) old.remove();
+  var f = document.createElement('div');
+  f.id = 'push-form';
+  f.innerHTML =
+    '<div class="pf-box"><div class="pf-h">🔁 Send for re-verification</div>'+
+    '<div class="pf-sub">'+esc(name||'')+' · '+esc(id)+' — goes back to the top of the assigned ZCRIM\'s list. The ZCRIM sees the details below and gets an email.</div>'+
+    '<label>Grievance type</label><select id="pf-cat">'+GRIEVANCES.map(function(g){ return '<option>'+g+'</option>'; }).join('')+'</select>'+
+    '<label>Details of grievance *</label><textarea id="pf-det" rows="4" maxlength="500" placeholder="What does the citizen say is wrong? What should the ZCRIM check?"></textarea>'+
+    '<div class="pf-row"><div><label>Complainant name</label><input id="pf-name" maxlength="80"></div>'+
+    '<div><label>Complainant mobile</label><input id="pf-mob" type="tel" maxlength="10" inputmode="numeric"></div></div>'+
+    '<label>Grievance / reference no.</label><input id="pf-ref" maxlength="60" placeholder="e.g. CM Window / CPGRAMS no.">'+
+    '<div class="pf-err" id="pf-err"></div>'+
+    '<div class="pf-btns"><button onclick="document.getElementById(\'push-form\').remove()">Cancel</button>'+
+    '<button class="primary" id="pf-send">Send to ZCRIM</button></div></div>';
+  (document.getElementById('report-view').style.display === 'block' ? document.getElementById('report-view') : document.body).appendChild(f);
+  document.getElementById('pf-send').onclick = function(){ submitPush(id); };
+  setTimeout(function(){ document.getElementById('pf-det').focus(); }, 50);
+}
+function submitPush(id){
+  var v = function(i){ return document.getElementById(i).value.trim(); };
+  var info = {category:v('pf-cat'), details:v('pf-det'), complainantName:v('pf-name'), complainantMobile:v('pf-mob'), reference:v('pf-ref')};
+  var err = document.getElementById('pf-err');
+  if (info.details.length < 10) { err.textContent = 'Please describe the grievance (at least 10 characters).'; return; }
+  if (info.complainantMobile && !validMobile(info.complainantMobile)) { err.textContent = 'Complainant mobile must be a valid 10-digit number.'; return; }
+  var btn = document.getElementById('pf-send'); btn.disabled = true; btn.textContent = 'Sending…'; err.textContent = '';
+  google.script.run
+    .withSuccessHandler(function(res){
+      if (!res.ok) { if(res.relogin){handleSessionError(res);return;} btn.disabled=false; btn.textContent='Send to ZCRIM'; err.textContent = res.msg; return; }
+      document.getElementById('push-form').remove();
+      toast('✅ '+res.msg+(res.emailed?' ZCRIM emailed.':''),'green');
+      if (document.getElementById('report-view').style.display === 'block') openReport(id);
+      if (opWard) openWard(opWard.block, opWard.ward);   // refresh the village list's statuses
+    })
+    .withFailureHandler(function(e){ btn.disabled=false; btn.textContent='Send to ZCRIM'; err.textContent = 'Error: '+e.message; })
+    .pushReverification(state.token, id, info);
 }
 
 // ── LOGOUT ────────────────────────────────────
@@ -1225,6 +1335,8 @@ function doLogout(auto) {
 // ── VILLAGE PICKER ────────────────────────────
 function loadVillagePicker() {
   showScreen('screen-village');
+  state.officerSurvey = false;
+  document.getElementById('vp-portal-btn').style.display = state.isOfficer ? '' : 'none';
   document.getElementById('sess-name').textContent=state.zcrim.name;
   document.getElementById('village-list').innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)"><span class="spinner"></span> Loading…</div>';
   google.script.run
@@ -1324,6 +1436,7 @@ function loadLeaderboard(){
 }
 
 function switchVillage(){
+  if (state.officerSurvey) { backToPortal(); return; }
   showScreen('screen-village');
   google.script.run
     .withSuccessHandler(function(res){if(!res.ok){handleSessionError(res);return;} state.allWards=res.wards;renderVillageList(res.wards);renderVillageStats(res.wards,res.totalResurvey||0);document.getElementById('village-search').value='';})
@@ -1409,6 +1522,7 @@ function loadNextFamily(){
         showScreen('screen-done');
         return;
       }
+      state.resurveyNote = res.note || null;
       setupFamily({
         family: res.family, rowIndex: res.rowIndex, isResurvey: res.isResurvey || false,
         surveyTag: res.isResurvey ? ("Resurvey-" + new Date().toISOString().slice(0,10)) : "Original",
@@ -1442,7 +1556,7 @@ function setupFamily(d){
   startTimerDisplay();
   window.scrollTo(0, 0);
   var skipBtn = document.getElementById('btn-skip');
-  if(skipBtn){ skipBtn.disabled=false; skipBtn.style.opacity='1'; }
+  if(skipBtn){ skipBtn.disabled=false; skipBtn.style.opacity='1'; skipBtn.style.display=''; }
 
   // Update progress counter
   google.script.run
@@ -1482,8 +1596,12 @@ function renderFamilyInfo(){
     banner.id = 'resurvey-banner';
     banner.className = 'alert-red';
     banner.style.cssText = 'margin:0 0 14px;text-align:center';
+    var n = state.resurveyNote;
     banner.innerHTML = '<div style="font-size:16px;font-weight:900;letter-spacing:1px">RE-SURVEY REQUIRED</div>'
-      + '<div style="font-size:12px;margin-top:4px">This family has been flagged by admin. Please re-photograph and re-submit all fields carefully.</div>';
+      + '<div style="font-size:12px;margin-top:4px">This family has been flagged by admin. Please re-photograph and re-submit all fields carefully.</div>'
+      + (n ? '<div style="text-align:left;margin-top:10px;padding-top:8px;border-top:1px solid #ef444466;font-size:12px;line-height:1.5">'
+           + '<b>'+esc(n.category || 'Grievance')+'</b> · sent by '+esc(n.by)+' on '+esc(String(n.at).slice(0,10))+'<br>'+esc(n.reason)
+           + (n.reference ? '<br><span style="opacity:.8">Ref: '+esc(n.reference)+'</span>' : '') + '</div>' : '');
     var tab0 = document.getElementById('tab0');
     if (tab0) tab0.insertBefore(banner, tab0.firstChild);
   }
@@ -1990,6 +2108,7 @@ function finalSubmit(uploaded,ts){
       if(familySnap) state.surveyedIds[familySnap.id] = true;
       clearDraft();
       clearSurveyState();
+      if (state.officerSurvey) { backToPortal(); return; }
       loadNextFamily();
     })
     .withFailureHandler(function(e){
@@ -2041,7 +2160,7 @@ function writeDraft(){
   var d = {
     v:1, zcrim:zcrimKey(), savedAt:Date.now(), ward:state.selectedWard,
     family:state.family, rowIndex:state.familyRowIndex, isResurvey:state.isResurvey, surveyTag:state.surveyTag, start:state.surveyStartTime, stamp:state.surveyStamp,
-    tabs:tabUnlocked, members:members, assets:collectAssets(), urls:urls,
+    tabs:tabUnlocked, members:members, officer:!!state.officerSurvey, note:state.resurveyNote||null, assets:collectAssets(), urls:urls,
     selfie: state.selfie ? {dataUrl:state.selfie, gps:(state.selfieMeta||{}).gps, ts:(state.selfieMeta||{}).ts} : null,
     photos: state.photos
   };
@@ -2069,6 +2188,7 @@ function offerDraftRestore(){
 }
 function restoreDraft(d){
   enterSurveyScreen(d.ward);
+  state.officerSurvey = !!d.officer; state.resurveyNote = d.note || null;
   setupFamily({family:d.family, rowIndex:d.rowIndex, isResurvey:d.isResurvey, surveyTag:d.surveyTag, start:d.start, stamp:d.stamp, memberCount:d.members.length});
   d.members.forEach(function(m,i){ ['name','age','income','declInc','occ','rem'].forEach(function(f,j){ setVal('m'+i+'-'+f, m[j]); }); });
   Object.keys(d.assets || {}).forEach(function(k){ setVal('a-'+k, d.assets[k]); });
