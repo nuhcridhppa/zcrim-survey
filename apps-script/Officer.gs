@@ -2,14 +2,15 @@
  * ZCRIM — Officer portal (ADC / DCRIM / Admin)
  *
  * Add this file to the Apps Script project next to Code.gs and ReportV2.gs.
- * Read-only: it never writes to the sheet.
  *
  * Officers are entries in ZCRIMS (Code.gs) with  master:true  (Admin),
  * dcrim:true  (DCRIM) or  adc:true  (ADC). All officers see all blocks.
  * Test accounts' families are left out, like the other dashboards.
  *
  * Needs these names in Code.gs → handleApiRequest → allowed + fnMap:
- *   getOfficerOverview, getVillageFamilies, searchFamilies, getFamilyReport
+ *   getOfficerOverview, getVillageFamilies, searchFamilies, getFamilyReport,
+ *   getFamilyForSurvey, pushReverification
+ * Writes only in pushReverification (Families status + ResurveyLog); everything else is read-only.
  */
 
 function isOfficer_(z) { return !!(z && (z.master || z.dcrim || z.adc)); }
@@ -173,7 +174,115 @@ function getFamilyReport(token, familyId, surveyRow) {
   surveys.forEach(function (s) { if (s.row === want) pick = s; });   // only rows of THIS family
   var rep = rv2Report(pick.row);
   rep.ok = true;
+  rep.history = resurveyHistory_(id);
+  rep.canPush = !!(auth.zcrim.master || auth.zcrim.adc);
   rep.surveys = surveys;
   rep.row = pick.row;
   return rep;
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  OFFICER SURVEY — open any family in the survey form
+// ─────────────────────────────────────────────────────────────────
+function getFamilyForSurvey(token, familyId) {
+  var auth = officerAuth_(token);
+  if (!auth.ok) return auth;
+  var id = sanitizeStr(familyId, 20).toUpperCase();
+  var sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName("Families");
+  var last = sh.getLastRow();
+  var data = last > 1 ? sh.getRange(1, 1, last, 10).getValues() : [];
+  for (var i = 1; i < data.length; i++) {
+    var r = data[i];
+    if (String(r[0] || "").trim().toUpperCase() !== id) continue;
+    var status = famStatus_(r);
+    var note = status === "resurvey" ? resurveyNote_(id) : null;
+    return { ok:true, rowIndex:i + 1, isResurvey:status === "resurvey" || status === "done", status:status, note:note,
+             family:{ id:r[0], name:r[1], mobile:r[2], age:r[3], gender:r[4], address:r[5], block:r[6],
+                      ward:String(r[7] || "").trim(), assignedTo:String(r[8] || "").trim() } };
+  }
+  return { ok:false, msg:"Family not found: " + id };
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  RE-VERIFICATION (grievance) — ADC / Admin send a family back to its ZCRIM
+// ─────────────────────────────────────────────────────────────────
+var RESURVEY_HDR = ["Timestamp","AdminName","FamilyID","FamilyName","PrevStatus","Reason",
+                    "Category","ComplainantName","ComplainantMobile","GrievanceRef","Source"];
+var GRIEVANCE_TYPES = ["Income wrongly verified","Family members incorrect","Assets / house details incorrect",
+                       "Wrong family surveyed","Other"];
+
+function pushReverification(token, familyId, info) {
+  var auth = officerAuth_(token);
+  if (!auth.ok) return auth;
+  if (!(auth.zcrim.master || auth.zcrim.adc)) return { ok:false, msg:"Only ADC or Admin can send a family for re-verification." };
+  info = info || {};
+  var id       = sanitizeStr(familyId, 20).toUpperCase();
+  var category = GRIEVANCE_TYPES.indexOf(info.category) > -1 ? info.category : "Other";
+  var details  = cellSafe(sanitizeStr(info.details, 500));
+  var cName    = cellSafe(sanitizeStr(info.complainantName, 80));
+  var cMobile  = String(info.complainantMobile || "").replace(/[^\d]/g, "").slice(0, 10);
+  var ref      = cellSafe(sanitizeStr(info.reference, 60));
+  if (details.length < 10) return { ok:false, msg:"Please describe the grievance (at least 10 characters)." };
+  if (cMobile && !validMobile(cMobile)) return { ok:false, msg:"Complainant mobile must be a valid 10-digit number." };
+
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var famSh = ss.getSheetByName("Families");
+  var lock = LockService.getDocumentLock();
+  if (!lock.tryLock(10000)) return { ok:false, msg:"Busy — please try again in a moment." };
+  try {
+    var last = famSh.getLastRow();
+    var data = last > 1 ? famSh.getRange(1, 1, last, 10).getValues() : [];
+    for (var i = 1; i < data.length; i++) {
+      var r = data[i];
+      if (String(r[0] || "").trim().toUpperCase() !== id) continue;
+      var prev = famStatus_(r);
+      if (prev === "resurvey") return { ok:false, msg:id + " is already waiting for re-verification." };
+      if (prev === "pending")  return { ok:false, msg:id + " has not been surveyed yet — it is already in the ZCRIM's list." };
+      famSh.getRange(i + 1, 10).setValue("resurvey");
+      famSh.getRange(i + 1, 1, 1, 10).setBackground("#ffe0b2");
+
+      var logSh = ss.getSheetByName("ResurveyLog") || ss.insertSheet("ResurveyLog");
+      var hdr = logSh.getRange(1, 1, 1, RESURVEY_HDR.length).getValues()[0];
+      for (var c = 0; c < RESURVEY_HDR.length; c++) {
+        if (!String(hdr[c] || "").trim()) logSh.getRange(1, c + 1).setValue(RESURVEY_HDR[c]).setFontWeight("bold");
+      }
+      var ts = formatTS(new Date());
+      logSh.getRange(logSh.getLastRow() + 1, 1).setNumberFormat("@");
+      logSh.appendRow([ts, auth.zcrim.name, r[0], r[1], prev, details, category, cName, cMobile, ref, "Grievance"]);
+
+      // Tell the assigned ZCRIM (email failure must not undo the request)
+      var assigned = ZCRIMS.filter(function (z) { return z.mobile === String(r[8] || "").trim(); })[0];
+      var emailed = false;
+      if (assigned && assigned.email) {
+        try {
+          GmailApp.sendEmail(assigned.email, "Re-verification requested: " + r[0] + " (" + r[1] + ")",
+            "Dear " + assigned.name + ",\n\n" + auth.zcrim.name + " has sent this family back for re-verification.\n\n" +
+            "PPP ID   : " + r[0] + "\nName     : " + r[1] + "\nVillage  : " + r[7] + ", " + r[6] + "\n" +
+            "Grievance: " + category + "\nDetails  : " + details + (ref ? "\nRef. no. : " + ref : "") + "\n\n" +
+            "It is now at the top of your survey list for " + r[7] + ". Please re-survey it carefully.\n\n— ZCRIM Survey Admin",
+            { name:"ZCRIM Survey Admin", replyTo:ADMIN_EMAIL });
+          emailed = true;
+        } catch (e) { Logger.log("Re-verification email failed: " + e.message); }
+      }
+      return { ok:true, msg:"Sent to " + (assigned ? assigned.name : "the assigned ZCRIM") + " for re-verification.", emailed:emailed };
+    }
+    return { ok:false, msg:"Family not found: " + id };
+  } finally { lock.releaseLock(); }
+}
+
+// Latest re-verification request for a family (shown to the ZCRIM and in the report)
+function resurveyNote_(familyId) {
+  var list = resurveyHistory_(familyId);
+  return list.length ? list[list.length - 1] : null;
+}
+function resurveyHistory_(familyId) {
+  var sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName("ResurveyLog");
+  if (!sh || sh.getLastRow() < 2) return [];
+  var id = String(familyId || "").trim().toUpperCase();
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, RESURVEY_HDR.length).getValues();
+  return v.filter(function (r) { return String(r[2] || "").trim().toUpperCase() === id; }).map(function (r) {
+    var when = parseTS(r[0]);
+    return { at:when ? formatTS(when) : String(r[0]), by:String(r[1] || ""), reason:String(r[5] || ""),
+             category:String(r[6] || ""), complainant:String(r[7] || ""), reference:String(r[9] || "") };
+  });
 }
