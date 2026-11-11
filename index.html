@@ -144,6 +144,10 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 #rv-body .small{font-size:11px;color:#86868B;line-height:1.6}
 #rv-body .c{background:#fff;border-radius:16px;padding:16px 18px;margin-top:12px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04);break-inside:avoid}
 #rv-body .c h2{font-size:15px;font-weight:700;margin:0 0 8px}
+#rv-body .loc{display:grid;grid-template-columns:1fr 1.4fr 1.4fr;margin-top:14px;background:#fff;border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04);overflow:hidden}
+#rv-body .loc div{padding:10px 14px;border-left:1px solid #E5E5EA}#rv-body .loc div:first-child{border-left:0}
+#rv-body .loc span{display:block;font-size:10.5px;font-weight:600;color:#86868B;text-transform:uppercase;letter-spacing:.06em}
+#rv-body .loc b{display:block;font-size:14px;margin-top:2px}
 #rv-body .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
 #rv-body .rstat{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04)}
 #rv-body .rstat .n{font-size:20px;font-weight:700;margin-top:2px;white-space:nowrap}
@@ -172,6 +176,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 #rv-body .sign div{border-top:1px solid #1D1D1F;padding-top:5px;font-size:11px;color:#6E6E73}
 #rv-body .foot{margin-top:18px;text-align:center;color:#86868B;font-size:10.5px}
 #rv-body a{color:#007AFF;text-decoration:none}
+@media(max-width:520px){#rv-body .loc{grid-template-columns:1fr}#rv-body .loc div{border-left:0;border-top:1px solid #E5E5EA}#rv-body .loc div:first-child{border-top:0}}
 @media(max-width:640px){#rv-body .stats,#rv-body .two{grid-template-columns:1fr 1fr}#rv-body .photos{grid-template-columns:1fr}}
 @media print{
   @page{size:A4;margin:10mm}
@@ -180,7 +185,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   #report-view{position:static;overflow:visible;background:#fff}
   #report-view .rv-bar{display:none}
   #rv-body{margin:0;max-width:none;padding:0}
-  #rv-body .c,#rv-body .rstat{box-shadow:none;border:1px solid #E5E5EA}
+  #rv-body .c,#rv-body .rstat,#rv-body .loc{box-shadow:none;border:1px solid #E5E5EA}
   #rv-body .glance{columns:2;column-gap:22px}
   #rv-body .flag{break-inside:avoid;border-top:0;padding:4px 0}
   #rv-body .ph{break-inside:avoid}
@@ -1164,10 +1169,15 @@ function renderReport(d){
   function hi(x,on){ return on ? '<span class="pill p-orange" style="padding:2px 8px">'+esc(x)+'</span>' : v(x); }
   function row(k,x){ return '<tr><td>'+k+'</td><td>'+x+'</td></tr>'; }
   document.getElementById('rv-body').innerHTML =
-  '<div class="hero"><div><div class="eyebrow">Family Verification · '+esc(s.Ward)+', '+esc(s.Block)+'</div><h1>'+esc(s.FamilyName)+'</h1>'+
+  '<div class="hero"><div><div class="eyebrow">Family Verification Report</div><h1>'+esc(s.FamilyName)+'</h1>'+
     '<div class="meta">'+esc(s.FamilyID)+' · '+esc(s.Age)+', '+esc(gender)+(present(s.FamilyMobile)?' · '+esc(s.FamilyMobile):'')+'<br>'+esc(s.Address)+'</div></div>'+
     '<div style="text-align:right"><span class="pill '+status[0]+'">'+status[1]+'</span>'+(resurvey?' <span class="pill p-orange">'+esc(s.SurveyTag)+'</span>':'')+
     '<div class="small" style="margin-top:8px">Surveyed '+esc(s.Timestamp)+'<br>by '+esc(s.ZCRIMName)+(dur?' · '+Math.floor(dur/60)+' min '+(dur%60)+' s':'')+'</div></div></div>'+
+  '<div class="loc">'+
+    '<div><span>District</span><b>Nuh</b></div>'+
+    '<div><span>Block / MC</span><b>'+(present(s.Block)?esc(s.Block):'—')+'</b></div>'+
+    '<div><span>Village / Ward</span><b>'+(present(s.Ward)?esc(s.Ward):'—')+'</b></div>'+
+  '</div>'+
   '<div class="stats">'+
     '<div class="rstat"><div class="s">Members</div><div class="n">'+M.length+'</div><div class="s">'+earning+' earning</div></div>'+
     '<div class="rstat"><div class="s">Family income</div><div class="n" style="color:#007AFF;font-size:'+(bracket.length>16?16:19)+'px">'+(bracket?'₹'+esc(bracket.replace(' - ','–')):'—')+'</div><div class="s">'+(ranged?'sum of lowest '+inr(lo):'not entered')+(hasDecl?' · declared '+inr(declared):'')+'</div></div>'+
