@@ -7,10 +7,11 @@ Open the **Project Declared** sheet, then **Extensions → Apps Script**.
 | In the editor click | Name it | Paste the contents of |
 |---|---|---|
 | **＋ → Script** | `ReportV2` | [`ReportV2.gs`](ReportV2.gs) |
-| **＋ → HTML** | `ReportV2` | [`ReportV2.html`](ReportV2.html) |
+| **＋ → HTML** | `ReportPage` | [`ReportPage.html`](ReportPage.html) |
 | **＋ → Script** | `Officer` | [`Officer.gs`](Officer.gs) |
 
 If `ReportV2` already exists, replace its contents. `ReportV2.gs` changed, so the portal can use it too.
+The HTML file must be named **`ReportPage`**, not `ReportV2`: Apps Script won't allow an HTML file and a script file with the same name.
 
 ## 2. Six small edits in `Code.gs`
 

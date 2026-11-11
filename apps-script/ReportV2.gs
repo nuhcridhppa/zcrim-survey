@@ -2,7 +2,8 @@
  * ZCRIM — Family Report (new format)
  *
  * Add this file to the Apps Script project bound to the "Project Declared" sheet,
- * together with ReportV2.html. It only READS the SurveyData, MemberData and PhotoLog
+ * together with the HTML file ReportPage (ReportPage.html). Apps Script does not allow
+ * an HTML file with the same name as a script file, so the page is called ReportPage. It only READS the SurveyData, MemberData and PhotoLog
  * tabs; it never writes to the sheet and does not touch any other code.
  *
  * Open it from the ZCRIM Admin menu (add one line to your onOpen menu):
@@ -11,7 +12,7 @@
  */
 
 function showFamilyReportV2() {
-  var html = HtmlService.createHtmlOutputFromFile('ReportV2')
+  var html = HtmlService.createHtmlOutputFromFile('ReportPage')
     .setWidth(1000)
     .setHeight(760);
   SpreadsheetApp.getUi().showModalDialog(html, 'Family Report');
