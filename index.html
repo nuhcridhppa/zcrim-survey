@@ -536,61 +536,30 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 <div id="toast"></div>
 
 <script>
-// ── APPS SCRIPT BACKEND URL ──────────────────
-// Replace this with your deployed Apps Script URL
-var _AK = (function(){var _k=17,_d=[125,99,38,118,119,32,102,80,125,118,125,103,119,65,69,104,115,93,98,92,73,103,105,73,104,83,67,71,68,72,95,93];var _s="";for(var _i=0;_i<_d.length;_i++)_s+=String.fromCharCode(_d[_i]^_k);return _s;})();
-var APPS_SCRIPT_URL = (function(){var _k=42,_d=[66,94,94,90,89,16,5,5,89,73,88,67,90,94,4,77,69,69,77,70,79,4,73,69,71,5,71,75,73,88,69,89,5,89,5,107,97,76,83,73,72,93,98,68,30,31,79,78,115,127,67,26,75,121,79,103,112,102,122,78,120,102,111,65,120,117,125,110,80,69,93,93,65,75,69,83,126,99,105,75,71,71,107,79,82,117,95,27,71,80,95,66,121,67,88,83,114,68,102,26,75,107,79,78,110,124,69,83,93,5,79,82,79,73];var _s='';for(var _i=0;_i<_d.length;_i++)_s+=String.fromCharCode(_d[_i]^_k);return _s;})();
-// ── XHR WRAPPER — handles Apps Script CORS redirects ──
+// ── SERVER CALLS ──────────────────────────────
+// The page is served by Apps Script, so it talks to the server through Google's own
+// google.script.run channel: no server address or API key in this file. Every call goes
+// through ONE server function, api(fn, argsJson), which only allows the app's functions.
 function gsr(fnName, args, onSuccess, onFailure) {
   var isLarge = fnName === 'uploadPhoto' || fnName === 'submitSurvey' || fnName === 'getFamilyReport';
-  var xhr = new XMLHttpRequest();
-  // A dropped connection fires both onreadystatechange and onerror — report it only once
   var settled = false;
-  function fail(msg){ if(settled) return; settled = true; if (onFailure) onFailure({message: msg}); }
-  xhr.timeout = isLarge ? 90000 : 30000;
-  xhr.ontimeout = function(){ fail('Request timed out. Check internet connection.'); };
-
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState !== 4 || settled) return;
-    if (xhr.status === 0) return; // network error / timeout — handled by onerror / ontimeout
-    if (xhr.status >= 200 && xhr.status < 300) {
-      settled = true;
-      try {
-        var res = JSON.parse(xhr.responseText);
-        if (onSuccess) onSuccess(res);
-      } catch(e) {
-        // JSON parse failed — could be a redirect or Apps Script HTML error page
-        // Never show raw response to user
-        console.error('JSON parse error', xhr.responseText.substring(0, 200));
-        if (onFailure) onFailure({message: 'Server error. Please try again.'});
-      }
-    } else {
-      fail('HTTP ' + xhr.status + ': ' + xhr.statusText);
-    }
-  };
-
-  xhr.onerror = function() { fail('Network error. Check internet connection.'); };
-
-  if (isLarge) {
-    // POST for photos/large data
-    xhr.open('POST', APPS_SCRIPT_URL, true);
-    xhr.setRequestHeader('Content-Type', 'text/plain'); // text/plain avoids CORS preflight
-    xhr.send(JSON.stringify({fn: fnName, args: args || [], ak: _AK}));
-  } else {
-    // GET for normal calls
-    var url = APPS_SCRIPT_URL
-      + '?fn='   + encodeURIComponent(fnName)
-      + '&args=' + encodeURIComponent(JSON.stringify(args || []))
-      + '&ak='   + encodeURIComponent(_AK);
-    xhr.open('GET', url, true);
-    xhr.send();
+  function done(cb, v){ if (settled) return; settled = true; clearTimeout(timer); if (cb) cb(v); }
+  var timer = setTimeout(function(){ done(onFailure, {message:'Request timed out. Check internet connection.'}); }, isLarge ? 90000 : 30000);
+  if (!(window.google && google.script && google.script.run)) {
+    done(onFailure, {message:'Open the app from its Apps Script link.'}); return;
   }
+  google.script.run
+    .withSuccessHandler(function(json){
+      var res; try { res = JSON.parse(json); } catch(e) { done(onFailure, {message:'Server error. Please try again.'}); return; }
+      done(onSuccess, res);
+    })
+    .withFailureHandler(function(e){ done(onFailure, {message: (e && e.message) ? 'Server error: ' + e.message : 'Network error. Check internet connection.'}); })
+    .api(fnName, JSON.stringify(args || []));
 }
 
-// ── google.script.run REPLACEMENT ────────────
-// Supports: google.script.run.withSuccessHandler(fn).withFailureHandler(fn).fnName(args)
-var google = {
-  script: {
+// ── API.run — same style as API.run, routed through gsr() above ──
+// Supports: API.run.withSuccessHandler(fn).withFailureHandler(fn).fnName(args)
+var API = {
     run: (function() {
       function Runner() {
         this._ok  = function(){};
@@ -642,7 +611,6 @@ var google = {
 
       return handler;
     })()
-  }
 };
 
 // ── SECURITY: sanitize any server data before inserting into DOM ──
@@ -804,14 +772,14 @@ function doLogin() {
   var btn=document.getElementById('btn-login');
   btn.innerHTML='<span class="spinner"></span> Logging in…'; btn.disabled=true;
 
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       btn.innerHTML='Login →'; btn.disabled=false;
       if(!res.ok){showErr('login-err',res.msg); return;}
       // Officers (Admin / DCRIM / ADC) may use a PC; field surveyors must use a phone
       var officer = !!(res.zcrim && (res.zcrim.master || res.zcrim.dcrim || res.zcrim.adc));
       if (!officer && !isMobileDevice()) {
-        google.script.run.logoutSession(res.token);
+        API.run.logoutSession(res.token);
         showErr('login-err', '🚫 Login only allowed from mobile phones. Desktop/PC access is not permitted.');
         return;
       }
@@ -819,7 +787,7 @@ function doLogin() {
       state.sessionExpiry=new Date(res.expires);
       getGPS(function(c){
         state.gps=c;
-        google.script.run.logLogin({
+        API.run.logLogin({
           token:res.token, zcrimName:res.zcrim.name, mobile:res.zcrim.mobile,
           lat:c.lat, lng:c.lng,
           deviceInfo:navigator.platform+' | '+screen.width+'x'+screen.height,
@@ -922,7 +890,7 @@ function startSessionTimer() {
     // (Every upload and submit also carries the token, so the server rejects a dead session there too.)
     heartbeatTick++;
     if (heartbeatTick % HEARTBEAT_SEC === 0 && state.token) {
-      google.script.run
+      API.run
         .withSuccessHandler(function(res) {
           // Log out only when the server says the session really ended (relogin:true).
           // A server error or an older backend shouldn't kick the surveyor out mid-survey.
@@ -951,7 +919,7 @@ function loadOfficerPortal() {
   document.getElementById('dcrim-summary').innerHTML =
     '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--mut)"><span class="spinner"></span> Loading…</div>';
 
-  google.script.run
+  API.run
     .withSuccessHandler(function(res) {
       if (res && res.ok) {
         state.overview = res;
@@ -963,7 +931,7 @@ function loadOfficerPortal() {
       // Apps Script not updated yet (Officer.gs missing) — show the old progress view so DCRIM still works
       if (res && /^Not allowed/.test(res.msg || '')) {
         state.opLegacy = true;
-        google.script.run.withSuccessHandler(function(r){
+        API.run.withSuccessHandler(function(r){
           if (r && r.ok) renderDcrimProgress(r);
           else opError('Officer portal is being set up — server update pending.');
         }).getDcrimProgress(state.token);
@@ -1064,7 +1032,7 @@ function renderBlocks(){
 function openWard(block, ward){
   opWard = {block:block, ward:ward, families:null}; opFilter = 'all';
   renderWard();
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       if (!res.ok) { if(res.relogin){handleSessionError(res);return;} toast(res.msg,'red'); return; }
       if (opWard && opWard.ward === ward) { opWard.families = res.families; renderWard(); }
@@ -1102,7 +1070,7 @@ function opSearch(){
   var q = document.getElementById('op-q').value.trim(), el = document.getElementById('op-results');
   if (q.length < 3) { el.innerHTML = '<div class="loading">Type at least 3 characters.</div>'; return; }
   el.innerHTML = '<div class="loading"><span class="spinner"></span> Searching…</div>';
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       if (!res.ok) { if(res.relogin){handleSessionError(res);return;} el.innerHTML = '<div class="loading">'+esc(res.msg)+'</div>'; return; }
       if (!res.families.length) { el.innerHTML = '<div class="loading">No family found for “'+esc(q)+'”.</div>'; return; }
@@ -1121,7 +1089,7 @@ function openReport(id, row){
   v.style.display = 'block'; v.scrollTop = 0;
   document.getElementById('rv-pick').style.display = 'none';
   document.getElementById('rv-body').innerHTML = '<div style="padding:60px;text-align:center;color:#86868B">Building report for '+esc(id)+'… (loading photos)</div>';
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       if (!res.ok) { if(res.relogin){handleSessionError(res);return;} document.getElementById('rv-body').innerHTML = '<div style="padding:60px;text-align:center">'+esc(res.msg)+'</div>'; return; }
       var pick = document.getElementById('rv-pick');
@@ -1254,7 +1222,7 @@ function backToPortal(){
 function officerSurvey(id){
   if (state.family && state.family.id !== id && !confirm('Another survey is open ('+state.family.id+'). Discard it and survey '+id+'?')) return;
   showLoadingOverlay('Opening '+id+' for survey…');
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       hideLoadingOverlay();
       if (!res.ok) { if(res.relogin){handleSessionError(res);return;} toast(res.msg,'red'); return; }
@@ -1305,7 +1273,7 @@ function submitPush(id){
   if (info.details.length < 10) { err.textContent = 'Please describe the grievance (at least 10 characters).'; return; }
   if (info.complainantMobile && !validMobile(info.complainantMobile)) { err.textContent = 'Complainant mobile must be a valid 10-digit number.'; return; }
   var btn = document.getElementById('pf-send'); btn.disabled = true; btn.textContent = 'Sending…'; err.textContent = '';
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       if (!res.ok) { if(res.relogin){handleSessionError(res);return;} btn.disabled=false; btn.textContent='Send to ZCRIM'; err.textContent = res.msg; return; }
       document.getElementById('push-form').remove();
@@ -1324,7 +1292,7 @@ function doLogout(auto) {
   if (warn) warn.style.display = 'none';
   showErr('login-err', '');
   showErr('submit-err', '');
-  if(state.token) google.script.run.logoutSession(state.token);
+  if(state.token) API.run.logoutSession(state.token);
   state.token=null; state.zcrim=null; state.selectedWard=null;
   document.getElementById('inp-mobile').value='';
   document.getElementById('inp-password').value='';
@@ -1339,7 +1307,7 @@ function loadVillagePicker() {
   document.getElementById('vp-portal-btn').style.display = state.isOfficer ? '' : 'none';
   document.getElementById('sess-name').textContent=state.zcrim.name;
   document.getElementById('village-list').innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)"><span class="spinner"></span> Loading…</div>';
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       if(!res.ok){handleSessionError(res);return;}
       state.allWards=res.wards; renderVillageList(res.wards); renderVillageStats(res.wards, res.totalResurvey||0);
@@ -1415,7 +1383,7 @@ function showTab(tabId){
 
 function loadLeaderboard(){
   var el = document.getElementById('leaderboard-list');
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       if(!res.ok){ el.innerHTML='<div class="loading" style="color:var(--red)">'+esc(res.msg)+'</div>'; return; }
       var medals=['🥇','🥈','🥉'];
@@ -1438,7 +1406,7 @@ function loadLeaderboard(){
 function switchVillage(){
   if (state.officerSurvey) { backToPortal(); return; }
   showScreen('screen-village');
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){if(!res.ok){handleSessionError(res);return;} state.allWards=res.wards;renderVillageList(res.wards);renderVillageStats(res.wards,res.totalResurvey||0);document.getElementById('village-search').value='';})
     .withFailureHandler(function(){})
     .getWardsForZcrim(state.token);
@@ -1469,7 +1437,7 @@ function skipFamily(){
     loadNextFamily();
   }, 16000);
 
-  google.script.run
+  API.run
     .withSuccessHandler(function(r){
       if(done) return;
       done = true;
@@ -1509,7 +1477,7 @@ function loadNextFamily(){
     showScreen('screen-village');
   }, 15000);
 
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       if(loadDone) return;
       loadDone = true;
@@ -1559,7 +1527,7 @@ function setupFamily(d){
   if(skipBtn){ skipBtn.disabled=false; skipBtn.style.opacity='1'; skipBtn.style.display=''; }
 
   // Update progress counter
-  google.script.run
+  API.run
     .withSuccessHandler(function(r){ if(r.ok) document.getElementById('hdr-remaining').textContent = r.remaining+' remaining'; })
     .getFamiliesForZcrim(state.token, state.selectedWard);
 }
@@ -1784,6 +1752,7 @@ function showCameraError(target, msg) {
     '<ol style="text-align:left;margin:10px 0 0 18px;font-size:11px;line-height:1.8">' +
       how.map(function(h){ return '<li>'+h+'</li>'; }).join('') + '</ol>' +
     '<button class="btn btn-blue" onclick="event.stopPropagation();openCamera(\'' + target + '\')" style="margin:14px 0 0;padding:10px;font-size:13px">🔄 Try Again</button>' +
+    '<button class="btn btn-green" onclick="event.stopPropagation();captureWithPhoneCamera(\'' + target + '\')" style="margin:8px 0 0;padding:10px;font-size:13px">📷 Open phone camera</button>' +
     '</div>';
   box.onclick = null;
   toast('🚫 Allow Camera and Location to take photos', 'red');
@@ -1886,46 +1855,61 @@ function encodePhoto(canvas){
 }
 
 function capturePhoto(){
-  var v      = document.getElementById('cam-video');
-  var vw = v.videoWidth || 1280, vh = v.videoHeight || 720;
-  var scale = Math.min(1, PHOTO_MAX_PX / Math.max(vw, vh));
-  var canvas = document.createElement('canvas');
-  canvas.width  = Math.round(vw * scale);
-  canvas.height = Math.round(vh * scale);
-  var ctx = canvas.getContext('2d');
-  ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+  var v = document.getElementById('cam-video');
+  processCapture(v, v.videoWidth || 1280, v.videoHeight || 720, state.cameraTarget, true);
+}
 
-  var t = state.cameraTarget;
+// Resize → quality check → GPS/time stamp → save. Used by the live camera and the phone-camera fallback.
+function processCapture(src, sw, sh, t, fromLiveCamera){
+  var scale = Math.min(1, PHOTO_MAX_PX / Math.max(sw, sh));
+  var canvas = document.createElement('canvas');
+  canvas.width  = Math.round(sw * scale);
+  canvas.height = Math.round(sh * scale);
+  canvas.getContext('2d').drawImage(src, 0, 0, canvas.width, canvas.height);
+
   var g = state.gps || {lat:'N/A', lng:'N/A'};
   var label = photoLabel(t);
-
+  function finish(){
+    burnGpsStamp(canvas, g, label, state.family);
+    var dataUrl = encodePhoto(canvas);
+    if (fromLiveCamera) closeCamera();
+    savePhoto(t, dataUrl, g);
+  }
   // Quality check BEFORE gps stamp
   var quality = checkPhotoQuality(canvas);
   var qualityMsg = '';
   if (quality.brightness < 40)  qualityMsg = 'Photo is too dark (brightness: '+quality.brightness+'/255). Move to better lighting and retake.';
   else if (quality.contrast < 18) qualityMsg = 'Photo appears blurry or has very low contrast. Please retake for a clearer image.';
-
   if (qualityMsg) {
-    var savedCanvas = canvas;
     showQualityWarning(qualityMsg,
-      function(){ /* retake — camera still open */ },
-      function(){
-        // User chose to keep — continue with GPS stamp and save
-        burnGpsStamp(savedCanvas, g, label, state.family);
-        var dataUrl = encodePhoto(savedCanvas);
-        closeCamera();
-        savePhoto(t, dataUrl, g);
-      }
-    );
-    return; // wait for user choice
+      function(){ if (!fromLiveCamera) captureWithPhoneCamera(t); /* live camera: still open for retake */ },
+      finish);
+    return;
   }
+  finish();
+}
 
-  // Quality OK — proceed normally
-  burnGpsStamp(canvas, g, label, state.family);
-  var dataUrl = encodePhoto(canvas);
-
-  closeCamera();
-  savePhoto(t, dataUrl, g);
+// Fallback when the browser blocks the live camera inside the app: open the phone's own camera.
+// Only a photo taken in the last few minutes is accepted, so old gallery pictures are refused.
+function captureWithPhoneCamera(t){
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.setAttribute('capture', t === 'selfie' ? 'user' : 'environment');
+  inp.style.display = 'none';
+  inp.onchange = function(){
+    var f = inp.files && inp.files[0]; inp.remove();
+    if (!f) return;
+    if (!/^image\//.test(f.type)) { toast('Please take a photo','red'); return; }
+    if (f.lastModified && Date.now() - f.lastModified > 5 * 60 * 1000) { toast('📷 Please take a NEW photo now — older pictures are not accepted','red'); return; }
+    state.cameraTarget = t;
+    getGPS(function(c){ if (c.lat !== 'N/A') state.gps = c; });
+    var url = URL.createObjectURL(f), img = new Image();
+    img.onload = function(){ processCapture(img, img.naturalWidth, img.naturalHeight, t, false); URL.revokeObjectURL(url); };
+    img.onerror = function(){ toast('Could not read that photo — try again','red'); URL.revokeObjectURL(url); };
+    img.src = url;
+  };
+  document.body.appendChild(inp);
+  inp.click();
 }
 
 function savePhoto(t, dataUrl, g) {
@@ -1963,7 +1947,7 @@ function startUpload(k){
   function attempt(){
     u.tries++;
     var g = item.gps || state.gps || {lat:'N/A', lng:'N/A'};
-    google.script.run
+    API.run
       .withSuccessHandler(function(r){
         if (!current()) return;
         if (r && r.ok && r.url) { u.status='done'; u.url=r.url; renderUploadBadge(k); saveDraft(); uploadSettled(); }
@@ -2094,7 +2078,7 @@ function finalSubmit(uploaded,ts){
   var membersSnap      = collectMembers();
   var gpsSnap          = state.gps || {lat:'N/A',lng:'N/A'};
 
-  google.script.run
+  API.run
     .withSuccessHandler(function(res){
       if(!res.ok){
         if(res.relogin){handleSessionError(res);return;}
