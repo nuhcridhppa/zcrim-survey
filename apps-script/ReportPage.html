@@ -42,6 +42,10 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.025em;margin:4px 0 2px;line-h
 .small{font-size:11px;color:var(--label3);line-height:1.6}
 .card{background:var(--card);border-radius:16px;padding:18px 20px;margin-top:14px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04);break-inside:avoid}
 .card h2{font-size:15px;font-weight:700;margin:0 0 10px;letter-spacing:-.015em}
+.loc{display:grid;grid-template-columns:1fr 1.4fr 1.4fr;gap:0;margin-top:16px;background:var(--card);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04);overflow:hidden}
+.loc div{padding:10px 16px;border-left:1px solid var(--hair)}.loc div:first-child{border-left:0}
+.loc span{display:block;font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.06em}
+.loc b{display:block;font-size:14px;margin-top:2px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}
 .stat{background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04)}
 .stat .n{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:2px;white-space:nowrap}
@@ -81,13 +85,14 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.025em;margin:4px 0 2px;line-h
 .foot{margin-top:22px;text-align:center;color:var(--label3);font-size:10.5px}
 a{color:var(--blue);text-decoration:none}
 
+@media (max-width:520px){.loc{grid-template-columns:1fr}.loc div{border-left:0;border-top:1px solid var(--hair)}.loc div:first-child{border-top:0}}
 @media (max-width:700px){.stats{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr 1fr}.photos{grid-template-columns:1fr}.hero{flex-direction:column}.hero .right{text-align:left}}
 @media print{
   @page{size:A4;margin:10mm}
   body{background:#fff;font-size:11.5px}
   .toolbar,#results{display:none!important}
   .page{margin:0;max-width:none;padding:0}
-  .card,.stat{box-shadow:none;border:1px solid var(--hair)}
+  .card,.stat,.loc{box-shadow:none;border:1px solid var(--hair)}
   .card{padding:12px 16px;margin-top:10px;border-radius:12px}
   .card h2{font-size:13.5px;margin-bottom:6px}
   .stats{margin-top:14px;gap:10px}
@@ -247,7 +252,7 @@ function render(d){
   var html =
   '<div class="page">'+
   '<div class="hero"><div>'+
-    '<div class="eyebrow">Family Verification · '+esc(s.Ward)+', '+esc(s.Block)+'</div>'+
+    '<div class="eyebrow">Family Verification Report</div>'+
     '<h1>'+esc(s.FamilyName)+'</h1>'+
     '<div class="meta">'+esc(s.FamilyID)+' &nbsp;·&nbsp; '+esc(s.Age)+', '+esc(gender)+(present(s.FamilyMobile)?' &nbsp;·&nbsp; '+esc(s.FamilyMobile):'')+'<br>'+esc(s.Address)+'</div>'+
   '</div><div class="right">'+
@@ -256,6 +261,11 @@ function render(d){
       '<br>'+(resurvey?'Re-survey':'Original survey')+(dur?' · '+Math.floor(dur/60)+' min '+(dur%60)+' s':'')+'</div>'+
   '</div></div>'+
 
+  '<div class="loc">'+
+    '<div><span>District</span><b>Nuh</b></div>'+
+    '<div><span>Block / MC</span><b>'+(present(s.Block)?esc(s.Block):'—')+'</b></div>'+
+    '<div><span>Village / Ward</span><b>'+(present(s.Ward)?esc(s.Ward):'—')+'</b></div>'+
+  '</div>'+
   '<div class="stats">'+
     '<div class="stat"><div class="s">Members</div><div class="n">'+M.length+'</div><div class="s">'+earning+' earning</div></div>'+
     '<div class="stat"><div class="s">Family income</div><div class="n" style="color:var(--blue);font-size:'+(incomeTxt.length>14?17:21)+'px">'+incomeTxt+'</div><div class="s">'+(ranged?'sum of lowest '+inr(lo):'no income entered')+(hasDeclared?' · declared '+inr(declared):'')+'</div></div>'+

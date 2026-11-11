@@ -42,8 +42,12 @@ function rv2Get_(t, row, col) {
 }
 
 // Timestamps are written as text "dd/mm/yyyy hh:mm:ss AM" — but a cell may also hold a real Date.
+// A real Date in a timestamp cell was mis-read by the sheet (en_US locale): Code.gs parseTS() swaps it back
+function rv2IsDate_(x) { return Object.prototype.toString.call(x) === '[object Date]'; }
+function rv2Date_(x) { return typeof parseTS === 'function' ? parseTS(x) : x; }
+
 function rv2Ms_(x) {
-  if (x instanceof Date) return x.getTime();
+  if (rv2IsDate_(x)) { var d = rv2Date_(x); return d ? d.getTime() : NaN; }
   var m = String(x).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?/i);
   if (!m) return NaN;
   var h = +m[4];
@@ -52,8 +56,8 @@ function rv2Ms_(x) {
 }
 
 function rv2Text_(x) {
-  if (x instanceof Date) {
-    return Utilities.formatDate(x, Session.getScriptTimeZone(), 'dd/MM/yyyy hh:mm:ss a');
+  if (rv2IsDate_(x)) {
+    return Utilities.formatDate(rv2Date_(x), Session.getScriptTimeZone(), 'dd/MM/yyyy hh:mm:ss a');
   }
   return String(x);
 }
