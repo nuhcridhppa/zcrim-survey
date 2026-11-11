@@ -16,6 +16,9 @@ If `ReportV2` already exists, replace its contents. `ReportV2.gs` changed, so th
 
 Use **Ctrl+F** to find each line, then change it as shown.
 
+> **Easier:** ask Claude for the finished `Code.gs` with every edit below already applied, then replace the whole file (Ctrl+A, paste).
+> That version also lets officers log in with a **username**: `dcrim` and `adc`. Their passwords are set in the Passwords sheet.
+
 ### Edit 1: add the ADC account (inside `var ZCRIMS = [`)
 Find:
 ```js

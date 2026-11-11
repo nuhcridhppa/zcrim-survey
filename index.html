@@ -216,8 +216,8 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
     <div class="card">
       <div class="sec-title">Field Verifier Login</div>
       <div class="field">
-        <label>Registered Mobile Number</label>
-        <input id="inp-mobile" type="tel" maxlength="10" placeholder="10-digit mobile number"
+        <label>Mobile Number or Username</label>
+        <input id="inp-mobile" type="text" maxlength="30" placeholder="10-digit mobile or officer username" autocapitalize="none" autocomplete="username" spellcheck="false"
           onkeydown="if(event.key==='Enter') document.getElementById('inp-password').focus()" />
       </div>
       <div class="field">
@@ -759,7 +759,8 @@ function isMobileDevice() {
 function doLogin() {
   var mob=document.getElementById('inp-mobile').value.trim();
   var pwd=document.getElementById('inp-password').value.trim();
-  if(!validMobile(mob)){showErr('login-err','Enter valid 10-digit mobile number.'); return;}
+  // Field ZCRIMs use their mobile number; officers (ADC / DCRIM) may use a username
+  if(!validMobile(mob) && !/^[a-z][a-z0-9._-]{1,29}$/i.test(mob)){showErr('login-err','Enter your 10-digit mobile number or username.'); return;}
   if(!pwd){showErr('login-err','Enter your password.'); return;}
 
   showErr('login-err','');
